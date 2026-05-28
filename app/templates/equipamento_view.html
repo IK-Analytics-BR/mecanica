@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Visualizar Equipamento{% endblock %}
+{% block title %}Visualizar Veículo - IKFlow Mecânica{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -24,7 +24,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Visualizar Equipamento</h1>
+                    <h1 class="h2">Detalhes do Veículo</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <a href="{{ url_for('equipamento.equipamento_editar', id=equipamento.id) }}" class="btn btn-sm btn-warning me-2">
                             <i class="fas fa-edit"></i> Editar
@@ -44,8 +44,8 @@
                                     <div class="view-value">{{ equipamento.id }}</div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="view-label">Nome do Equipamento</div>
-                                    <div class="view-value">{{ equipamento.name }}</div>
+                                    <div class="view-label">Veículo</div>
+                                    <div class="view-value">{{ equipamento.name }}{% if equipamento.model %} &mdash; <small class="text-muted">{{ equipamento.model }}</small>{% endif %}</div>
                                 </div>
                             </div>
                             
@@ -55,14 +55,18 @@
                                     <div class="view-value">{{ cliente.name if cliente else 'N/A' }}</div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="view-label">Data de Instalação</div>
+                                    <div class="view-label">Data de Entrada na Oficina</div>
                                     <div class="view-value">{{ equipamento.installation_date }}</div>
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="view-label">Próxima Manutenção</div>
+                                    <div class="view-label">Fabricante / Placa</div>
+                                    <div class="view-value">{{ equipamento.manufacturer or '—' }} | {{ equipamento.serial_number or '—' }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="view-label">Próxima Revisão</div>
                                     <div class="view-value">{{ equipamento.next_maintenance if equipamento.next_maintenance else 'Não agendada' }}</div>
                                 </div>
                             </div>
@@ -79,7 +83,7 @@
                         
                         <div class="view-container">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5>Insumos Instalados</h5>
+                                <h5>Peças / Insumos Instalados</h5>
                                 <a href="#" class="btn btn-sm btn-primary">
                                     <i class="fas fa-plus"></i> Adicionar Insumo
                                 </a>
@@ -117,7 +121,7 @@
                             </div>
                             {% else %}
                             <div class="alert alert-info">
-                                Nenhum insumo instalado neste equipamento.
+                                Nenhuma peça instalada registrada para este veículo.
                             </div>
                             {% endif %}
                         </div>
@@ -126,9 +130,19 @@
                     <div class="col-md-4">
                         <div class="view-container">
                             <h5><i class="fas fa-info-circle"></i> Informações</h5>
-                            <p>Visualizando detalhes do equipamento.</p>
-                            <p>Para editar os dados, clique no botão "Editar".</p>
-                            <p>Para voltar à lista de equipamentos, clique em "Voltar".</p>
+                            <p>Visualizando detalhes do veículo.</p>
+                            <p>Para editar os dados, clique em "Editar".</p>
+                            <p>Para voltar, clique em "Voltar".</p>
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{{ url_for('service_order.veiculo_historico', equipment_id=veiculo.id) }}"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-history me-1"></i> Histórico Completo
+                                </a>
+                                <a href="{{ url_for('service_order.service_order_list') }}"
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-tools me-1"></i> Ver OS deste Veículo
+                                </a>
+                            </div>
                             
                             {% if cliente %}
                             <div class="alert alert-info mt-3">

@@ -173,25 +173,35 @@ def cash_register_open():
     empresa_id = pdv_info['company_id'] if pdv_info else None
     
     try:
-        # Chamar procedure usando método específico (agora com 7 parâmetros)
-        result = db.call_procedure('sp_open_cash_register', (
+        from datetime import datetime
+        # Verificar se já existe caixa aberto para este usuário
+        caixa_aberto = db.fetch_one(
+            "SELECT id FROM cash_register WHERE user_id = %s AND status = 'open' LIMIT 1",
+            (user_id,)
+        )
+        if caixa_aberto:
+            flash('Você já possui um caixa aberto. Feche-o antes de abrir outro.', 'warning')
+            return redirect(url_for('cash_register.cash_register_current'))
+
+        # INSERT direto — sem stored procedure
+        cash_register_id = db.insert("""
+            INSERT INTO cash_register
+                (register_number, user_id, pdv_id, empresa_id, cashier_name,
+                 opening_balance, opening_notes, opened_at, status, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), 'open', NOW())
+        """, (
             register_number,
             user_id,
+            pdv_id,
+            empresa_id,
             username,
             opening_balance,
             opening_notes,
-            pdv_id,        # Novo parâmetro
-            empresa_id     # Novo parâmetro
         ))
-        
-        if result and 'cash_register_id' in result:
-            cash_register_id = result['cash_register_id']
-            flash(f'Caixa #{cash_register_id} aberto com sucesso! Valor inicial: R$ {opening_balance:.2f}', 'success')
-        else:
-            flash('Caixa aberto com sucesso!', 'success')
-        
+
+        flash(f'Caixa #{cash_register_id} aberto com sucesso! Valor inicial: R$ {opening_balance:.2f}', 'success')
         return redirect(url_for('cash_register.cash_register_current'))
-        
+
     except Exception as e:
         flash(f'Erro ao abrir caixa: {str(e)}', 'danger')
         return redirect(url_for('cash_register.cash_register_open'))
@@ -394,46 +404,58 @@ def cash_register_close(register_id):
                               movimentacoes=movimentacoes)
     
     # POST: Processar fechamento
-    actual_cash = float(request.form.get('actual_cash', 0))
-    actual_card = float(request.form.get('actual_card', 0))
+    actual_cash  = float(request.form.get('actual_cash', 0))
+    actual_card  = float(request.form.get('actual_card', 0))
     actual_other = float(request.form.get('actual_other', 0))
     closing_notes = request.form.get('closing_notes', '')
-    
+    actual_total  = actual_cash + actual_card + actual_other
+
     try:
-        # Chamar procedure usando método específico
-        db.call_procedure('sp_close_cash_register', (
-            register_id,
-            actual_cash,
-            actual_card,
-            actual_other,
-            closing_notes
+        # Calcular totais esperados
+        totals = db.fetch_one("""
+            SELECT
+                COALESCE(SUM(CASE WHEN payment_method IN ('cash','money','dinheiro') THEN net_total ELSE 0 END),0) as cash_total,
+                COALESCE(SUM(CASE WHEN payment_method IN ('credit_card','credito','debit_card','debito') THEN net_total ELSE 0 END),0) as card_total,
+                COALESCE(SUM(CASE WHEN payment_method NOT IN ('cash','money','dinheiro','credit_card','credito','debit_card','debito','pix') THEN net_total ELSE 0 END),0) as other_total,
+                COALESCE(SUM(net_total), 0) as grand_total
+            FROM sales WHERE cash_register_id = %s AND status = 'confirmed'
+        """, (register_id,)) or {}
+
+        expected_cash  = float(register.get('opening_balance', 0)) + float(totals.get('cash_total', 0))
+        expected_card  = float(totals.get('card_total', 0))
+        expected_other = float(totals.get('other_total', 0))
+        expected_total = expected_cash + expected_card + expected_other
+        diff_cash  = actual_cash  - expected_cash
+        diff_total = actual_total - expected_total
+
+        # UPDATE direto — sem stored procedure
+        db.execute_query("""
+            UPDATE cash_register SET
+                status          = 'closed',
+                closed_at       = NOW(),
+                actual_cash     = %s,
+                actual_card     = %s,
+                actual_other    = %s,
+                actual_total    = %s,
+                expected_cash   = %s,
+                expected_card   = %s,
+                expected_other  = %s,
+                expected_total  = %s,
+                difference_cash = %s,
+                difference_total= %s,
+                closing_notes   = %s,
+                updated_at      = NOW()
+            WHERE id = %s
+        """, (
+            actual_cash, actual_card, actual_other, actual_total,
+            expected_cash, expected_card, expected_other, expected_total,
+            diff_cash, diff_total,
+            closing_notes, register_id
         ))
-        
-        # Buscar configuração de impressão do PDV
-        pdv_id = session.get('pdv_id')
-        imprimir_automatico = True
-        formato_impressao = '80mm'
-        
-        if pdv_id:
-            pdv_config = db.fetch_one("""
-                SELECT imprimir_automatico, formato_impressao 
-                FROM pdv_settings WHERE id = %s
-            """, (pdv_id,))
-            if pdv_config:
-                imprimir_automatico = pdv_config.get('imprimir_automatico', True)
-                formato_impressao = pdv_config.get('formato_impressao', '80mm')
-        
+
         flash('Caixa fechado com sucesso!', 'success')
-        
-        # Redirecionar para detalhes com flag de impressão
-        if imprimir_automatico:
-            return redirect(url_for('cash_register.cash_register_detail', 
-                                   register_id=register_id, 
-                                   imprimir=1,
-                                   formato=formato_impressao))
-        else:
-            return redirect(url_for('cash_register.cash_register_detail', register_id=register_id))
-        
+        return redirect(url_for('cash_register.cash_register_detail', register_id=register_id))
+
     except Exception as e:
         flash(f'Erro ao fechar caixa: {str(e)}', 'danger')
         return redirect(url_for('cash_register.cash_register_close', register_id=register_id))
@@ -545,16 +567,29 @@ def api_cash_register_status():
 @login_required
 def cash_register_withdrawal(register_id):
     """Registrar sangria (retirada de dinheiro do caixa)"""
-    if request.method == 'GET':
-        # Redirecionar para fluxo de caixa com tipo=sangria
-        return redirect(url_for('cash_flow.cash_flow_new', 
-                              type='expense', 
-                              description='SANGRIA - Caixa #' + str(register_id),
-                              return_to='cash_register'))
-    
-    # POST seria processado aqui se necessário
-    flash('Sangria registrada com sucesso!', 'success')
-    return redirect(url_for('cash_register.cash_register_detail', register_id=register_id))
+    db = get_db()
+    register = db.fetch_one("SELECT * FROM cash_register WHERE id = %s", (register_id,))
+    if not register or register['status'] != 'open':
+        flash('Caixa não encontrado ou já fechado.', 'danger')
+        return redirect(url_for('cash_register.cash_register_list'))
+
+    if request.method == 'POST':
+        valor = float(request.form.get('valor', 0))
+        motivo = request.form.get('motivo', 'Sangria')
+        if valor <= 0:
+            flash('Informe um valor válido para a sangria.', 'warning')
+        else:
+            try:
+                db.insert("""
+                    INSERT INTO cash_flow (type, amount, description, cash_register_id, created_at)
+                    VALUES ('expense', %s, %s, %s, NOW())
+                """, (valor, f'SANGRIA — {motivo}', register_id))
+                flash(f'Sangria de R$ {valor:.2f} registrada com sucesso!', 'success')
+                return redirect(url_for('cash_register.cash_register_detail', register_id=register_id))
+            except Exception as e:
+                flash(f'Erro ao registrar sangria: {str(e)}', 'danger')
+
+    return render_template('cash_register_sangria.html', register=register)
 
 # =====================================================
 # SUPRIMENTO (ADIÇÃO DE DINHEIRO)
@@ -564,16 +599,29 @@ def cash_register_withdrawal(register_id):
 @login_required
 def cash_register_supply(register_id):
     """Registrar suprimento (adição de dinheiro ao caixa)"""
-    if request.method == 'GET':
-        # Redirecionar para fluxo de caixa com tipo=suprimento
-        return redirect(url_for('cash_flow.cash_flow_new', 
-                              type='income', 
-                              description='SUPRIMENTO - Caixa #' + str(register_id),
-                              return_to='cash_register'))
-    
-    # POST seria processado aqui se necessário
-    flash('Suprimento registrado com sucesso!', 'success')
-    return redirect(url_for('cash_register.cash_register_detail', register_id=register_id))
+    db = get_db()
+    register = db.fetch_one("SELECT * FROM cash_register WHERE id = %s", (register_id,))
+    if not register or register['status'] != 'open':
+        flash('Caixa não encontrado ou já fechado.', 'danger')
+        return redirect(url_for('cash_register.cash_register_list'))
+
+    if request.method == 'POST':
+        valor = float(request.form.get('valor', 0))
+        motivo = request.form.get('motivo', 'Suprimento')
+        if valor <= 0:
+            flash('Informe um valor válido para o suprimento.', 'warning')
+        else:
+            try:
+                db.insert("""
+                    INSERT INTO cash_flow (type, amount, description, cash_register_id, created_at)
+                    VALUES ('income', %s, %s, %s, NOW())
+                """, (valor, f'SUPRIMENTO — {motivo}', register_id))
+                flash(f'Suprimento de R$ {valor:.2f} registrado com sucesso!', 'success')
+                return redirect(url_for('cash_register.cash_register_detail', register_id=register_id))
+            except Exception as e:
+                flash(f'Erro ao registrar suprimento: {str(e)}', 'danger')
+
+    return render_template('cash_register_suprimento.html', register=register)
 
 
 # =====================================================

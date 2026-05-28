@@ -71,7 +71,7 @@ def configuracoes():
                 cnpj,
                 usar_no_pdv
             FROM empresas
-            WHERE ativo = 1 AND usar_no_pdv = 1
+            WHERE ativo = 1
             ORDER BY nome
         """)
         
@@ -159,7 +159,7 @@ def salvar_configuracoes():
         
         if config_exists:
             # Atualizar existente
-            db.execute("""
+            db.execute_query("""
                 UPDATE pdv_settings SET
                     pdv_name = %s,
                     pdv_number = %s,
@@ -259,7 +259,7 @@ def resetar_configuracoes():
     user_id = session.get('user_id')
     
     try:
-        db.execute("""
+        db.execute_query("""
             UPDATE pdv_settings SET
                 allow_negative_stock = FALSE,
                 check_stock_realtime = TRUE,
@@ -308,7 +308,7 @@ def editar_pdv(pdv_id):
                 cnpj,
                 usar_no_pdv
             FROM empresas
-            WHERE ativo = 1 AND usar_no_pdv = 1
+            WHERE ativo = 1
             ORDER BY nome
         """)
         
@@ -328,7 +328,7 @@ def novo_pdv():
     db = get_db()
     
     try:
-        # Buscar empresas para dropdown (apenas empresas habilitadas para PDV)
+        # Buscar empresas para dropdown
         empresas = db.fetch_all("""
             SELECT 
                 id, 
@@ -336,7 +336,7 @@ def novo_pdv():
                 cnpj,
                 usar_no_pdv
             FROM empresas
-            WHERE ativo = 1 AND usar_no_pdv = 1
+            WHERE ativo = 1
             ORDER BY nome
         """)
         
@@ -381,7 +381,7 @@ def criar_pdv():
             data[field] = field in data
         
         # Inserir novo PDV
-        db.execute("""
+        db.execute_query("""
             INSERT INTO pdv_settings (
                 pdv_name, pdv_number, description, company_id,
                 allow_negative_stock, check_stock_realtime, show_stock_quantity,
@@ -395,14 +395,12 @@ def criar_pdv():
                 enable_f6_search, enable_f9_finish, require_supervisor_cancel,
                 log_all_operations, printer_name, paper_width,
                 print_company_logo, print_customer_copy, active,
-                emitir_nfce, imprimir_automatico, formato_impressao, impressora_padrao,
-                created_at, updated_by
+                updated_by
             ) VALUES (
                 %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s,
-                NOW(), %s
+                %s
             )
         """, (
             data.get('pdv_name'), data.get('pdv_number'), data.get('description'),
@@ -418,8 +416,6 @@ def criar_pdv():
             data['enable_f6_search'], data['enable_f9_finish'], data['require_supervisor_cancel'],
             data['log_all_operations'], data.get('printer_name'), data.get('paper_width', 80),
             data['print_company_logo'], data['print_customer_copy'], data['active'],
-            data['emitir_nfce'], data['imprimir_automatico'], 
-            data.get('formato_impressao', '80mm'), data.get('impressora_padrao'),
             user_id
         ))
         
@@ -462,7 +458,7 @@ def atualizar_pdv(pdv_id):
             data[field] = field in data
         
         # Atualizar PDV
-        db.execute("""
+        db.execute_query("""
             UPDATE pdv_settings SET
                 pdv_name = %s,
                 pdv_number = %s,
@@ -501,10 +497,6 @@ def atualizar_pdv(pdv_id):
                 print_company_logo = %s,
                 print_customer_copy = %s,
                 active = %s,
-                emitir_nfce = %s,
-                imprimir_automatico = %s,
-                formato_impressao = %s,
-                impressora_padrao = %s,
                 updated_by = %s,
                 updated_at = NOW()
             WHERE id = %s
@@ -522,8 +514,6 @@ def atualizar_pdv(pdv_id):
             data['enable_f6_search'], data['enable_f9_finish'], data['require_supervisor_cancel'],
             data['log_all_operations'], data.get('printer_name'), data.get('paper_width', 80),
             data['print_company_logo'], data['print_customer_copy'], data['active'],
-            data['emitir_nfce'], data['imprimir_automatico'],
-            data.get('formato_impressao', '80mm'), data.get('impressora_padrao'),
             user_id, pdv_id
         ))
         
@@ -544,7 +534,7 @@ def excluir_pdv(pdv_id):
     db = get_db()
     
     try:
-        db.execute("""
+        db.execute_query("""
             UPDATE pdv_settings 
             SET active = FALSE, updated_at = NOW()
             WHERE id = %s

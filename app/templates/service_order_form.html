@@ -1,193 +1,789 @@
 {% extends "base.html" %}
 
-{% block title %}Nova Ordem de Serviço - Sistema de Gestão de Suprimentos{% endblock %}
+{% block title %}{% if order %}OS {{ order.order_number }}{% else %}Nova OS / Orçamento{% endif %} - IKFlow Mecânica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .os-header { background: linear-gradient(135deg, #0b2447, #08a5b2); color:#fff; border-radius:10px; padding:16px 20px; margin-bottom:20px; }
+    .os-header .badge-status { font-size:0.95rem; padding:6px 14px; border-radius:20px; }
+    .section-card { border:none; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:16px; }
+    .section-card .card-header { background:#f8f9fa; font-weight:600; border-radius:10px 10px 0 0; border-bottom:2px solid #e9ecef; }
+    .section-card .card-header i { color:#08a5b2; }
+    .complexidade-btn { border:2px solid #dee2e6; border-radius:8px; padding:10px 18px; cursor:pointer; transition:.2s; background:#fff; }
+    .complexidade-btn:hover { border-color:#08a5b2; }
+    .complexidade-btn.active { border-color:#08a5b2; background:#e8f8f9; font-weight:600; }
+    .complexidade-btn.active.simples { border-color:#28a745; background:#eaffea; }
+    .complexidade-btn.active.medio { border-color:#ff9f1a; background:#fff8ee; }
+    .complexidade-btn.active.complexo { border-color:#dc3545; background:#fff0f0; }
+    .pecas-table th { background:#f0f9fa; font-size:.85rem; }
+    .total-box { background: linear-gradient(135deg, #0b2447, #08a5b2); color:#fff; border-radius:10px; padding:16px 20px; }
+    .total-box .total-linha { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.15); }
+    .total-box .total-geral { font-size:1.4rem; font-weight:700; padding-top:8px; }
+    .btn-orcamento { border-radius:8px; padding:8px 20px; font-weight:600; }
+    #pecas-tbody tr td input { border:1px solid #dee2e6; border-radius:6px; padding:4px 8px; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
-    <div class="alert alert-info">
-        <strong>Nota:</strong> Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
+
+    <ol class="breadcrumb mb-3">
+        <li class="breadcrumb-item"><a href="{{ url_for('bem_vindo') }}">Início</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('service_order.service_order_list') }}">Ordens de Serviço</a></li>
+        <li class="breadcrumb-item active">{% if order %}{{ order.order_number }}{% else %}Nova OS{% endif %}</li>
+    </ol>
+
+    <!-- Cabeçalho OS -->
+    <div class="os-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h4 class="mb-0"><i class="fas fa-tools me-2"></i>
+                {% if order %}OS {{ order.order_number }}{% else %}Nova Ordem de Serviço / Orçamento{% endif %}
+            </h4>
+            {% if order %}<small class="opacity-75">Aberta em {{ order.open_date.strftime('%d/%m/%Y %H:%M') if order.open_date else '' }}</small>{% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            {% if order %}
+            <a href="{{ url_for('service_order.service_order_list') }}" class="btn btn-light btn-sm"><i class="fas fa-list me-1"></i> Lista de OS</a>
+            <button onclick="window.print()" class="btn btn-warning btn-sm"><i class="fas fa-print me-1"></i> Imprimir</button>
+            {% endif %}
+        </div>
     </div>
 
-    <h1 class="mt-4">Nova Ordem de Serviço</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ url_for('service_order.service_order_list') }}">Ordens de Serviço</a></li>
-        <li class="breadcrumb-item active">Nova OS</li>
-    </ol>
-    
-    <!-- Debug Info -->
-    <div class="alert alert-info">
-        <h5>Debug Info:</h5>
-        <p>Clientes disponíveis: {{ customers|length if customers else 0 }}</p>
-        {% if customers %}
-            <ul>
-                {% for customer in customers %}
-                    <li>ID: {{ customer.id }} - Nome: {{ customer.name }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Nenhum cliente disponível</p>
-        {% endif %}
-    </div>
-    
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-tools me-1"></i>
-            Nova Ordem de Serviço
-        </div>
-        <div class="card-body">
-            <form method="post" action="{{ url_for('service_order.service_order_add') }}">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="customer_id" class="form-label">Cliente <span class="text-danger">*</span></label>
-                        <select class="form-select" id="customer_id" name="customer_id" required>
-                            <option value="">Selecione um cliente</option>
-                            {% for customer in customers %}
-                            <option value="{{ customer.id }}">
-                                {{ customer.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+    <form method="post" action="{{ url_for('service_order.service_order_add') if not order else url_for('service_order.service_order_edit', order_id=order.id) }}" id="os-form">
+
+        <!-- ═══ ETAPA 1: IDENTIFICAÇÃO DO CLIENTE ═══ -->
+        <div class="card section-card" id="card-cliente">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-user me-2"></i>Etapa 1 — Cliente</span>
+                <span id="badge-cliente" class="badge bg-secondary">Não identificado</span>
+            </div>
+            <div class="card-body">
+                <!-- campo oculto com ID real -->
+                <input type="hidden" name="customer_id" id="customer_id" value="{{ order.customer_id if order else '' }}" required>
+
+                <!-- Busca por nome ou CPF/CNPJ -->
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Buscar por nome ou CPF/CNPJ</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="busca-cliente"
+                                   placeholder="Digite o nome ou CPF/CNPJ..."
+                                   autocomplete="off"
+                                   value="{{ order.customer_name if order else '' }}">
+                        </div>
+                        <div id="lista-clientes" class="list-group shadow-sm" style="position:absolute;z-index:1000;min-width:340px;display:none;"></div>
                     </div>
-                    <div class="col-md-6">
-                        <label for="equipment_id" class="form-label">Equipamento <span class="text-danger">*</span></label>
-                        <select class="form-select" id="equipment_id" name="equipment_id" required>
-                            <option value="">Selecione um equipamento</option>
-                            {% for equipment in equipments %}
-                            <option value="{{ equipment.id }}" data-customer="{{ equipment.customer_id }}" class="equipment-option">
-                                {{ equipment.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                    <div class="col-md-3">
+                        <div id="info-cliente" class="text-muted small"></div>
                     </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="supply_id" class="form-label">Componente</label>
-                        <select class="form-select" id="supply_id" name="supply_id">
-                            <option value="">Selecione um componente (opcional)</option>
-                            {% for supply in supplies %}
-                            <option value="{{ supply.id }}">
-                                {{ supply.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">Opcional. Se não selecionado, a OS será para o equipamento como um todo.</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="maintenance_plan_id" class="form-label">Plano de Manutenção</label>
-                        <select class="form-select" id="maintenance_plan_id" name="maintenance_plan_id">
-                            <option value="">Selecione um plano (opcional)</option>
-                            {% for plan in maintenance_plans %}
-                            <option value="{{ plan.id }}" 
-                                    data-customer="{{ plan.customer_id }}" 
-                                    data-equipment="{{ plan.equipment_id }}"
-                                    class="plan-option">
-                                {{ plan.task }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">Opcional. Vincule esta OS a um plano de manutenção existente.</div>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="type" class="form-label">Tipo de Manutenção <span class="text-danger">*</span></label>
-                        <select class="form-select" id="type" name="type" required>
-                            <option value="">Selecione um tipo</option>
-                            <option value="preventive">Preventiva</option>
-                            <option value="corrective">Corretiva</option>
-                            <option value="predictive">Preditiva</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="technician_id" class="form-label">Técnico Responsável</label>
-                        <select class="form-select" id="technician_id" name="technician_id">
-                            <option value="">Selecione um técnico (opcional)</option>
-                            {% for technician in technicians %}
-                            <option value="{{ technician.id }}">
-                                {{ technician.name }} {% if technician.specialty %}({{ technician.specialty }}){% endif %}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">Opcional. Pode ser atribuído posteriormente.</div>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="observations" class="form-label">Observações</label>
-                        <textarea class="form-control" id="observations" name="observations" rows="5"></textarea>
-                        <div class="form-text">Descreva o problema ou as instruções para a manutenção.</div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Salvar
+                    <div class="col-md-4 text-end">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn-novo-cliente"
+                                onclick="abrirModalNovoCliente()">
+                            <i class="fas fa-user-plus me-1"></i> Novo Cliente
                         </button>
-                        <a href="{{ url_for('service_order.service_order_list') }}" class="btn btn-secondary">
-                            <i class="fas fa-times me-1"></i> Cancelar
-                        </a>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
+
+        <!-- ═══ ETAPA 2: VEÍCULO ═══ -->
+        <div class="card section-card" id="card-veiculo" style="opacity:0.5;pointer-events:none;">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-car me-2"></i>Etapa 2 — Veículo</span>
+                <span id="badge-veiculo" class="badge bg-secondary">Aguardando cliente</span>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="equipment_id" id="equipment_id" value="{{ order.equipment_id if order else '' }}" required>
+
+                <div class="row g-3 align-items-end">
+                    <!-- Placa: busca rápida OU select entre veículos do cliente -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Placa</label>
+                        <input type="text" class="form-control text-uppercase fw-bold" id="campo-placa"
+                               placeholder="ABC-1234 ou BRA2E19"
+                               autocomplete="off" maxlength="8"
+                               style="letter-spacing:2px;font-size:1.1rem;">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Veículos cadastrados do cliente</label>
+                        <select class="form-select" id="select-veiculo">
+                            <option value="">— selecione ou informe a placa —</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">KM Entrada</label>
+                        <input type="number" class="form-control" name="km_entrada"
+                               placeholder="Ex: 52000"
+                               value="{{ order.km_entrada if order and order.km_entrada else '' }}">
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btn-novo-veiculo"
+                                onclick="abrirModalNovoVeiculo()">
+                            <i class="fas fa-plus me-1"></i> Novo Veículo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chip de confirmação do veículo -->
+                <div id="info-veiculo" class="mt-2" style="display:none;">
+                    <div class="alert alert-success py-2 mb-0 d-flex align-items-center gap-2">
+                        <i class="fas fa-check-circle"></i>
+                        <span id="txt-veiculo"></span>
+                        <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="limparVeiculo()">
+                            <i class="fas fa-times"></i> Trocar veículo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ DADOS DO ATENDIMENTO ═══ -->
+        <div class="card section-card">
+            <div class="card-header"><i class="fas fa-clipboard-list me-2"></i>Dados do Atendimento</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Tipo <span class="text-danger">*</span></label>
+                        <select class="form-select" name="type" required>
+                            <option value="corrective" {% if not order or order.type == 'corrective' %}selected{% endif %}>Corretiva</option>
+                            <option value="preventive" {% if order and order.type == 'preventive' %}selected{% endif %}>Preventiva</option>
+                            <option value="predictive" {% if order and order.type == 'predictive' %}selected{% endif %}>Preditiva</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Técnico Responsável</label>
+                        <select class="form-select" name="technician_id">
+                            <option value="">A definir...</option>
+                            {% for technician in technicians %}
+                            <option value="{{ technician.id }}" {% if order and order.technician_id == technician.id %}selected{% endif %}>
+                                {{ technician.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Status Orçamento</label>
+                        <select class="form-select" name="status_orcamento">
+                            <option value="rascunho" {% if not order or order.get('status_orcamento','rascunho') == 'rascunho' %}selected{% endif %}>Rascunho</option>
+                            <option value="enviado" {% if order and order.get('status_orcamento') == 'enviado' %}selected{% endif %}>Enviado ao Cliente</option>
+                            <option value="aprovado" {% if order and order.get('status_orcamento') == 'aprovado' %}selected{% endif %}>Aprovado</option>
+                            <option value="reprovado" {% if order and order.get('status_orcamento') == 'reprovado' %}selected{% endif %}>Reprovado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Relato do Cliente</label>
+                        <textarea class="form-control" name="observations" rows="1"
+                                  placeholder="O que o cliente relatou...">{{ order.observations if order else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ MODAL — NOVO CLIENTE RÁPIDO ═══ -->
+        <div class="modal fade" id="modalNovoCliente" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Novo Cliente</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nome <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nc-nome" placeholder="Nome completo ou razão social">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label">CPF / CNPJ</label>
+                                <input type="text" class="form-control" id="nc-cpf" placeholder="000.000.000-00">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Telefone / WhatsApp</label>
+                                <input type="text" class="form-control" id="nc-fone" placeholder="(67) 99999-9999">
+                            </div>
+                        </div>
+                        <div id="nc-aviso" class="mt-2" style="display:none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="salvarNovoCliente()">
+                            <i class="fas fa-save me-1"></i> Salvar e Usar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ MODAL — NOVO VEÍCULO RÁPIDO ═══ -->
+        <div class="modal fade" id="modalNovoVeiculo" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-car me-2"></i>Novo Veículo</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Placa <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control text-uppercase" id="nv-placa" maxlength="8" placeholder="ABC-1234">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Fabricante</label>
+                                <input type="text" class="form-control" id="nv-fab" placeholder="Ex: Honda">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Modelo</label>
+                                <input type="text" class="form-control" id="nv-modelo" placeholder="Ex: Civic">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Ano</label>
+                                <input type="number" class="form-control" id="nv-ano" placeholder="2020" min="1950" max="2030">
+                            </div>
+                            <div class="col-md-9">
+                                <label class="form-label">Cor</label>
+                                <input type="text" class="form-control" id="nv-cor" placeholder="Ex: Prata">
+                            </div>
+                        </div>
+                        <div id="nv-aviso" class="mt-2" style="display:none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="salvarNovoVeiculo()">
+                            <i class="fas fa-save me-1"></i> Salvar e Usar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAGNÓSTICO DO MECÂNICO -->
+        <div class="card section-card">
+            <div class="card-header"><i class="fas fa-search-plus me-2"></i>Diagnóstico do Mecânico</div>
+            <div class="card-body">
+                <textarea class="form-control" name="diagnostico" rows="3"
+                          placeholder="Mecânico: descreva aqui o diagnóstico técnico, o que foi encontrado no veículo e os serviços necessários...">{{ order.diagnostico if order and order.get('diagnostico') else '' }}</textarea>
+            </div>
+        </div>
+
+        <!-- MÃO DE OBRA / COMPLEXIDADE -->
+        <div class="card section-card">
+            <div class="card-header"><i class="fas fa-hard-hat me-2"></i>Mão de Obra &amp; Complexidade</div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Nível de Complexidade</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="complexidade-btn simples {% if not order or order.get('complexidade','medio') == 'simples' %}active{% endif %}"
+                                    onclick="setComplexidade('simples')">
+                                <i class="fas fa-circle text-success"></i> Simples
+                            </button>
+                            <button type="button" class="complexidade-btn medio {% if not order and true or (order and order.get('complexidade','medio') == 'medio') %}active{% endif %}"
+                                    onclick="setComplexidade('medio')">
+                                <i class="fas fa-circle text-warning"></i> Médio
+                            </button>
+                            <button type="button" class="complexidade-btn complexo {% if order and order.get('complexidade') == 'complexo' %}active{% endif %}"
+                                    onclick="setComplexidade('complexo')">
+                                <i class="fas fa-circle text-danger"></i> Complexo
+                            </button>
+                        </div>
+                        <input type="hidden" name="complexidade" id="complexidade_input"
+                               value="{{ order.complexidade if order and order.get('complexidade') else 'medio' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Horas Estimadas</label>
+                        <input type="number" step="0.5" min="0" class="form-control" name="horas_estimadas" id="horas_estimadas"
+                               placeholder="Ex: 2.5" value="{{ order.horas_estimadas if order and order.get('horas_estimadas') else '' }}"
+                               oninput="calcularTotais()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">R$/Hora</label>
+                        <input type="number" step="0.01" min="0" class="form-control" name="valor_hora" id="valor_hora"
+                               placeholder="Ex: 120.00" value="{{ order.valor_hora if order and order.get('valor_hora') else '120.00' }}"
+                               oninput="calcularTotais()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Subtotal Mão de Obra</label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control fw-bold text-success" id="subtotal_mo" readonly
+                                   value="{{ '%.2f'|format(order.total_mao_obra) if order and order.get('total_mao_obra') else '0.00' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PEÇAS E MATERIAIS -->
+        <div class="card section-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-cogs me-2"></i>Peças e Materiais</span>
+                <button type="button" class="btn btn-sm btn-primary" onclick="adicionarPeca()">
+                    <i class="fas fa-plus me-1"></i> Adicionar Peça
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="pecas-table">
+                        <thead class="pecas-table">
+                            <tr>
+                                <th style="width:40%">Descrição da Peça / Material</th>
+                                <th style="width:15%">Qtd</th>
+                                <th style="width:18%">Valor Unitário</th>
+                                <th style="width:18%">Total</th>
+                                <th style="width:9%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="pecas-tbody">
+                            <tr id="row-empty">
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    <i class="fas fa-plus-circle me-1"></i> Clique em "Adicionar Peça" para inserir peças ou materiais
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Campo oculto para serializar itens -->
+                <input type="hidden" name="pecas_json" id="pecas_json" value="[]">
+            </div>
+        </div>
+
+        <!-- TOTAIS + AÇÕES -->
+        <div class="row g-3">
+            <div class="col-md-5">
+                <div class="total-box">
+                    <div class="total-linha">
+                        <span>Mão de Obra:</span>
+                        <span id="total-mo-display">R$ 0,00</span>
+                    </div>
+                    <div class="total-linha">
+                        <span>Peças e Materiais:</span>
+                        <span id="total-pecas-display">R$ 0,00</span>
+                    </div>
+                    <div class="total-linha">
+                        <span>Desconto:</span>
+                        <span>
+                            <input type="number" step="0.01" min="0" name="desconto" id="desconto"
+                                   class="form-control form-control-sm d-inline-block text-end"
+                                   style="width:100px;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)"
+                                   value="{{ '%.2f'|format(order.desconto) if order and order.get('desconto') else '0.00' }}"
+                                   oninput="calcularTotais()">
+                        </span>
+                    </div>
+                    <div class="total-linha total-geral">
+                        <span>TOTAL GERAL:</span>
+                        <span id="total-geral-display">R$ 0,00</span>
+                    </div>
+                    <input type="hidden" name="total_mao_obra" id="total_mao_obra_hidden" value="0">
+                    <input type="hidden" name="total_pecas" id="total_pecas_hidden" value="0">
+                    <input type="hidden" name="total_geral" id="total_geral_hidden" value="0">
+                </div>
+            </div>
+            <div class="col-md-7 d-flex flex-column justify-content-end gap-2">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" name="acao" value="salvar" class="btn btn-primary btn-orcamento flex-fill">
+                        <i class="fas fa-save me-1"></i> Salvar Rascunho
+                    </button>
+                    <button type="submit" name="acao" value="enviar" class="btn btn-success btn-orcamento flex-fill">
+                        <i class="fas fa-share me-1"></i> Salvar e Enviar ao Cliente
+                    </button>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if order and order.get('status_orcamento') == 'enviado' %}
+                    <button type="submit" name="acao" value="aprovar" class="btn btn-warning btn-orcamento flex-fill">
+                        <i class="fas fa-check me-1"></i> Marcar como Aprovado
+                    </button>
+                    {% endif %}
+                    <a href="{{ url_for('service_order.service_order_list') }}" class="btn btn-secondary btn-orcamento flex-fill">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    $(document).ready(function() {
-        // Filtrar equipamentos por cliente
-        $('#customer_id').change(function() {
-            var customerId = $(this).val();
-            
-            // Esconder todos os equipamentos
-            $('.equipment-option').hide();
-            
-            // Mostrar apenas os equipamentos do cliente selecionado
-            $('.equipment-option[data-customer="' + customerId + '"]').show();
-            
-            // Limpar a seleção atual
-            $('#equipment_id').val('');
-            
-            // Filtrar planos de manutenção
-            $('.plan-option').hide();
-            $('.plan-option[data-customer="' + customerId + '"]').show();
-            $('#maintenance_plan_id').val('');
+let pecas = [];
+let rowCounter = 0;
+
+function setComplexidade(nivel) {
+    document.getElementById('complexidade_input').value = nivel;
+    document.querySelectorAll('.complexidade-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.complexidade-btn.' + nivel).classList.add('active');
+
+    // Faixas de valor/hora por complexidade
+    const faixas = { simples: 80, medio: 120, complexo: 180 };
+    document.getElementById('valor_hora').value = faixas[nivel].toFixed(2);
+    calcularTotais();
+}
+
+function adicionarPeca() {
+    const tbody = document.getElementById('pecas-tbody');
+    const rowEmpty = document.getElementById('row-empty');
+    if (rowEmpty) rowEmpty.remove();
+
+    rowCounter++;
+    const id = rowCounter;
+    const tr = document.createElement('tr');
+    tr.id = 'peca-row-' + id;
+    tr.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm" placeholder="Ex: Filtro de óleo, Correia dentada..." onchange="atualizarPeca(${id})"></td>
+        <td><input type="number" step="0.01" min="0.01" value="1" class="form-control form-control-sm text-center" style="max-width:80px" onchange="atualizarPeca(${id})" oninput="atualizarPeca(${id})"></td>
+        <td><input type="number" step="0.01" min="0" value="0" class="form-control form-control-sm text-end" onchange="atualizarPeca(${id})" oninput="atualizarPeca(${id})"></td>
+        <td><input type="text" class="form-control form-control-sm text-end fw-bold" readonly value="R$ 0,00"></td>
+        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removerPeca(${id})"><i class="fas fa-times"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    pecas.push({ id: id, descricao: '', quantidade: 1, valor_unitario: 0, valor_total: 0 });
+    tr.querySelector('input[type=text]').focus();
+}
+
+function atualizarPeca(id) {
+    const row = document.getElementById('peca-row-' + id);
+    const inputs = row.querySelectorAll('input');
+    const descricao = inputs[0].value;
+    const quantidade = parseFloat(inputs[1].value) || 0;
+    const valor_unitario = parseFloat(inputs[2].value) || 0;
+    const valor_total = quantidade * valor_unitario;
+    inputs[3].value = 'R$ ' + valor_total.toFixed(2).replace('.', ',');
+
+    const idx = pecas.findIndex(p => p.id === id);
+    if (idx >= 0) {
+        pecas[idx] = { id, descricao, quantidade, valor_unitario, valor_total };
+    }
+    calcularTotais();
+}
+
+function removerPeca(id) {
+    const row = document.getElementById('peca-row-' + id);
+    if (row) row.remove();
+    pecas = pecas.filter(p => p.id !== id);
+    if (pecas.length === 0) {
+        const tbody = document.getElementById('pecas-tbody');
+        tbody.innerHTML = '<tr id="row-empty"><td colspan="5" class="text-center text-muted py-3"><i class="fas fa-plus-circle me-1"></i> Clique em "Adicionar Peça" para inserir peças ou materiais</td></tr>';
+    }
+    calcularTotais();
+}
+
+function calcularTotais() {
+    const horas = parseFloat(document.getElementById('horas_estimadas').value) || 0;
+    const valorHora = parseFloat(document.getElementById('valor_hora').value) || 0;
+    const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+
+    const totalMO = horas * valorHora;
+    const totalPecas = pecas.reduce((s, p) => s + (p.valor_total || 0), 0);
+    const totalGeral = Math.max(0, totalMO + totalPecas - desconto);
+
+    const fmt = v => 'R$ ' + v.toFixed(2).replace('.', ',');
+    document.getElementById('subtotal_mo').value = totalMO.toFixed(2).replace('.', ',');
+    document.getElementById('total-mo-display').textContent = fmt(totalMO);
+    document.getElementById('total-pecas-display').textContent = fmt(totalPecas);
+    document.getElementById('total-geral-display').textContent = fmt(totalGeral);
+
+    document.getElementById('total_mao_obra_hidden').value = totalMO.toFixed(2);
+    document.getElementById('total_pecas_hidden').value = totalPecas.toFixed(2);
+    document.getElementById('total_geral_hidden').value = totalGeral.toFixed(2);
+    document.getElementById('pecas_json').value = JSON.stringify(pecas);
+}
+
+// ══════════════════════════════════════════════════════════
+// ETAPA 1 — CLIENTE INTELIGENTE
+// ══════════════════════════════════════════════════════════
+let clienteTimer = null;
+const inputBusca = document.getElementById('busca-cliente');
+const listaClientes = document.getElementById('lista-clientes');
+const hiddenCustomerId = document.getElementById('customer_id');
+const badgeCliente = document.getElementById('badge-cliente');
+const infoCliente = document.getElementById('info-cliente');
+
+inputBusca.addEventListener('input', function() {
+    clearTimeout(clienteTimer);
+    const q = this.value.trim();
+    if (q.length < 2) { listaClientes.style.display = 'none'; return; }
+    clienteTimer = setTimeout(() => buscarClientes(q), 300);
+});
+
+inputBusca.addEventListener('blur', () => setTimeout(() => listaClientes.style.display = 'none', 200));
+inputBusca.addEventListener('focus', function() {
+    if (this.value.trim().length >= 2) buscarClientes(this.value.trim());
+});
+
+function buscarClientes(q) {
+    fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(data => {
+            listaClientes.innerHTML = '';
+            if (!data.length) {
+                listaClientes.innerHTML = `<div class="list-group-item text-muted small">
+                    Nenhum cliente encontrado.
+                    <a href="#" class="text-primary ms-2" onclick="event.preventDefault();abrirModalNovoCliente('${q.replace(/'/g,"\\'")}')">
+                        <i class="fas fa-user-plus me-1"></i>Cadastrar "${q}"
+                    </a>
+                </div>`;
+            } else {
+                data.forEach(c => {
+                    const el = document.createElement('a');
+                    el.className = 'list-group-item list-group-item-action py-2';
+                    el.href = '#';
+                    el.innerHTML = `<strong>${c.name}</strong>
+                        <small class="text-muted ms-2">${c.cnpj || ''}</small>
+                        ${c.phone ? `<small class="text-muted ms-2"><i class="fas fa-phone"></i> ${c.phone}</small>` : ''}`;
+                    el.addEventListener('mousedown', (e) => { e.preventDefault(); selecionarCliente(c); });
+                    listaClientes.appendChild(el);
+                });
+            }
+            listaClientes.style.display = 'block';
         });
-        
-        // Filtrar planos de manutenção por equipamento
-        $('#equipment_id').change(function() {
-            var equipmentId = $(this).val();
-            
-            // Esconder todos os planos
-            $('.plan-option').hide();
-            
-            // Mostrar apenas os planos do equipamento selecionado
-            $('.plan-option[data-equipment="' + equipmentId + '"]').show();
-            
-            // Limpar a seleção atual
-            $('#maintenance_plan_id').val('');
-        });
-        
-        // Preencher campos com base no plano de manutenção selecionado
-        $('#maintenance_plan_id').change(function() {
-            var planOption = $(this).find('option:selected');
-            if (planOption.val()) {
-                var customerId = planOption.data('customer');
-                var equipmentId = planOption.data('equipment');
-                
-                $('#customer_id').val(customerId);
-                $('#equipment_id').val(equipmentId);
-                $('#type').val('preventive'); // Planos geralmente são preventivos
+}
+
+function selecionarCliente(c) {
+    hiddenCustomerId.value = c.id;
+    inputBusca.value = c.name;
+    listaClientes.style.display = 'none';
+    badgeCliente.textContent = c.name;
+    badgeCliente.className = 'badge bg-success';
+    infoCliente.innerHTML = `<i class="fas fa-check-circle text-success me-1"></i>
+        <strong>${c.name}</strong>${c.cnpj ? ' · CPF/CNPJ: '+c.cnpj : ''}${c.phone ? ' · '+c.phone : ''}
+        <a href="#" class="ms-2 text-danger small" onclick="event.preventDefault();limparCliente()">Trocar</a>`;
+    // Habilitar Etapa 2
+    habilitarEtapaVeiculo(c.id);
+}
+
+function limparCliente() {
+    hiddenCustomerId.value = '';
+    inputBusca.value = '';
+    badgeCliente.textContent = 'Não identificado';
+    badgeCliente.className = 'badge bg-secondary';
+    infoCliente.innerHTML = '';
+    // Bloquear Etapa 2
+    document.getElementById('card-veiculo').style.opacity = '0.5';
+    document.getElementById('card-veiculo').style.pointerEvents = 'none';
+    document.getElementById('badge-veiculo').textContent = 'Aguardando cliente';
+    document.getElementById('badge-veiculo').className = 'badge bg-secondary';
+    document.getElementById('equipment_id').value = '';
+    document.getElementById('info-veiculo').style.display = 'none';
+    document.getElementById('select-veiculo').innerHTML = '<option value="">— selecione ou informe a placa —</option>';
+}
+
+// ══════════════════════════════════════════════════════════
+// ETAPA 2 — VEÍCULO INTELIGENTE
+// ══════════════════════════════════════════════════════════
+function habilitarEtapaVeiculo(customerId) {
+    const cardV = document.getElementById('card-veiculo');
+    cardV.style.opacity = '1';
+    cardV.style.pointerEvents = 'auto';
+    document.getElementById('badge-veiculo').textContent = 'Selecione o veículo';
+    document.getElementById('badge-veiculo').className = 'badge bg-warning text-dark';
+    // Carregar veículos do cliente
+    fetch(`/api/veiculos/por-cliente/${customerId}`)
+        .then(r => r.json())
+        .then(data => {
+            const sel = document.getElementById('select-veiculo');
+            sel.innerHTML = '<option value="">— selecione ou informe a placa —</option>';
+            data.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = `${v.placa} — ${v.name}`;
+                opt.dataset.placa = v.placa;
+                opt.dataset.model = v.model || '';
+                opt.dataset.fab = v.manufacturer || '';
+                sel.appendChild(opt);
+            });
+            if (data.length === 1) {
+                sel.value = data[0].id;
+                sel.dispatchEvent(new Event('change'));
             }
         });
+}
+
+document.getElementById('select-veiculo').addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    if (!opt.value) return;
+    confirmarVeiculo(opt.value, opt.textContent, opt.dataset.placa || '');
+});
+
+// Busca por placa (digitação direta)
+let placaTimer = null;
+document.getElementById('campo-placa').addEventListener('input', function() {
+    const placa = this.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+    this.value = placa;
+    clearTimeout(placaTimer);
+    if (placa.length >= 7) {
+        placaTimer = setTimeout(() => buscarPorPlaca(placa), 500);
+    }
+});
+
+function buscarPorPlaca(placa) {
+    fetch(`/api/veiculos/buscar-placa?placa=${encodeURIComponent(placa)}`)
+        .then(r => r.json())
+        .then(veiculo => {
+            if (veiculo) {
+                // Veículo encontrado — verificar se cliente já está selecionado
+                if (!hiddenCustomerId.value && veiculo.customer_id) {
+                    // Preencher cliente automaticamente!
+                    selecionarCliente({
+                        id: veiculo.customer_id,
+                        name: veiculo.customer_name || 'Cliente',
+                        cnpj: veiculo.cnpj || '',
+                        phone: veiculo.phone || ''
+                    });
+                }
+                confirmarVeiculo(veiculo.id, `${veiculo.placa} — ${veiculo.name}`, veiculo.placa);
+            } else {
+                // Placa não existe — sugerir cadastro
+                if (hiddenCustomerId.value) {
+                    const el = document.getElementById('nv-placa');
+                    if (el) el.value = placa;
+                    setTimeout(() => abrirModalNovoVeiculo(placa), 200);
+                }
+            }
+        });
+}
+
+function confirmarVeiculo(id, texto, placa) {
+    document.getElementById('equipment_id').value = id;
+    document.getElementById('info-veiculo').style.display = 'block';
+    document.getElementById('txt-veiculo').textContent = texto;
+    document.getElementById('badge-veiculo').textContent = placa || texto;
+    document.getElementById('badge-veiculo').className = 'badge bg-success';
+}
+
+function limparVeiculo() {
+    document.getElementById('equipment_id').value = '';
+    document.getElementById('info-veiculo').style.display = 'none';
+    document.getElementById('campo-placa').value = '';
+    document.getElementById('select-veiculo').value = '';
+    document.getElementById('badge-veiculo').textContent = 'Selecione o veículo';
+    document.getElementById('badge-veiculo').className = 'badge bg-warning text-dark';
+}
+
+// ══════════════════════════════════════════════════════════
+// MODAL — NOVO CLIENTE
+// ══════════════════════════════════════════════════════════
+function abrirModalNovoCliente(nomeInicial = '') {
+    document.getElementById('nc-nome').value = nomeInicial;
+    document.getElementById('nc-cpf').value = '';
+    document.getElementById('nc-fone').value = '';
+    document.getElementById('nc-aviso').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('modalNovoCliente')).show();
+}
+
+function salvarNovoCliente() {
+    const nome = document.getElementById('nc-nome').value.trim();
+    const cpf  = document.getElementById('nc-cpf').value.trim();
+    const fone = document.getElementById('nc-fone').value.trim();
+    const aviso = document.getElementById('nc-aviso');
+    if (!nome) { aviso.innerHTML = '<div class="alert alert-danger py-1">Nome é obrigatório.</div>'; aviso.style.display='block'; return; }
+    aviso.innerHTML = '<div class="text-muted small"><i class="fas fa-spinner fa-spin me-1"></i>Salvando...</div>';
+    aviso.style.display = 'block';
+    fetch('/api/clientes/cadastrar-rapido', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name: nome, cnpj: cpf, phone: fone})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('modalNovoCliente')).hide();
+            const msg = data.ja_existia ? `Cliente "${data.name}" já estava cadastrado — selecionado.`
+                                        : `Cliente "${data.name}" cadastrado com sucesso!`;
+            selecionarCliente({id: data.id, name: data.name, cnpj: cpf, phone: fone});
+            mostrarToast(msg, data.ja_existia ? 'warning' : 'success');
+        } else {
+            aviso.innerHTML = `<div class="alert alert-danger py-1">${data.erro}</div>`;
+        }
     });
+}
+
+// ══════════════════════════════════════════════════════════
+// MODAL — NOVO VEÍCULO
+// ══════════════════════════════════════════════════════════
+function abrirModalNovoVeiculo(placa = '') {
+    document.getElementById('nv-placa').value = placa || document.getElementById('campo-placa').value;
+    document.getElementById('nv-fab').value = '';
+    document.getElementById('nv-modelo').value = '';
+    document.getElementById('nv-ano').value = '';
+    document.getElementById('nv-cor').value = '';
+    document.getElementById('nv-aviso').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('modalNovoVeiculo')).show();
+}
+
+function salvarNovoVeiculo() {
+    const placa   = document.getElementById('nv-placa').value.trim().toUpperCase();
+    const fab     = document.getElementById('nv-fab').value.trim();
+    const modelo  = document.getElementById('nv-modelo').value.trim();
+    const ano     = document.getElementById('nv-ano').value.trim();
+    const cid     = hiddenCustomerId.value;
+    const aviso   = document.getElementById('nv-aviso');
+    if (!placa) { aviso.innerHTML = '<div class="alert alert-danger py-1">Placa é obrigatória.</div>'; aviso.style.display='block'; return; }
+    if (!cid)   { aviso.innerHTML = '<div class="alert alert-danger py-1">Selecione o cliente antes.</div>'; aviso.style.display='block'; return; }
+    aviso.innerHTML = '<div class="text-muted small"><i class="fas fa-spinner fa-spin me-1"></i>Salvando...</div>';
+    aviso.style.display = 'block';
+    fetch('/api/veiculos/cadastrar-rapido', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({placa, fabricante: fab, modelo, ano, customer_id: parseInt(cid)})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('modalNovoVeiculo')).hide();
+            const msg = data.ja_existia ? `Veículo ${data.placa} já cadastrado — selecionado.`
+                                        : `Veículo ${data.placa} cadastrado com sucesso!`;
+            confirmarVeiculo(data.id, `${data.placa} — ${data.name}`, data.placa);
+            mostrarToast(msg, data.ja_existia ? 'warning' : 'success');
+        } else {
+            aviso.innerHTML = `<div class="alert alert-danger py-1">${data.erro}</div>`;
+        }
+    });
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST FLUTUANTE
+// ══════════════════════════════════════════════════════════
+function mostrarToast(msg, tipo = 'success') {
+    const container = document.getElementById('toast-container') || (() => {
+        const d = document.createElement('div');
+        d.id = 'toast-container';
+        d.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;';
+        document.body.appendChild(d);
+        return d;
+    })();
+    const t = document.createElement('div');
+    t.className = `toast align-items-center text-white bg-${tipo} border-0 show mb-2`;
+    t.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button></div>`;
+    container.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
+
+// ══════════════════════════════════════════════════════════
+// INICIALIZAÇÃO — restaurar estado se editando OS existente
+// ══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+    const cidVal = hiddenCustomerId.value;
+    const eidVal = document.getElementById('equipment_id').value;
+    if (cidVal) {
+        // Restaurar cliente em modo edição
+        const nome = inputBusca.value || 'Cliente selecionado';
+        badgeCliente.textContent = nome;
+        badgeCliente.className = 'badge bg-success';
+        infoCliente.innerHTML = `<i class="fas fa-check-circle text-success me-1"></i> <strong>${nome}</strong>
+            <a href="#" class="ms-2 text-danger small" onclick="event.preventDefault();limparCliente()">Trocar</a>`;
+        habilitarEtapaVeiculo(cidVal);
+        if (eidVal) {
+            setTimeout(() => {
+                const sel = document.getElementById('select-veiculo');
+                if (sel) { sel.value = eidVal; }
+                document.getElementById('badge-veiculo').textContent = 'Selecionado';
+                document.getElementById('badge-veiculo').className = 'badge bg-success';
+            }, 600);
+        }
+    }
+    calcularTotais();
+});
 </script>
 {% endblock %}

@@ -34,10 +34,9 @@ def accounts_payable_list():
     
     # Construir a consulta base
     query = """
-        SELECT ap.*, s.name as supplier_name, ba.name as bank_account_name
+        SELECT ap.*, s.name as supplier_name
         FROM accounts_payable ap
-        JOIN suppliers s ON ap.supplier_id = s.id
-        JOIN bank_accounts ba ON ap.bank_account_id = ba.id
+        LEFT JOIN suppliers s ON ap.supplier_id = s.id
         WHERE ap.active = TRUE
     """
     params = []
@@ -73,12 +72,14 @@ def accounts_payable_list():
         ORDER BY name
     """)
     
-    # Buscar contas bancárias para o formulário
-    bank_accounts = db.fetch_all("""
-        SELECT id, name FROM bank_accounts
-        WHERE active = TRUE AND status = 'active'
-        ORDER BY name
-    """)
+    try:
+        bank_accounts = db.fetch_all("""
+            SELECT id, name FROM bank_accounts
+            WHERE active = TRUE AND status = 'active'
+            ORDER BY name
+        """)
+    except Exception:
+        bank_accounts = []
     
     return render_template(
         'accounts_payable_list.html',
@@ -137,9 +138,6 @@ def accounts_payable_create():
         if not payment_method:
             errors.append('Forma de pagamento é obrigatória.')
         
-        if not bank_account_id:
-            errors.append('Conta bancária é obrigatória.')
-        
         # Se houver erros, exibir mensagens e retornar ao formulário
         if errors:
             for error in errors:
@@ -152,12 +150,14 @@ def accounts_payable_create():
                 ORDER BY name
             """)
             
-            # Buscar contas bancárias para o formulário
-            bank_accounts = db.fetch_all("""
-                SELECT id, name FROM bank_accounts
-                WHERE active = TRUE AND status = 'active'
-                ORDER BY name
-            """)
+            try:
+                bank_accounts = db.fetch_all("""
+                    SELECT id, name FROM bank_accounts
+                    WHERE active = TRUE AND status = 'active'
+                    ORDER BY name
+                """)
+            except Exception:
+                bank_accounts = []
             
             # Buscar contas contábeis
             chart_accounts = db.fetch_all("""
@@ -179,15 +179,13 @@ def accounts_payable_create():
         # Inserir conta a pagar no banco de dados
         payable_id = db.insert("""
             INSERT INTO accounts_payable (
-                supplier_id, invoice_number, description, total_amount, 
-                installments, issue_date, due_date, payment_method, 
-                bank_account_id, status, notes, origin
+                supplier_id, document_number, description, amount,
+                issue_date, due_date, status, notes
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (
-            supplier_id, invoice_number, description, total_amount, 
-            installments, issue_date, due_date, payment_method, 
-            bank_account_id, 'pending', notes, 'manual'
+            supplier_id, invoice_number, description, total_amount,
+            issue_date, due_date, 'pending', notes
         ))
         
         if payable_id:
@@ -219,20 +217,24 @@ def accounts_payable_create():
         ORDER BY name
     """)
     
-    # Buscar contas bancárias para o formulário
-    bank_accounts = db.fetch_all("""
-        SELECT id, name FROM bank_accounts
-        WHERE active = TRUE AND status = 'active'
-        ORDER BY name
-    """)
+    try:
+        bank_accounts = db.fetch_all("""
+            SELECT id, name FROM bank_accounts
+            WHERE active = TRUE AND status = 'active'
+            ORDER BY name
+        """)
+    except Exception:
+        bank_accounts = []
     
-    # Buscar contas contábeis
-    chart_accounts = db.fetch_all("""
-        SELECT id, code, name FROM chart_of_accounts
-        WHERE is_analytical = TRUE AND active = TRUE
-        AND type IN ('expense', 'liability')
-        ORDER BY code
-    """)
+    try:
+        chart_accounts = db.fetch_all("""
+            SELECT id, code, name FROM chart_of_accounts
+            WHERE is_analytical = TRUE AND active = TRUE
+            AND type IN ('expense', 'liability')
+            ORDER BY code
+        """)
+    except Exception:
+        chart_accounts = []
     
     return render_template(
         'accounts_payable_form.html',
@@ -304,9 +306,6 @@ def accounts_payable_edit(payable_id):
         if not payment_method:
             errors.append('Forma de pagamento é obrigatória.')
         
-        if not bank_account_id:
-            errors.append('Conta bancária é obrigatória.')
-        
         # Se houver erros, exibir mensagens e retornar ao formulário
         if errors:
             for error in errors:
@@ -316,14 +315,12 @@ def accounts_payable_edit(payable_id):
         # Atualizar conta a pagar no banco de dados
         affected_rows = db.update("""
             UPDATE accounts_payable
-            SET supplier_id = %s, invoice_number = %s, description = %s, 
-                issue_date = %s, due_date = %s, payment_method = %s, 
-                bank_account_id = %s, chart_account_id = %s, notes = %s
+            SET supplier_id = %s, document_number = %s, description = %s,
+                issue_date = %s, due_date = %s, notes = %s
             WHERE id = %s
         """, (
-            supplier_id, invoice_number, description, 
-            issue_date, due_date, payment_method, 
-            bank_account_id, chart_account_id if chart_account_id else None, notes, payable_id
+            supplier_id, invoice_number, description,
+            issue_date, due_date, notes, payable_id
         ))
         
         # Atualizar parcelas se houver apenas uma
@@ -352,20 +349,24 @@ def accounts_payable_edit(payable_id):
         ORDER BY name
     """)
     
-    # Buscar contas bancárias para o formulário
-    bank_accounts = db.fetch_all("""
-        SELECT id, name FROM bank_accounts
-        WHERE active = TRUE AND status = 'active'
-        ORDER BY name
-    """)
+    try:
+        bank_accounts = db.fetch_all("""
+            SELECT id, name FROM bank_accounts
+            WHERE active = TRUE AND status = 'active'
+            ORDER BY name
+        """)
+    except Exception:
+        bank_accounts = []
     
-    # Buscar contas contábeis
-    chart_accounts = db.fetch_all("""
-        SELECT id, code, name FROM chart_of_accounts
-        WHERE is_analytical = TRUE AND active = TRUE
-        AND type IN ('expense', 'liability')
-        ORDER BY code
-    """)
+    try:
+        chart_accounts = db.fetch_all("""
+            SELECT id, code, name FROM chart_of_accounts
+            WHERE is_analytical = TRUE AND active = TRUE
+            AND type IN ('expense', 'liability')
+            ORDER BY code
+        """)
+    except Exception:
+        chart_accounts = []
     
     return render_template(
         'accounts_payable_form.html',
@@ -384,10 +385,9 @@ def accounts_payable_view(payable_id):
     
     # Buscar a conta a pagar
     payable = db.fetch_one("""
-        SELECT ap.*, s.name as supplier_name, ba.name as bank_account_name
+        SELECT ap.*, s.name as supplier_name
         FROM accounts_payable ap
-        JOIN suppliers s ON ap.supplier_id = s.id
-        JOIN bank_accounts ba ON ap.bank_account_id = ba.id
+        LEFT JOIN suppliers s ON ap.supplier_id = s.id
         WHERE ap.id = %s AND ap.active = TRUE
     """, (payable_id,))
     
@@ -459,7 +459,7 @@ def accounts_payable_pay_installment(installment_id):
     
     # Buscar a parcela
     installment = db.fetch_one("""
-        SELECT pi.*, ap.supplier_id, ap.description, ap.bank_account_id, ap.installments
+        SELECT pi.*, ap.supplier_id, ap.description, ap.installments
         FROM payable_installments pi
         JOIN accounts_payable ap ON pi.payable_id = ap.id
         WHERE pi.id = %s
@@ -531,10 +531,13 @@ def accounts_payable_pay_installment(installment_id):
         if installment['installments'] > 1:
             description += f" - Parcela {installment['installment_number']}/{installment['installments']}"
         
-        db.insert("""
-            INSERT INTO cash_flow (date, type, description, amount, bank_account_id, reference_id, reference_type)
-            VALUES (%s, 'expense', %s, %s, %s, %s, 'payable')
-        """, (payment_date, description, payment_amount, installment['bank_account_id'], installment['payable_id']))
+        try:
+            db.insert("""
+                INSERT INTO cash_flow (date, type, description, amount, reference_id, reference_type)
+                VALUES (%s, 'expense', %s, %s, %s, 'payable')
+            """, (payment_date, description, payment_amount, installment['payable_id']))
+        except Exception:
+            pass
         
         flash('Pagamento registrado com sucesso!', 'success')
         
@@ -565,7 +568,7 @@ def accounts_payable_reverse_installment(installment_id):
     
     # Buscar a parcela
     installment = db.fetch_one("""
-        SELECT pi.*, ap.supplier_id, ap.description, ap.bank_account_id, ap.installments
+        SELECT pi.*, ap.supplier_id, ap.description, ap.installments
         FROM payable_installments pi
         JOIN accounts_payable ap ON pi.payable_id = ap.id
         WHERE pi.id = %s
@@ -603,10 +606,13 @@ def accounts_payable_reverse_installment(installment_id):
         if reversal_reason:
             description += f" ({reversal_reason})"
         
-        db.insert("""
-            INSERT INTO cash_flow (date, type, description, amount, bank_account_id, reference_id, reference_type)
-            VALUES (%s, 'income', %s, %s, %s, %s, 'payable')
-        """, (reversal_date, description, installment['amount'], installment['bank_account_id'], installment['payable_id']))
+        try:
+            db.insert("""
+                INSERT INTO cash_flow (date, type, description, amount, reference_id, reference_type)
+                VALUES (%s, 'income', %s, %s, %s, 'payable')
+            """, (reversal_date, description, installment['amount'], installment['payable_id']))
+        except Exception:
+            pass
         
         flash('Pagamento estornado com sucesso!', 'success')
         

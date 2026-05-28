@@ -49,7 +49,9 @@ def lista():
     usuarios = db.fetch_all("""
         SELECT 
             u.id, u.name, u.username, u.email, u.role, u.status,
-            u.eh_vendedor, u.eh_operador, u.eh_lider_equipe,
+            COALESCE(u.is_seller,0) as eh_vendedor,
+            COALESCE(u.eh_operador,0) as eh_operador,
+            COALESCE(u.eh_lider_equipe,0) as eh_lider_equipe,
             (SELECT COUNT(*) FROM usuario_permissoes WHERE usuario_id = u.id) as total_permissoes
         FROM users u
         WHERE u.status = 'active'
@@ -178,7 +180,7 @@ def remover_todas_permissoes(usuario_id):
     db = get_db()
     
     try:
-        db.execute("DELETE FROM usuario_permissoes WHERE usuario_id = %s", (usuario_id,))
+        db.execute_query("DELETE FROM usuario_permissoes WHERE usuario_id = %s", (usuario_id,))
         flash('Todas as permissões foram removidas.', 'success')
     except Exception as e:
         flash(f'Erro ao remover permissões: {str(e)}', 'danger')

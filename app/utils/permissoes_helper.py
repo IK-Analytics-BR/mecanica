@@ -218,7 +218,7 @@ def salvar_permissoes_usuario(usuario_id: int, permissoes: list, created_by: int
     
     try:
         # Remove permissões existentes
-        db.execute("DELETE FROM usuario_permissoes WHERE usuario_id = %s", (usuario_id,))
+        db.execute_query("DELETE FROM usuario_permissoes WHERE usuario_id = %s", (usuario_id,))
         
         # Insere novas permissões
         for perm in permissoes:
@@ -252,8 +252,21 @@ def copiar_permissoes(usuario_origem_id: int, usuario_destino_id: int, created_b
     db = get_db()
     
     try:
-        db.execute("CALL sp_copiar_permissoes(%s, %s, %s)", 
-                   (usuario_origem_id, usuario_destino_id, created_by))
+        # Buscar permissões da origem
+        origem = db.fetch_all(
+            "SELECT tela_id, pode_visualizar, pode_criar, pode_editar, pode_excluir FROM usuario_permissoes WHERE usuario_id = %s",
+            (usuario_origem_id,)
+        ) or []
+        # Limpar destino
+        db.execute_query("DELETE FROM usuario_permissoes WHERE usuario_id = %s", (usuario_destino_id,))
+        # Copiar
+        for p in origem:
+            db.insert("""
+                INSERT INTO usuario_permissoes
+                (usuario_id, tela_id, pode_visualizar, pode_criar, pode_editar, pode_excluir, created_by)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
+            """, (usuario_destino_id, p['tela_id'],
+                   p['pode_visualizar'], p['pode_criar'], p['pode_editar'], p['pode_excluir'], created_by))
         return True
     except Exception as e:
         print(f"[PERMISSOES] Erro ao copiar permissões: {e}")
@@ -267,7 +280,14 @@ def dar_acesso_total(usuario_id: int, created_by: int = None) -> bool:
     db = get_db()
     
     try:
-        db.execute("CALL sp_acesso_total_usuario(%s, %s)", (usuario_id, created_by))
+        telas = db.fetch_all("SELECT id FROM sistema_telas WHERE ativo=1") or []
+        db.execute_query("DELETE FROM usuario_permissoes WHERE usuario_id = %s", (usuario_id,))
+        for t in telas:
+            db.insert("""
+                INSERT INTO usuario_permissoes
+                (usuario_id, tela_id, pode_visualizar, pode_criar, pode_editar, pode_excluir, created_by)
+                VALUES (%s,%s,1,1,1,1,%s)
+            """, (usuario_id, t['id'], created_by))
         return True
     except Exception as e:
         print(f"[PERMISSOES] Erro ao dar acesso total: {e}")

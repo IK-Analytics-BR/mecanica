@@ -41,8 +41,8 @@ def accounts_receivable_list():
             ba.name AS bank_account_name,
             e.nome_fantasia AS company_name
         FROM accounts_receivable ar
-        JOIN customers c ON ar.customer_id = c.id
-        JOIN bank_accounts ba ON ar.bank_account_id = ba.id
+        LEFT JOIN customers c ON ar.customer_id = c.id
+        LEFT JOIN bank_accounts ba ON ar.bank_account_id = ba.id
         LEFT JOIN empresas e ON ar.company_id = e.id
         WHERE ar.active = TRUE
     """
@@ -406,8 +406,8 @@ def accounts_receivable_view(receivable_id):
     receivable = db.fetch_one("""
         SELECT ar.*, c.name as customer_name, ba.name as bank_account_name
         FROM accounts_receivable ar
-        JOIN customers c ON ar.customer_id = c.id
-        JOIN bank_accounts ba ON ar.bank_account_id = ba.id
+        LEFT JOIN customers c ON ar.customer_id = c.id
+        LEFT JOIN bank_accounts ba ON ar.bank_account_id = ba.id
         WHERE ar.id = %s AND ar.active = TRUE
     """, (receivable_id,))
     

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Emitir NFS-e — {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('nfse.nfse_lista') }}">NFS-e</a></li>
+    <li class="breadcrumb-item active">Emitir — {{ order.order_number }}</li>
+  </ol>
+  <h4 class="mb-4"><i class="fas fa-file-invoice text-info me-2"></i>Emitir NFS-e — OS {{ order.order_number }}</h4>
+
+  <div class="row g-4">
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">Dados da Nota</div>
+        <div class="card-body">
+          <table class="table table-sm table-borderless">
+            <tr><th class="text-muted small">Cliente</th><td>{{ order.customer_name }}</td></tr>
+            <tr><th class="text-muted small">Veículo</th><td>{{ order.equipment_name }} — {{ order.placa }}</td></tr>
+            <tr><th class="text-muted small">OS</th><td>{{ order.order_number }}</td></tr>
+            <tr><th class="text-muted small">RPS Nº</th><td><strong>{{ rps_numero }}</strong></td></tr>
+            <tr><th class="text-muted small">Valor</th><td><strong class="text-success fs-5">R$ {{ '%.2f'|format(order.get('total_geral') or 0) }}</strong></td></tr>
+            <tr><th class="text-muted small">Alíq. ISS</th><td>{{ cfg.get('aliquota_iss','5.00') }}%</td></tr>
+            <tr><th class="text-muted small">Ambiente</th><td>
+              <span class="badge bg-{% if cfg.get('ambiente')=='producao' %}danger{% else %}warning text-dark{% endif %}">
+                {{ cfg.get('ambiente','homologacao')|title }}
+              </span>
+            </td></tr>
+          </table>
+          <form method="post" action="{{ url_for('nfse.nfse_emitir', order_id=order.id) }}">
+            <button type="submit" class="btn btn-info text-white w-100 mt-2"
+                    onclick="return confirm('Emitir NFS-e para OS {{ order.order_number }}?')">
+              <i class="fas fa-paper-plane me-1"></i> Emitir NFS-e
+            </button>
+          </form>
+          <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}"
+             class="btn btn-outline-secondary w-100 mt-2">← Voltar para OS</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold d-flex justify-content-between">
+          <span><i class="fas fa-code me-2"></i>XML RPS Preview</span>
+          <button class="btn btn-sm btn-outline-secondary" onclick="copiarXml()"><i class="fas fa-copy me-1"></i> Copiar</button>
+        </div>
+        <div class="card-body p-0">
+          <textarea id="xml_preview" class="form-control font-monospace border-0" rows="22"
+                    style="font-size:11px;resize:none;background:#1e1e2e;color:#a6e3a1" readonly>{{ xml_preview }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function copiarXml() {
+  navigator.clipboard.writeText(document.getElementById('xml_preview').value)
+    .then(() => alert('XML copiado!'));
+}
+</script>
+{% endblock %}

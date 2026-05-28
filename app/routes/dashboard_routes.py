@@ -284,7 +284,7 @@ def maintenance_report():
         labor_cost = sum(l['hours_worked'] * l['hourly_rate'] for l in labor)
         order_cost = items_cost + labor_cost
         
-        order['items'] = items
+        order['order_items'] = items
         order['labor'] = labor
         order['items_cost'] = items_cost
         order['labor_cost'] = labor_cost
@@ -489,17 +489,25 @@ def performance_report():
         params.append(equipment_id)
     
     # Consulta para MTBF (Mean Time Between Failures)
+    # LAG() não pode ser usado diretamente no mesmo SELECT que tem GROUP BY;
+    # usamos uma subquery para calcular os intervalos primeiro.
     mtbf_query = f"""
-        SELECT e.name as equipment_name,
-               COUNT(so.id) as failure_count,
-               SUM(TIMESTAMPDIFF(HOUR, so.open_date, so.completion_date)) as total_downtime,
-               AVG(TIMESTAMPDIFF(HOUR, 
-                   LAG(so.completion_date) OVER (PARTITION BY so.equipment_id ORDER BY so.open_date), 
-                   so.open_date)) as mtbf
-        {base_query}
-        AND so.type = 'corrective'
-        GROUP BY e.name
-        HAVING COUNT(so.id) > 1
+        SELECT equipment_name,
+               COUNT(*) as failure_count,
+               SUM(total_downtime_h) as total_downtime,
+               AVG(time_since_last_h) as mtbf
+        FROM (
+            SELECT e.name as equipment_name,
+                   TIMESTAMPDIFF(HOUR, so.open_date, so.completion_date) as total_downtime_h,
+                   TIMESTAMPDIFF(HOUR,
+                       LAG(so.completion_date) OVER (PARTITION BY so.equipment_id ORDER BY so.open_date),
+                       so.open_date) as time_since_last_h
+            {base_query}
+            AND so.type = 'corrective'
+        ) sub
+        WHERE time_since_last_h IS NOT NULL
+        GROUP BY equipment_name
+        HAVING COUNT(*) > 1
     """
     
     # Consulta para MTTR (Mean Time To Repair)

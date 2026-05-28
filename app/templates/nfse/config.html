@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}NFS-e — Configuração{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('nfse.nfse_lista') }}">NFS-e</a></li>
+    <li class="breadcrumb-item active">Configuração</li>
+  </ol>
+  <h4 class="mb-4"><i class="fas fa-file-invoice text-info me-2"></i>Configuração NFS-e (ABRASF 2.03)</h4>
+  <div class="row g-4">
+    <div class="col-md-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">Dados do Prestador</div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('nfse.nfse_config') }}">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">CNPJ do Prestador</label>
+                <input type="text" class="form-control" name="cnpj_prestador" value="{{ cfg.get('cnpj_prestador','') }}" placeholder="00.000.000/0000-00">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Inscrição Municipal</label>
+                <input type="text" class="form-control" name="inscricao_municipal" value="{{ cfg.get('inscricao_municipal','') }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Razão Social</label>
+                <input type="text" class="form-control" name="razao_social" value="{{ cfg.get('razao_social','') }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Cód. Município IBGE</label>
+                <input type="text" class="form-control" name="cod_municipio_ibge" value="{{ cfg.get('cod_municipio_ibge','5002704') }}" placeholder="5002704 = Campo Grande">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Item Lista Serviço</label>
+                <input type="text" class="form-control" name="item_lista_servico" value="{{ cfg.get('item_lista_servico','14.01') }}" placeholder="14.01 = Reparação mecânica">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Alíquota ISS (%)</label>
+                <input type="number" step="0.01" class="form-control" name="aliquota_iss" value="{{ cfg.get('aliquota_iss','5.00') }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">CNAE</label>
+                <input type="text" class="form-control" name="cnae" value="{{ cfg.get('cnae','4520001') }}" placeholder="4520001 = Manutenção veículos">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Série RPS</label>
+                <input type="text" class="form-control" name="serie_rps" value="{{ cfg.get('serie_rps','NF') }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Ambiente</label>
+                <select class="form-select" name="ambiente">
+                  <option value="homologacao" {% if cfg.get('ambiente','homologacao')=='homologacao' %}selected{% endif %}>Homologação (teste)</option>
+                  <option value="producao" {% if cfg.get('ambiente')=='producao' %}selected{% endif %}>Produção</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <hr class="my-1">
+                <label class="form-label fw-semibold">URL WebService Prefeitura (opcional)</label>
+                <input type="url" class="form-control" name="ws_url" value="{{ cfg.get('ws_url','') }}" placeholder="https://nfse.campogrande.ms.gov.br/webservice">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Caminho Certificado .pem</label>
+                <input type="text" class="form-control" name="cert_path" value="{{ cfg.get('cert_path','') }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Senha do Certificado</label>
+                <input type="password" class="form-control" name="cert_password" value="{{ cfg.get('cert_password','') }}">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3"><i class="fas fa-save me-1"></i> Salvar Configuração</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body">
+          <h6 class="fw-bold"><i class="fas fa-info-circle text-info me-1"></i>Sobre a NFS-e</h6>
+          <ul class="small text-muted ps-3">
+            <li>Padrão <strong>ABRASF 2.03</strong> — usado na maioria das prefeituras do Brasil.</li>
+            <li class="mt-1">Serviço de mecânica: <strong>Item 14.01</strong> — "Lubrificação, limpeza, lustração, revisão, carga e recarga, conserto, restauração, blindagem, manutenção e conservação de máquinas, veículos, aparelhos, equipamentos..."</li>
+            <li class="mt-1">CNAE mecânica: <strong>4520-0/01</strong></li>
+            <li class="mt-1">Sem WebService configurado: gera XML para envio manual no portal da prefeitura.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

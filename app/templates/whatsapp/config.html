@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}WhatsApp — Configuração{% endblock %}
+
+{% block extra_css %}
+<style>
+  .provider-badge { font-size:.75rem; padding:3px 8px; border-radius:10px; }
+  .field-group { display:none; }
+  .field-group.active { display:block; }
+  .template-card { border:1px solid #dee2e6; border-radius:8px; margin-bottom:12px; }
+  .template-card .card-header { background:#f8f9fa; font-size:.9rem; font-weight:600; padding:8px 14px; }
+  .vars-help { background:#e8f4fd; border-radius:6px; padding:8px 12px; font-size:.82rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('whatsapp.whatsapp_painel') }}">WhatsApp</a></li>
+    <li class="breadcrumb-item active">Configuração</li>
+  </ol>
+  <h4 class="mb-4"><i class="fab fa-whatsapp text-success me-2"></i>Configuração WhatsApp Business</h4>
+
+  <div class="row g-4">
+
+    <!-- ══ CARD: PROVEDOR ══ -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold d-flex align-items-center gap-2">
+          <i class="fas fa-plug text-primary"></i> Conexão com API
+          {% if cfg.get('provider') %}
+            <span class="badge bg-success provider-badge ms-auto">{{ cfg.get('provider','—').upper() }} configurado</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('whatsapp.whatsapp_config') }}">
+
+            <!-- Seleção de provedor -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Provedor <span class="text-danger">*</span></label>
+              <select class="form-select" name="provider" id="provider_sel" onchange="toggleProvider()">
+                <option value="uazapi"     {% if cfg.get('provider','uazapi')=='uazapi' %}selected{% endif %}>UazAPI (uazapi.com) ★ Configurado</option>
+                <option value="uzapi"      {% if cfg.get('provider')=='uzapi' %}selected{% endif %}>UZapi (uzapi.com)</option>
+                <option value="zapi"       {% if cfg.get('provider')=='zapi' %}selected{% endif %}>Z-API (z-api.io)</option>
+                <option value="wppconnect" {% if cfg.get('provider')=='wppconnect' %}selected{% endif %}>WPPConnect Server</option>
+                <option value="evolution"  {% if cfg.get('provider')=='evolution' %}selected{% endif %}>Evolution API v2</option>
+                <option value="meta"       {% if cfg.get('provider')=='meta' %}selected{% endif %}>Meta Cloud API (oficial)</option>
+              </select>
+              <div class="form-text">
+                <span id="provider_desc"></span>
+              </div>
+            </div>
+
+            <!-- ─── CAMPOS COMUNS ─── -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">URL da API</label>
+              <input type="text" class="form-control" name="api_url"
+                     value="{{ cfg.get('api_url','') }}"
+                     placeholder="Ex: https://api.uzapi.com.br">
+              <div class="form-text" id="url_help"></div>
+            </div>
+
+            <!-- Token (UazAPI) -->
+            <div class="field-group" id="fg_token_uazapi">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Token / API Key <span class="text-danger">*</span></label>
+                <input type="text" class="form-control font-monospace" name="token"
+                       value="{{ cfg.get('token','') }}"
+                       placeholder="Token disponível no painel UazAPI">
+                <div class="form-text">Obtenha em: <a href="https://api.uazapi.com/v1" target="_blank">api.uazapi.com</a></div>
+              </div>
+            </div>
+
+            <!-- API Key (UZapi / Evolution) -->
+            <div class="field-group" id="fg_apikey">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">API Key</label>
+                <input type="text" class="form-control font-monospace" name="api_key"
+                       value="{{ cfg.get('api_key','') }}"
+                       placeholder="Chave gerada no painel do provedor">
+              </div>
+            </div>
+
+            <!-- Token (WPPConnect / Z-API / Meta) -->
+            <div class="field-group" id="fg_token">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Token / Bearer</label>
+                <input type="text" class="form-control font-monospace" name="token"
+                       value="{{ cfg.get('token','') }}"
+                       placeholder="Token de autenticação">
+              </div>
+            </div>
+
+            <!-- Client Token (Z-API) -->
+            <div class="field-group" id="fg_client_token">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Client-Token (Z-API)</label>
+                <input type="text" class="form-control font-monospace" name="client_token"
+                       value="{{ cfg.get('client_token','') }}"
+                       placeholder="Client-Token do dashboard Z-API">
+              </div>
+            </div>
+
+            <!-- Instance (UZapi / Evolution) -->
+            <div class="field-group" id="fg_instance">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Nome da Instância</label>
+                <input type="text" class="form-control" name="instance_name"
+                       value="{{ cfg.get('instance_name','') }}"
+                       placeholder="Ex: mecanica">
+              </div>
+            </div>
+
+            <!-- Session (WPPConnect) -->
+            <div class="field-group" id="fg_session">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Nome da Sessão (WPPConnect)</label>
+                <input type="text" class="form-control" name="session_name"
+                       value="{{ cfg.get('session_name','') }}"
+                       placeholder="Ex: mecanica-session">
+              </div>
+            </div>
+
+            <!-- Phone Number ID (Meta) -->
+            <div class="field-group" id="fg_phone_id">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Phone Number ID (Meta)</label>
+                <input type="text" class="form-control font-monospace" name="phone_number_id"
+                       value="{{ cfg.get('phone_number_id','') }}"
+                       placeholder="ID do número no Meta Business">
+              </div>
+            </div>
+
+            <!-- Número WhatsApp -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Número de envio (com DDI)</label>
+              <input type="text" class="form-control" name="numero_whatsapp"
+                     value="{{ cfg.get('numero_whatsapp','') }}"
+                     placeholder="Ex: 5567999999999">
+              <div class="form-text">Número do WhatsApp que enviará as mensagens</div>
+            </div>
+
+            <hr class="my-3">
+            <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size:.75rem">
+              <i class="fas fa-sliders-h me-1"></i> Comportamento
+            </h6>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Dias antes p/ lembrete</label>
+                <input type="number" class="form-control" name="dias_lembrete" min="1" max="30"
+                       value="{{ cfg.get('dias_lembrete', 7) }}">
+                <div class="form-text">Padrão: 7 dias</div>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label fw-semibold">Telefone para Testes</label>
+                <input type="text" class="form-control" name="telefone_teste"
+                       value="{{ cfg.get('telefone_teste','') }}"
+                       placeholder="Ex: 5567981750909">
+                <div class="form-text">Número que receberá as mensagens de teste (com DDI 55)</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Telefones de Notificação (Admin)</label>
+              <input type="text" class="form-control" name="telefones_admin"
+                     value="{{ cfg.get('telefones_admin','') }}"
+                     placeholder="Ex: 67999998888, 67999997777">
+              <div class="form-text">Separados por vírgula. Recebem alertas de chamados, OS urgente, etc.</div>
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="disparos_ativos" id="disparos_ativos"
+                       {{ 'checked' if cfg.get('disparos_ativos') else '' }}>
+                <label class="form-check-label fw-semibold" for="disparos_ativos">
+                  Ativar disparos automáticos
+                  <small class="text-muted fw-normal">(orçamento aprovado, veículo pronto, lembretes)</small>
+                </label>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success flex-grow-1">
+                <i class="fas fa-save me-1"></i> Salvar Configuração
+              </button>
+              <a href="{{ url_for('whatsapp.whatsapp_status') }}" class="btn btn-outline-secondary" target="_blank">
+                <i class="fas fa-wifi"></i> Verificar Status
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ══ CARD: TESTAR ══ -->
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-bold"><i class="fas fa-paper-plane text-primary me-2"></i>Teste de Envio</div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('whatsapp.whatsapp_testar') }}">
+            <div class="row g-2">
+              <div class="col-md-5">
+                <label class="form-label">Telefone destino</label>
+                <input type="text" class="form-control" name="telefone"
+                       value="{{ cfg.get('telefone_teste','') }}"
+                       placeholder="5567981750909">
+              </div>
+              <div class="col-md-7">
+                <label class="form-label">Mensagem</label>
+                <input type="text" class="form-control" name="mensagem"
+                       value="Teste de conexão — IKFlow Mecânica">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-outline-success mt-2 w-100">
+              <i class="fas fa-paper-plane me-1"></i> Enviar Teste para {{ cfg.get('telefone_teste') or 'número informado' }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CARD: TEMPLATES DE MENSAGEM ══ -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">
+          <i class="fas fa-comment-alt text-success me-2"></i>Templates de Mensagem
+        </div>
+        <div class="card-body">
+          <div class="vars-help mb-3">
+            <strong>Variáveis disponíveis:</strong><br>
+            <code>{nome}</code> — nome do cliente &nbsp;
+            <code>{os_numero}</code> — número da OS &nbsp;
+            <code>{placa}</code> — placa do veículo &nbsp;
+            <code>{total}</code> — valor total
+          </div>
+
+          {% if templates_editaveis %}
+            {% for tpl in templates_editaveis %}
+            <div class="template-card">
+              <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-comment text-success"></i>
+                <strong>{{ tpl.titulo or tpl.tipo }}</strong>
+                <span class="badge bg-secondary ms-auto">{{ tpl.tipo }}</span>
+              </div>
+              <div class="card-body p-2">
+                <form method="post" action="{{ url_for('whatsapp.whatsapp_salvar_template', template_id=tpl.id) }}">
+                  <input type="hidden" name="titulo" value="{{ tpl.titulo or tpl.tipo }}">
+                  <textarea class="form-control form-control-sm" name="mensagem" rows="4"
+                            style="font-size:.82rem;font-family:monospace;">{{ tpl.mensagem }}</textarea>
+                  <button type="submit" class="btn btn-sm btn-outline-primary mt-1 w-100">
+                    <i class="fas fa-save me-1"></i> Salvar template
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="alert alert-warning py-2">
+              Nenhum template encontrado. Execute o script de migração do banco de dados.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PROVIDERS = {
+  uzapi:      { desc:'UZapi — URL base + API Key + Instância', url:'https://api.uzapi.com.br',  fields:['fg_apikey','fg_instance'] },
+  zapi:       { desc:'Z-API — URL base + ID da Instância + Token + Client-Token', url:'https://api.z-api.io', fields:['fg_token','fg_client_token','fg_instance'] },
+  wppconnect: { desc:'WPPConnect Server — URL base + Token + Nome da sessão', url:'http://localhost:21465', fields:['fg_token','fg_session'] },
+  evolution:  { desc:'Evolution API v2 — URL base + API Key + Instância', url:'http://localhost:8080', fields:['fg_apikey','fg_instance'] },
+  meta:       { desc:'Meta Cloud API — Token permanente + Phone Number ID', url:'https://graph.facebook.com', fields:['fg_token','fg_phone_id'] },
+};
+const ALL_FIELDS = ['fg_apikey','fg_token','fg_client_token','fg_instance','fg_session','fg_phone_id'];
+
+function toggleProvider() {
+  const sel = document.getElementById('provider_sel');
+  const prov = sel.value;
+  const cfg = PROVIDERS[prov] || {};
+  // Mostrar/ocultar campos
+  ALL_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', (cfg.fields||[]).includes(id));
+  });
+  // Descrição
+  document.getElementById('provider_desc').textContent = cfg.desc || '';
+  // Placeholder URL
+  const urlEl = document.querySelector('input[name=api_url]');
+  if (urlEl && !urlEl.value) urlEl.placeholder = cfg.url || '';
+  document.getElementById('url_help').textContent = cfg.url ? 'Ex: ' + cfg.url : '';
+}
+
+document.addEventListener('DOMContentLoaded', toggleProvider);
+</script>
+{% endblock %}

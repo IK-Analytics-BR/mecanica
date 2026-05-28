@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}WhatsApp Business — IKFlow Mecânica{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('bem_vindo') }}">Início</a></li>
+    <li class="breadcrumb-item active">WhatsApp</li>
+  </ol>
+
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h4 class="mb-0"><i class="fab fa-whatsapp text-success me-2"></i>WhatsApp Business</h4>
+    <a href="{{ url_for('whatsapp.whatsapp_config') }}" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-cog me-1"></i> Configurar
+    </a>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    {% set kpi_items = [
+      ('Total Enviados', kpis.get('total',0), 'fas fa-paper-plane', 'primary'),
+      ('Entregues', kpis.get('enviados',0), 'fas fa-check-double', 'success'),
+      ('Erros', kpis.get('erros',0), 'fas fa-times-circle', 'danger'),
+      ('Orçamentos', kpis.get('orcamentos',0), 'fas fa-file-invoice', 'info'),
+    ] %}
+    {% for label, val, icon, cor in kpi_items %}
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm text-center py-3">
+        <i class="{{ icon }} fa-2x text-{{ cor }} mb-2"></i>
+        <div class="fs-4 fw-bold">{{ val or 0 }}</div>
+        <small class="text-muted">{{ label }}</small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if not cfg %}
+  <div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    WhatsApp não configurado. <a href="{{ url_for('whatsapp.whatsapp_config') }}">Configurar agora →</a>
+  </div>
+  {% endif %}
+
+  <!-- Logs -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-bold"><i class="fas fa-list me-2"></i>Últimas Mensagens</div>
+    <div class="card-body p-0">
+      {% if logs %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr><th>Data</th><th>Tipo</th><th>Cliente</th><th>OS</th><th>Telefone</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td><small>{{ log.enviado_em.strftime('%d/%m %H:%M') if log.enviado_em else '—' }}</small></td>
+              <td><span class="badge bg-{% if log.tipo=='concluido' %}success{% elif log.tipo=='orcamento' %}primary{% elif log.tipo=='cobranca' %}warning text-dark{% else %}secondary{% endif %}">{{ log.tipo }}</span></td>
+              <td>{{ log.customer_name or '—' }}</td>
+              <td>{% if log.order_number %}<a href="#">{{ log.order_number }}</a>{% else %}—{% endif %}</td>
+              <td>{{ log.telefone }}</td>
+              <td><span class="badge bg-{% if log.status=='enviado' %}success{% else %}danger{% endif %}">{{ log.status }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center text-muted py-5"><i class="fab fa-whatsapp fa-3x mb-3 opacity-25"></i><p>Nenhuma mensagem enviada ainda.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

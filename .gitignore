@@ -67,3 +67,9 @@ temp/
 # Configurações locais
 config.local.py
 settings.local.py
+app/config_local.py
+.env.mecanica
+.env.*
+_chk*.py
+_fix*.py
+_setup*.py

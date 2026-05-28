@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}OS Avulsa — IKFlow Mecânica{% endblock %}
+
+{% block extra_css %}
+<style>
+  .os-header { background:linear-gradient(135deg,#0b2447,#08a5b2);color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:20px; }
+  .section-card { border:none;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:16px; }
+  .section-card .card-header { background:#f8f9fa;font-weight:600;border-radius:10px 10px 0 0;border-bottom:2px solid #e9ecef; }
+  .section-card .card-header i { color:#08a5b2; }
+  .complexidade-btn { border:2px solid #dee2e6;border-radius:8px;padding:10px 18px;cursor:pointer;transition:.2s;background:#fff; }
+  .complexidade-btn.active.simples { border-color:#28a745;background:#eaffea;font-weight:600; }
+  .complexidade-btn.active.medio  { border-color:#ff9f1a;background:#fff8ee;font-weight:600; }
+  .complexidade-btn.active.complexo { border-color:#dc3545;background:#fff0f0;font-weight:600; }
+  .total-box { background:linear-gradient(135deg,#0b2447,#08a5b2);color:#fff;border-radius:10px;padding:16px 20px; }
+  .total-box .total-linha { display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.15); }
+  .total-box .total-geral { font-size:1.4rem;font-weight:700;padding-top:8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('bem_vindo') }}">Início</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('service_order.service_order_list') }}">OS</a></li>
+    <li class="breadcrumb-item active">OS Avulsa</li>
+  </ol>
+
+  <div class="os-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h4 class="mb-0"><i class="fas fa-user-clock me-2"></i>OS / Orçamento Avulso</h4>
+      <small class="opacity-75">Para clientes sem cadastro no sistema</small>
+    </div>
+    <a href="{{ url_for('service_order.service_order_add') }}" class="btn btn-light btn-sm">
+      <i class="fas fa-user-check me-1"></i> Cliente cadastrado? Usar OS normal
+    </a>
+  </div>
+
+  <form method="post" action="{{ url_for('service_order.service_order_avulso') }}" id="os-form">
+
+    <!-- DADOS DO CLIENTE EVENTUAL -->
+    <div class="card section-card">
+      <div class="card-header"><i class="fas fa-user me-2"></i>Dados do Cliente (sem cadastro)</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Nome do Cliente <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="nome_eventual" required placeholder="Ex: João Silva">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Telefone / WhatsApp</label>
+            <input type="text" class="form-control" name="phone_eventual" placeholder="(67) 9 9999-9999">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">Placa do Veículo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control text-uppercase" name="placa_eventual" required
+                   placeholder="ABC-1234" maxlength="8">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Tipo</label>
+            <select class="form-select" name="type">
+              <option value="corrective">Corretiva</option>
+              <option value="preventive">Preventiva</option>
+              <option value="predictive">Preditiva</option>
+            </select>
+          </div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">KM Entrada</label>
+            <input type="number" class="form-control" name="km_entrada" placeholder="Ex: 52000">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Técnico</label>
+            <select class="form-select" name="technician_id">
+              <option value="">A definir...</option>
+              {% for t in technicians %}
+              <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RELATO E DIAGNÓSTICO -->
+    <div class="card section-card">
+      <div class="card-header"><i class="fas fa-comments me-2"></i>Relato e Diagnóstico</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Relato do Cliente</label>
+            <textarea class="form-control" name="observations" rows="3" placeholder="O que o cliente relatou..."></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Diagnóstico do Mecânico</label>
+            <textarea class="form-control" name="diagnostico" rows="3" placeholder="Diagnóstico técnico..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÃO DE OBRA -->
+    <div class="card section-card">
+      <div class="card-header"><i class="fas fa-hard-hat me-2"></i>Mão de Obra</div>
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Complexidade</label>
+            <div class="d-flex gap-2">
+              <button type="button" class="complexidade-btn simples" onclick="setComplexidade('simples')"><i class="fas fa-circle text-success"></i> Simples</button>
+              <button type="button" class="complexidade-btn medio active" onclick="setComplexidade('medio')"><i class="fas fa-circle text-warning"></i> Médio</button>
+              <button type="button" class="complexidade-btn complexo" onclick="setComplexidade('complexo')"><i class="fas fa-circle text-danger"></i> Complexo</button>
+            </div>
+            <input type="hidden" name="complexidade" id="complexidade_input" value="medio">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">Horas</label>
+            <input type="number" step="0.5" class="form-control" name="horas_estimadas" id="horas_estimadas" placeholder="Ex: 2.5" oninput="calcularTotais()">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-semibold">R$/Hora</label>
+            <input type="number" step="0.01" class="form-control" name="valor_hora" id="valor_hora" value="120.00" oninput="calcularTotais()">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Subtotal MO</label>
+            <div class="input-group">
+              <span class="input-group-text">R$</span>
+              <input type="text" class="form-control fw-bold text-success" id="subtotal_mo" readonly value="0,00">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEÇAS -->
+    <div class="card section-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-cogs me-2"></i>Peças e Materiais</span>
+        <button type="button" class="btn btn-sm btn-primary" onclick="adicionarPeca()"><i class="fas fa-plus me-1"></i> Adicionar Peça</button>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light"><tr>
+            <th style="width:40%">Descrição</th><th style="width:15%">Qtd</th>
+            <th style="width:18%">Valor Unit.</th><th style="width:18%">Total</th><th style="width:9%"></th>
+          </tr></thead>
+          <tbody id="pecas-tbody">
+            <tr id="row-empty"><td colspan="5" class="text-center text-muted py-3"><i class="fas fa-plus-circle me-1"></i> Clique em "Adicionar Peça"</td></tr>
+          </tbody>
+        </table>
+        <input type="hidden" name="pecas_json" id="pecas_json" value="[]">
+      </div>
+    </div>
+
+    <!-- TOTAIS + AÇÕES -->
+    <div class="row g-3">
+      <div class="col-md-5">
+        <div class="total-box">
+          <div class="total-linha"><span>Mão de Obra:</span><span id="total-mo-display">R$ 0,00</span></div>
+          <div class="total-linha"><span>Peças:</span><span id="total-pecas-display">R$ 0,00</span></div>
+          <div class="total-linha"><span>Desconto:</span>
+            <input type="number" step="0.01" min="0" name="desconto" id="desconto" value="0.00"
+                   class="form-control form-control-sm d-inline-block text-end"
+                   style="width:100px;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)"
+                   oninput="calcularTotais()">
+          </div>
+          <div class="total-linha total-geral"><span>TOTAL:</span><span id="total-geral-display">R$ 0,00</span></div>
+          <input type="hidden" name="total_mao_obra" id="total_mao_obra_hidden" value="0">
+          <input type="hidden" name="total_pecas" id="total_pecas_hidden" value="0">
+          <input type="hidden" name="total_geral" id="total_geral_hidden" value="0">
+        </div>
+      </div>
+      <div class="col-md-7 d-flex align-items-end gap-2 flex-wrap">
+        <button type="submit" class="btn btn-primary flex-fill" style="border-radius:8px;padding:10px;font-weight:600;">
+          <i class="fas fa-save me-1"></i> Salvar OS Avulsa
+        </button>
+        <a href="{{ url_for('service_order.service_order_list') }}" class="btn btn-secondary flex-fill" style="border-radius:8px;padding:10px;">
+          <i class="fas fa-times me-1"></i> Cancelar
+        </a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let pecas = [], rowCounter = 0;
+
+function setComplexidade(nivel) {
+  document.getElementById('complexidade_input').value = nivel;
+  document.querySelectorAll('.complexidade-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.complexidade-btn.' + nivel).classList.add('active');
+  const faixas = { simples: 80, medio: 120, complexo: 180 };
+  document.getElementById('valor_hora').value = faixas[nivel].toFixed(2);
+  calcularTotais();
+}
+
+function adicionarPeca() {
+  const tbody = document.getElementById('pecas-tbody');
+  document.getElementById('row-empty')?.remove();
+  rowCounter++;
+  const id = rowCounter;
+  const tr = document.createElement('tr');
+  tr.id = 'peca-row-' + id;
+  tr.innerHTML = `
+    <td><input type="text" class="form-control form-control-sm" placeholder="Descrição..." onchange="atualizarPeca(${id})"></td>
+    <td><input type="number" value="1" min="0.01" step="0.01" class="form-control form-control-sm text-center" style="max-width:80px" oninput="atualizarPeca(${id})"></td>
+    <td><input type="number" value="0" min="0" step="0.01" class="form-control form-control-sm text-end" oninput="atualizarPeca(${id})"></td>
+    <td><input type="text" class="form-control form-control-sm text-end fw-bold" readonly value="R$ 0,00"></td>
+    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removerPeca(${id})"><i class="fas fa-times"></i></button></td>`;
+  tbody.appendChild(tr);
+  pecas.push({ id, descricao:'', quantidade:1, valor_unitario:0, valor_total:0 });
+  tr.querySelector('input[type=text]').focus();
+}
+
+function atualizarPeca(id) {
+  const row = document.getElementById('peca-row-' + id);
+  const inputs = row.querySelectorAll('input');
+  const descricao = inputs[0].value;
+  const quantidade = parseFloat(inputs[1].value) || 0;
+  const valor_unitario = parseFloat(inputs[2].value) || 0;
+  const valor_total = quantidade * valor_unitario;
+  inputs[3].value = 'R$ ' + valor_total.toFixed(2).replace('.', ',');
+  const idx = pecas.findIndex(p => p.id === id);
+  if (idx >= 0) pecas[idx] = { id, descricao, quantidade, valor_unitario, valor_total };
+  calcularTotais();
+}
+
+function removerPeca(id) {
+  document.getElementById('peca-row-' + id)?.remove();
+  pecas = pecas.filter(p => p.id !== id);
+  if (!pecas.length) {
+    document.getElementById('pecas-tbody').innerHTML =
+      '<tr id="row-empty"><td colspan="5" class="text-center text-muted py-3"><i class="fas fa-plus-circle me-1"></i> Clique em "Adicionar Peça"</td></tr>';
+  }
+  calcularTotais();
+}
+
+function calcularTotais() {
+  const horas = parseFloat(document.getElementById('horas_estimadas').value) || 0;
+  const valorHora = parseFloat(document.getElementById('valor_hora').value) || 0;
+  const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+  const totalMO = horas * valorHora;
+  const totalPecas = pecas.reduce((s, p) => s + (p.valor_total || 0), 0);
+  const totalGeral = Math.max(0, totalMO + totalPecas - desconto);
+  const fmt = v => 'R$ ' + v.toFixed(2).replace('.', ',');
+  document.getElementById('subtotal_mo').value = totalMO.toFixed(2).replace('.', ',');
+  document.getElementById('total-mo-display').textContent = fmt(totalMO);
+  document.getElementById('total-pecas-display').textContent = fmt(totalPecas);
+  document.getElementById('total-geral-display').textContent = fmt(totalGeral);
+  document.getElementById('total_mao_obra_hidden').value = totalMO.toFixed(2);
+  document.getElementById('total_pecas_hidden').value = totalPecas.toFixed(2);
+  document.getElementById('total_geral_hidden').value = totalGeral.toFixed(2);
+  document.getElementById('pecas_json').value = JSON.stringify(pecas);
+}
+calcularTotais();
+</script>
+{% endblock %}

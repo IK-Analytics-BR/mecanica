@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}PIX — Cobrança {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="container px-4" style="max-width:600px">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('pix.pix_painel') }}">PIX</a></li>
+    <li class="breadcrumb-item active">Cobrança {{ order.order_number }}</li>
+  </ol>
+
+  <div class="card border-0 shadow text-center py-4 px-3">
+    <div class="mb-2">
+      <span class="fw-bold text-muted small">OS: {{ order.order_number }}</span>
+      <h5 class="mb-1">{{ order.customer_name }}</h5>
+      <div class="fs-2 fw-bold text-success my-2">R$ {{ '%.2f'|format(valor) }}</div>
+      <p class="text-muted small">Chave PIX: <strong>{{ chave_pix }}</strong><br>Recebedor: {{ nome_recebedor }}</p>
+    </div>
+
+    {% if qr_base64 %}
+    <div class="mb-3">
+      <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code PIX" style="max-width:220px;border:3px solid #32bcad;border-radius:8px;padding:4px">
+    </div>
+    {% endif %}
+
+    <!-- Copia e cola -->
+    <div class="mb-3">
+      <label class="form-label small fw-semibold text-muted">Copia e Cola PIX</label>
+      <div class="input-group">
+        <input type="text" id="pixPayload" class="form-control form-control-sm font-monospace"
+               value="{{ payload_pix }}" readonly>
+        <button class="btn btn-outline-secondary btn-sm" onclick="copiarPix()">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+      <div id="copiado" class="text-success small mt-1" style="display:none">✅ Copiado!</div>
+    </div>
+
+    <!-- Confirmar manualmente -->
+    <form method="post" action="{{ url_for('pix.pix_confirmar', order_id=order.id) }}">
+      <input type="hidden" name="txid" value="{{ txid }}">
+      <button type="submit" class="btn btn-success w-100 mb-2"
+              onclick="return confirm('Confirmar pagamento PIX recebido?')">
+        <i class="fas fa-check-circle me-1"></i> Confirmar Pagamento Recebido
+      </button>
+    </form>
+    <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}"
+       class="btn btn-outline-secondary w-100">← Voltar para OS</a>
+  </div>
+</div>
+<script>
+function copiarPix() {
+  navigator.clipboard.writeText(document.getElementById('pixPayload').value)
+    .then(() => { document.getElementById('copiado').style.display = 'block'; setTimeout(() => document.getElementById('copiado').style.display='none', 2000); });
+}
+</script>
+{% endblock %}

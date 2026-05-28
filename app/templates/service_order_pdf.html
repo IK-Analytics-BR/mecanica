@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>OS {{ order.order_number }} — Prisma de Diagnóstico</title>
+<style>
+  @page { size: A4; margin: 1.5cm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 11px; }
+  body { color: #222; }
+
+  /* Botão imprimir — some no PDF */
+  .no-print { margin-bottom: 12px; }
+  @media print { .no-print { display: none !important; } body { padding: 0; } }
+
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0b2447; padding-bottom: 10px; margin-bottom: 12px; }
+  .header .logo { font-size: 20px; font-weight: 900; color: #0b2447; }
+  .header .logo span { color: #08a5b2; }
+  .header .os-num { text-align: right; }
+  .header .os-num h2 { font-size: 22px; font-weight: 900; color: #0b2447; }
+  .header .os-num small { color: #666; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .badge-rascunho { background: #e9ecef; color: #555; }
+  .badge-enviado  { background: #cce5ff; color: #004085; }
+  .badge-aprovado { background: #d4edda; color: #155724; }
+  .badge-reprovado{ background: #f8d7da; color: #721c24; }
+
+  .section { border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
+  .section-title { background: #0b2447; color: #fff; padding: 5px 10px; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+  .section-body { padding: 8px 10px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .field label { font-size: 9px; color: #888; text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .field span  { font-weight: 600; font-size: 11px; }
+
+  .prisma { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .prisma-col { padding: 8px 10px; }
+  .prisma-col:first-child { border-right: 1px solid #dee2e6; }
+  .prisma-col h4 { font-size: 9px; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+  .prisma-col p  { font-size: 11px; min-height: 50px; white-space: pre-wrap; }
+
+  table { width: 100%; border-collapse: collapse; }
+  table th { background: #f0f9fa; text-align: left; padding: 4px 6px; font-size: 10px; border-bottom: 2px solid #dee2e6; }
+  table td { padding: 4px 6px; border-bottom: 1px solid #f0f0f0; font-size: 11px; }
+  table .text-right { text-align: right; }
+
+  .totais { display: flex; justify-content: flex-end; }
+  .totais-box { min-width: 220px; border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden; }
+  .totais-box .linha { display: flex; justify-content: space-between; padding: 4px 10px; border-bottom: 1px solid #f0f0f0; }
+  .totais-box .linha-total { background: #0b2447; color: #fff; font-weight: 700; font-size: 13px; }
+  .totais-box .linha-total .val { color: #08a5b2; }
+
+  .complexidade { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .c-simples  { background: #d4edda; color: #155724; }
+  .c-medio    { background: #fff3cd; color: #856404; }
+  .c-complexo { background: #f8d7da; color: #721c24; }
+
+  .assinatura { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .assinatura .linha-assin { border-top: 1px solid #555; padding-top: 4px; text-align: center; font-size: 9px; color: #555; }
+
+  .rodape { margin-top: 16px; border-top: 1px solid #dee2e6; padding-top: 6px; font-size: 9px; color: #999; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <button onclick="window.print()" style="background:#0b2447;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;">
+    🖨️ Imprimir / Salvar PDF
+  </button>
+  <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}"
+     style="margin-left:10px;color:#0b2447;text-decoration:none;">← Voltar para a OS</a>
+</div>
+
+<!-- CABEÇALHO -->
+<div class="header">
+  <div class="logo">IK<span>Flow</span> Mecânica</div>
+  <div class="os-num">
+    <h2>{{ order.order_number }}</h2>
+    <small>Emitida em: {{ order.open_date.strftime('%d/%m/%Y %H:%M') if order.open_date else '' }}</small><br>
+    <span class="badge badge-{{ order.get('status_orcamento','rascunho') }}">
+      {{ order.get('status_orcamento','Rascunho')|title }}
+    </span>
+  </div>
+</div>
+
+<!-- DADOS DO ATENDIMENTO -->
+<div class="section">
+  <div class="section-title">📋 Dados do Atendimento</div>
+  <div class="section-body grid3">
+    <div class="field"><label>Cliente</label><span>{{ order.customer_name or '—' }}</span></div>
+    <div class="field"><label>Veículo</label><span>{{ order.equipment_name or '—' }}</span></div>
+    <div class="field"><label>Placa</label><span>{{ order.placa or '—' }}</span></div>
+    <div class="field"><label>Fabricante</label><span>{{ order.fabricante or '—' }}</span></div>
+    <div class="field"><label>Modelo</label><span>{{ order.modelo or '—' }}</span></div>
+    <div class="field"><label>KM Entrada</label><span>{{ order.get('km_entrada') or '—' }}</span></div>
+    <div class="field"><label>Tipo</label>
+      <span>{% if order.type == 'corrective' %}Corretiva{% elif order.type == 'preventive' %}Preventiva{% else %}Preditiva{% endif %}</span>
+    </div>
+    <div class="field"><label>Mecânico</label><span>{{ order.technician_name or 'A definir' }}</span></div>
+    <div class="field"><label>Telefone</label><span>{{ order.customer_phone or '—' }}</span></div>
+  </div>
+</div>
+
+<!-- PRISMA DE DIAGNÓSTICO -->
+<div class="section">
+  <div class="section-title">🔍 Prisma de Diagnóstico</div>
+  <div class="prisma">
+    <div class="prisma-col">
+      <h4>Reclamação do Cliente (problema alegado)</h4>
+      <p>{{ order.observations or '—' }}</p>
+    </div>
+    <div class="prisma-col">
+      <h4>Diagnóstico Técnico do Mecânico</h4>
+      <p>{{ order.get('diagnostico') or '(A preencher pelo mecânico)' }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- MÃO DE OBRA -->
+<div class="section">
+  <div class="section-title">👷 Mão de Obra</div>
+  <div class="section-body grid3">
+    <div class="field">
+      <label>Complexidade</label>
+      <span class="complexidade c-{{ order.get('complexidade','medio') }}">
+        {{ (order.get('complexidade','medio')|title) }}
+      </span>
+    </div>
+    <div class="field"><label>Horas Estimadas</label><span>{{ order.get('horas_estimadas') or '—' }} h</span></div>
+    <div class="field"><label>R$/Hora</label><span>R$ {{ '%.2f'|format(order.get('valor_hora') or 0) }}</span></div>
+  </div>
+</div>
+
+<!-- PEÇAS E MATERIAIS -->
+<div class="section">
+  <div class="section-title">⚙️ Peças e Materiais</div>
+  <div class="section-body" style="padding:0">
+    {% if itens %}
+    <table>
+      <thead>
+        <tr>
+          <th>Descrição</th>
+          <th class="text-right">Qtd</th>
+          <th class="text-right">Unit. (R$)</th>
+          <th class="text-right">Total (R$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in itens %}
+        <tr>
+          <td>{{ item.descricao or item.get('supply_name','—') }}</td>
+          <td class="text-right">{{ item.get('quantidade') or item.get('quantity') or 1 }}</td>
+          <td class="text-right">{{ '%.2f'|format(item.get('valor_unitario') or item.get('unit_cost') or 0) }}</td>
+          <td class="text-right">{{ '%.2f'|format(item.get('valor_total') or 0) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="padding:8px 10px;color:#999;">Nenhuma peça registrada.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- TOTAIS -->
+<div class="totais">
+  <div class="totais-box">
+    <div class="linha"><span>Mão de Obra:</span><span>R$ {{ '%.2f'|format(order.get('total_mao_obra') or 0) }}</span></div>
+    <div class="linha"><span>Peças e Materiais:</span><span>R$ {{ '%.2f'|format(order.get('total_pecas') or 0) }}</span></div>
+    <div class="linha"><span>Desconto:</span><span>R$ {{ '%.2f'|format(order.get('desconto') or 0) }}</span></div>
+    <div class="linha linha-total"><span>TOTAL GERAL:</span><span class="val">R$ {{ '%.2f'|format(order.get('total_geral') or 0) }}</span></div>
+  </div>
+</div>
+
+<!-- ASSINATURAS -->
+<div class="assinatura">
+  <div class="linha-assin">Assinatura do Cliente</div>
+  <div class="linha-assin">Mecânico Responsável</div>
+  <div class="linha-assin">Atendente / Gerente</div>
+</div>
+
+<div class="rodape">
+  IKFlow Mecânica — Sistema de Gestão | {{ order.order_number }} |
+  Impresso em: <script>document.write(new Date().toLocaleString('pt-BR'))</script>
+</div>
+
+</body>
+</html>

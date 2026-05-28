@@ -1,18 +1,26 @@
 import os
+import sys
 import mysql.connector
 import json
 from datetime import datetime
 import requests
 import time
 
+# Carregar .env se disponível
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # =========================================
-# CONFIGURAÇÕES
+# CONFIGURAÇÕES — lê do ambiente (.env / config.py)
 # =========================================
 MYSQL_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "aritana",
-    "database": "supply_chain_system"
+    "host":     os.getenv('DB_HOST', 'localhost'),
+    "user":     os.getenv('DB_USER', 'root'),
+    "password": os.getenv('DB_PASSWORD', 'Root@1234!'),
+    "database": os.getenv('DB_NAME', 'supply_chain_mecanica'),
 }
 
 STATUS_FILE = os.path.join(os.path.dirname(__file__), 'geocodificacao_status.json')

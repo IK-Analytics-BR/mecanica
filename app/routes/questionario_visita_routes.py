@@ -1,10 +1,18 @@
 """Rotas para Questionário de Visita ao Cliente (genérico por segmento)."""
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app.database import get_db
-from app.services.questionario_visita_pdf import gerar_pdf_questionario
-from app.services.email_service import enviar_email_com_anexo
+from database import get_db
+try:
+    from services.questionario_visita_pdf import gerar_pdf_questionario
+except ImportError:
+    gerar_pdf_questionario = None
+try:
+    from services.email_service import enviar_email_com_anexo
+except ImportError:
+    enviar_email_com_anexo = None
 
 import json
 

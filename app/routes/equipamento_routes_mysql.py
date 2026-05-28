@@ -94,18 +94,21 @@ def equipamento_cadastrar():
     if request.method == 'POST':
         # Obter dados do formulário
         name = request.form['name']
-        customer_id = request.form['customer_id'] if request.form['customer_id'] else None
+        customer_id = request.form.get('customer_id') or None
         installation_date = request.form['installation_date']
-        next_maintenance = request.form['next_maintenance'] if request.form['next_maintenance'] else None
-        notes = request.form['notes']
+        next_maintenance = request.form.get('next_maintenance') or None
+        notes = request.form.get('notes', '')
+        serial_number = request.form.get('serial_number', '')
+        manufacturer = request.form.get('manufacturer', '')
+        model = request.form.get('model', '')
         
         # Inserir equipamento no banco de dados
         db = get_db()
         query = """
-            INSERT INTO equipment (name, customer_id, installation_date, next_maintenance, notes)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO equipment (name, customer_id, installation_date, next_maintenance, notes, serial_number, manufacturer, model)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-        params = (name, customer_id, installation_date, next_maintenance, notes)
+        params = (name, customer_id, installation_date, next_maintenance, notes, serial_number, manufacturer, model)
         
         equipamento_id = db.insert(query, params)
         
@@ -137,18 +140,22 @@ def equipamento_editar(id):
     if request.method == 'POST':
         # Obter dados do formulário
         name = request.form['name']
-        customer_id = request.form['customer_id'] if request.form['customer_id'] else None
+        customer_id = request.form.get('customer_id') or None
         installation_date = request.form['installation_date']
-        next_maintenance = request.form['next_maintenance'] if request.form['next_maintenance'] else None
-        notes = request.form['notes']
+        next_maintenance = request.form.get('next_maintenance') or None
+        notes = request.form.get('notes', '')
+        serial_number = request.form.get('serial_number', '')
+        manufacturer = request.form.get('manufacturer', '')
+        model = request.form.get('model', '')
         
         # Atualizar equipamento no banco de dados
         query = """
             UPDATE equipment
-            SET name = %s, customer_id = %s, installation_date = %s, next_maintenance = %s, notes = %s
+            SET name = %s, customer_id = %s, installation_date = %s, next_maintenance = %s,
+                notes = %s, serial_number = %s, manufacturer = %s, model = %s
             WHERE id = %s
         """
-        params = (name, customer_id, installation_date, next_maintenance, notes, id)
+        params = (name, customer_id, installation_date, next_maintenance, notes, serial_number, manufacturer, model, id)
         
         affected_rows = db.update(query, params)
         

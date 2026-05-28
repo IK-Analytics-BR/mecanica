@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Novo PDV' if novo else 'Editar PDV' }}{% endblock %}
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h4 class="mb-0">
+            <i class="fas fa-cash-register"></i>
+            {{ 'Novo PDV' if novo else 'Editar PDV — ' + (config.pdv_name or '') }}
+          </h4>
+          <a href="{{ url_for('pdv_config.configuracoes') }}" class="btn btn-light btn-sm">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </a>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('pdv_config.criar_pdv') if novo else url_for('pdv_config.atualizar_pdv', pdv_id=config.id) }}">
+
+            <!-- IDENTIFICAÇÃO -->
+            <h6 class="text-muted text-uppercase fw-bold mb-3 mt-2"><i class="fas fa-id-card me-1"></i> Identificação</h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Nome do PDV <span class="text-danger">*</span></label>
+                <input type="text" name="pdv_name" class="form-control" required
+                       value="{{ config.pdv_name or 'PDV Balcão' }}">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Número</label>
+                <input type="number" name="pdv_number" class="form-control" min="1"
+                       value="{{ config.pdv_number or 1 }}">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="active" class="form-select">
+                  <option value="1" {{ 'selected' if config.get('active', 1) else '' }}>Ativo</option>
+                  <option value="0" {{ 'selected' if not config.get('active', 1) else '' }}>Inativo</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Descrição</label>
+                <input type="text" name="description" class="form-control"
+                       value="{{ config.description or '' }}">
+              </div>
+              {% if empresas %}
+              <div class="col-md-6">
+                <label class="form-label">Empresa</label>
+                <select name="company_id" class="form-select">
+                  <option value="">-- Todas as empresas --</option>
+                  {% for emp in empresas %}
+                  <option value="{{ emp.id }}" {{ 'selected' if config.get('company_id') == emp.id else '' }}>
+                    {{ emp.nome }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% endif %}
+            </div>
+
+            <hr>
+            <!-- ESTOQUE -->
+            <h6 class="text-muted text-uppercase fw-bold mb-3"><i class="fas fa-boxes me-1"></i> Estoque & Produtos</h6>
+            <div class="row g-2 mb-4">
+              {% set checks_estoque = [
+                ('allow_negative_stock','Permitir estoque negativo'),
+                ('check_stock_realtime','Verificar estoque em tempo real'),
+                ('show_stock_quantity','Exibir quantidade em estoque'),
+                ('ask_quantity','Perguntar quantidade ao adicionar'),
+                ('allow_decimal_quantity','Permitir quantidade decimal'),
+                ('allow_price_change','Permitir alterar preço'),
+                ('show_product_image','Exibir imagem do produto'),
+                ('show_barcode','Exibir código de barras'),
+              ] %}
+              {% for field, label in checks_estoque %}
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="{{ field }}" id="{{ field }}"
+                         {{ 'checked' if config.get(field, True) else '' }}>
+                  <label class="form-check-label" for="{{ field }}">{{ label }}</label>
+                </div>
+              </div>
+              {% endfor %}
+              <div class="col-md-4">
+                <label class="form-label">Quantidade padrão</label>
+                <input type="number" step="0.001" name="default_quantity" class="form-control"
+                       value="{{ config.default_quantity or 1 }}">
+              </div>
+            </div>
+
+            <hr>
+            <!-- DESCONTOS -->
+            <h6 class="text-muted text-uppercase fw-bold mb-3"><i class="fas fa-percent me-1"></i> Descontos & Pagamento</h6>
+            <div class="row g-2 mb-4">
+              {% set checks_desc = [
+                ('show_discount_button','Exibir botão de desconto'),
+                ('allow_item_discount','Permitir desconto por item'),
+                ('allow_total_discount','Permitir desconto no total'),
+                ('require_manager_approval','Exigir aprovação do gerente'),
+                ('require_customer','Exigir cliente no PDV'),
+                ('allow_customer_registration','Permitir cadastrar cliente no PDV'),
+                ('require_payment_confirmation','Confirmar pagamento antes de fechar'),
+                ('allow_multiple_payments','Permitir múltiplas formas de pagamento'),
+              ] %}
+              {% for field, label in checks_desc %}
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="{{ field }}" id="{{ field }}"
+                         {{ 'checked' if config.get(field, True) else '' }}>
+                  <label class="form-check-label" for="{{ field }}">{{ label }}</label>
+                </div>
+              </div>
+              {% endfor %}
+              <div class="col-md-4">
+                <label class="form-label">Desconto máximo (%)</label>
+                <input type="number" step="0.01" name="max_discount_percent" class="form-control"
+                       value="{{ config.max_discount_percent or 10 }}">
+              </div>
+            </div>
+
+            <hr>
+            <!-- IMPRESSÃO -->
+            <h6 class="text-muted text-uppercase fw-bold mb-3"><i class="fas fa-print me-1"></i> Impressão</h6>
+            <div class="row g-2 mb-4">
+              {% set checks_imp = [
+                ('print_receipt_auto','Imprimir cupom automaticamente'),
+                ('print_company_logo','Imprimir logotipo da empresa'),
+                ('print_customer_copy','Imprimir via do cliente'),
+              ] %}
+              {% for field, label in checks_imp %}
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="{{ field }}" id="{{ field }}"
+                         {{ 'checked' if config.get(field, True) else '' }}>
+                  <label class="form-check-label" for="{{ field }}">{{ label }}</label>
+                </div>
+              </div>
+              {% endfor %}
+              <div class="col-md-4">
+                <label class="form-label">Impressora</label>
+                <input type="text" name="printer_name" class="form-control" placeholder="Nome da impressora"
+                       value="{{ config.printer_name or '' }}">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Largura do papel (mm)</label>
+                <select name="paper_width" class="form-select">
+                  <option value="58" {{ 'selected' if config.get('paper_width') == 58 else '' }}>58mm</option>
+                  <option value="80" {{ 'selected' if config.get('paper_width', 80) == 80 else '' }}>80mm</option>
+                </select>
+              </div>
+            </div>
+
+            <hr>
+            <!-- ATALHOS / COMPORTAMENTO -->
+            <h6 class="text-muted text-uppercase fw-bold mb-3"><i class="fas fa-keyboard me-1"></i> Atalhos & Comportamento</h6>
+            <div class="row g-2 mb-4">
+              {% set checks_atalhos = [
+                ('auto_focus_product_field','Foco automático no campo produto'),
+                ('beep_on_scan','Beep ao escanear código'),
+                ('enable_f2_customer','F2 — Selecionar cliente'),
+                ('enable_f4_discount','F4 — Aplicar desconto'),
+                ('enable_f5_cancel','F5 — Cancelar item'),
+                ('enable_f6_search','F6 — Buscar produto'),
+                ('enable_f9_finish','F9 — Finalizar venda'),
+                ('require_supervisor_cancel','Exigir supervisor para cancelar'),
+                ('log_all_operations','Registrar log de todas operações'),
+              ] %}
+              {% for field, label in checks_atalhos %}
+              <div class="col-md-6">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="{{ field }}" id="{{ field }}"
+                         {{ 'checked' if config.get(field, True) else '' }}>
+                  <label class="form-check-label" for="{{ field }}">{{ label }}</label>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end pt-2">
+              <a href="{{ url_for('pdv_config.configuracoes') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {{ 'Criar PDV' if novo else 'Salvar Alterações' }}
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

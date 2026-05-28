@@ -1,387 +1,358 @@
 {% extends "base.html" %}
+{% block title %}OS {{ order.order_number }} — IKFlow Mecânica{% endblock %}
 
-{% block title %}OS: {{ order.order_number }} - Sistema de Gestão de Suprimentos{% endblock %}
+{% block extra_css %}
+<style>
+  .os-hero { background:linear-gradient(135deg,#0b2447,#08a5b2);color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:18px; }
+  .os-hero .badge-status { font-size:13px; }
+  .action-bar { display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px; }
+  .section-card { border:none;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:16px; }
+  .section-card .card-header { background:#f8f9fa;font-weight:600;border-radius:10px 10px 0 0;border-bottom:2px solid #e9ecef;padding:10px 16px; }
+  .cronometro { font-family:monospace;font-size:1.4rem;font-weight:700;color:#0b2447; }
+  .info-row { display:flex;flex-wrap:wrap;gap:6px 20px; }
+  .info-item label { font-size:9px;text-transform:uppercase;color:#999;display:block;margin-bottom:2px; }
+  .info-item span { font-size:13px;font-weight:600; }
+  .total-box { background:linear-gradient(135deg,#0b2447,#08a5b2);color:#fff;border-radius:10px;padding:14px 18px; }
+  .total-box .linha { display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.15); }
+  .total-box .linha-total { font-size:1.2rem;font-weight:700;padding-top:8px; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
-    <div class="alert alert-info">
-        <strong>Nota:</strong> Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('bem_vindo') }}">Início</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('service_order.service_order_list') }}">OS</a></li>
+    <li class="breadcrumb-item active">{{ order.order_number }}</li>
+  </ol>
+
+  <!-- HERO -->
+  <div class="os-hero d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+      <h4 class="mb-1"><i class="fas fa-tools me-2"></i>{{ order.order_number }}</h4>
+      <div class="info-row opacity-90">
+        <div class="info-item"><label>Cliente</label><span>{{ order.customer_name or '—' }}</span></div>
+        <div class="info-item"><label>Veículo</label><span>{{ order.equipment_name or '—' }}</span></div>
+        <div class="info-item"><label>Placa</label><span>{{ order.placa or '—' }}</span></div>
+        <div class="info-item"><label>KM</label><span>{{ order.get('km_entrada') or '—' }}</span></div>
+        <div class="info-item"><label>Mecânico</label><span>{{ order.technician_name or 'A definir' }}</span></div>
+        <div class="info-item"><label>Abertura</label><span>{{ order.open_date.strftime('%d/%m/%Y %H:%M') if order.open_date else '—' }}</span></div>
+      </div>
+    </div>
+    <div class="text-end">
+      {% set s = order.status %}
+      {% if s == 'open' %}<span class="badge bg-secondary fs-6 badge-status">Aberta</span>
+      {% elif s == 'in_progress' %}<span class="badge bg-primary fs-6 badge-status">Em Execução</span>
+      {% elif s == 'completed' %}<span class="badge bg-success fs-6 badge-status">Concluída</span>
+      {% elif s == 'canceled' %}<span class="badge bg-dark fs-6 badge-status">Cancelada</span>
+      {% endif %}
+      <br><br>
+      {% set so = order.get('status_orcamento','rascunho') %}
+      <small class="opacity-75">Orçamento: </small>
+      {% if so == 'aprovado' %}<span class="badge bg-success">Aprovado</span>
+      {% elif so == 'enviado' %}<span class="badge bg-primary">Enviado</span>
+      {% elif so == 'reprovado' %}<span class="badge bg-danger">Reprovado</span>
+      {% else %}<span class="badge bg-light text-dark">Rascunho</span>{% endif %}
+    </div>
+  </div>
+
+  <!-- BARRA DE AÇÕES PRIMÁRIAS -->
+  <div class="action-bar">
+    {# PDF / Impressão #}
+    <a href="{{ url_for('service_order.service_order_pdf', order_id=order.id) }}"
+       class="btn btn-outline-secondary" target="_blank" title="Imprimir OS / Prisma">
+      <i class="fas fa-print me-1"></i> Imprimir OS
+    </a>
+
+    {# Editar #}
+    {% if order.status not in ('completed','canceled') %}
+    <a href="{{ url_for('service_order.service_order_edit', order_id=order.id) }}"
+       class="btn btn-warning text-dark"><i class="fas fa-edit me-1"></i> Editar</a>
+    {% endif %}
+
+    {# Aprovar orçamento #}
+    {% if order.get('status_orcamento') in ('rascunho','enviado') and order.status != 'canceled' %}
+    <form method="post" action="{{ url_for('service_order.service_order_aprovar', order_id=order.id) }}" class="d-inline">
+      <button type="submit" class="btn btn-success"
+              onclick="return confirm('Aprovar este orçamento e lançar em Contas a Receber?')">
+        <i class="fas fa-check-circle me-1"></i> Aprovar Orçamento
+      </button>
+    </form>
+    {% endif %}
+
+    {# Iniciar serviço #}
+    {% if not order.get('data_inicio_servico') and order.status == 'in_progress' %}
+    <form method="post" action="{{ url_for('service_order.service_order_iniciar', order_id=order.id) }}" class="d-inline">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-play-circle me-1"></i> Iniciar Serviço
+      </button>
+    </form>
+    {% endif %}
+
+    {# Finalizar serviço #}
+    {% if order.get('data_inicio_servico') and not order.get('data_fim_servico') %}
+    <form method="post" action="{{ url_for('service_order.service_order_finalizar', order_id=order.id) }}" class="d-inline">
+      <button type="submit" class="btn btn-success"
+              onclick="return confirm('Confirmar conclusão do serviço?')">
+        <i class="fas fa-flag-checkered me-1"></i> Finalizar Serviço
+      </button>
+    </form>
+    {% endif %}
+
+    {# Cancelar #}
+    {% if order.status not in ('completed','canceled') %}
+    <form method="post" action="{{ url_for('service_order.service_order_cancel', order_id=order.id) }}"
+          class="d-inline" onsubmit="return confirm('Cancelar esta OS?')">
+      <button type="submit" class="btn btn-outline-danger"><i class="fas fa-ban me-1"></i> Cancelar</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- BARRA DE AÇÕES SECUNDÁRIAS (WhatsApp / PIX / NFS-e) -->
+  <div class="action-bar mb-3">
+    {% if blueprint_exists('whatsapp') %}
+    <div class="dropdown">
+      <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='orcamento') }}">
+            <button type="submit" class="dropdown-item"><i class="fas fa-file-invoice me-2"></i>Enviar Orçamento</button>
+          </form>
+        </li>
+        <li>
+          <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='aprovado') }}">
+            <button type="submit" class="dropdown-item"><i class="fas fa-check me-2"></i>Aviso de Aprovação</button>
+          </form>
+        </li>
+        <li>
+          <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='concluido') }}">
+            <button type="submit" class="dropdown-item"><i class="fas fa-car me-2"></i>Veículo Pronto!</button>
+          </form>
+        </li>
+        <li>
+          <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='cobranca') }}">
+            <button type="submit" class="dropdown-item"><i class="fas fa-dollar-sign me-2"></i>Cobrança</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if blueprint_exists('pix') %}
+    <a href="{{ url_for('pix.pix_gerar', order_id=order.id) }}" class="btn btn-outline-info">
+      <i class="fas fa-qrcode me-1"></i> Gerar PIX
+    </a>
+    {% endif %}
+
+    {% if blueprint_exists('nfse') and order.status == 'completed' %}
+    <a href="{{ url_for('nfse.nfse_emitir', order_id=order.id) }}" class="btn btn-outline-primary">
+      <i class="fas fa-file-invoice me-1"></i> Emitir NFS-e
+    </a>
+    {% endif %}
+
+    {% if order.equipment_id %}
+    <a href="{{ url_for('service_order.veiculo_historico', equipment_id=order.equipment_id) }}"
+       class="btn btn-outline-dark">
+      <i class="fas fa-history me-1"></i> Histórico do Veículo
+    </a>
+    {% endif %}
+
+    <a href="{{ url_for('service_order.service_order_list') }}" class="btn btn-outline-secondary ms-auto">
+      <i class="fas fa-arrow-left me-1"></i> Voltar
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <!-- COLUNA ESQUERDA: dados + cronômetro -->
+    <div class="col-lg-5">
+
+      <!-- Cronômetro de serviço -->
+      {% if order.get('data_inicio_servico') %}
+      <div class="section-card card mb-0">
+        <div class="card-header"><i class="fas fa-stopwatch me-2 text-primary"></i>Cronômetro do Serviço</div>
+        <div class="card-body text-center py-3">
+          {% if order.get('data_fim_servico') %}
+            {% set inicio = order.data_inicio_servico %}
+            {% set fim    = order.data_fim_servico %}
+            <div class="cronometro text-success">✅ Concluído</div>
+            <div class="text-muted mt-1">
+              Início: {{ inicio.strftime('%d/%m %H:%M') }} |
+              Fim: {{ fim.strftime('%d/%m %H:%M') }}
+            </div>
+          {% else %}
+            <div class="cronometro text-primary" id="cronometro">00:00:00</div>
+            <small class="text-muted">Iniciado em {{ order.data_inicio_servico.strftime('%d/%m %H:%M') }}</small>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Diagnóstico -->
+      <div class="section-card card">
+        <div class="card-header"><i class="fas fa-search me-2 text-warning"></i>Prisma de Diagnóstico</div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small text-muted fw-semibold text-uppercase">Relato do Cliente</label>
+              <div class="bg-light rounded p-2" style="min-height:50px;font-size:13px;white-space:pre-wrap">{{ order.observations or '—' }}</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small text-muted fw-semibold text-uppercase">Diagnóstico Técnico</label>
+              <div class="bg-light rounded p-2" style="min-height:50px;font-size:13px;white-space:pre-wrap;border-left:3px solid #08a5b2">{{ order.get('diagnostico') or '(Não preenchido)' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MO -->
+      <div class="section-card card">
+        <div class="card-header"><i class="fas fa-hard-hat me-2 text-info"></i>Mão de Obra</div>
+        <div class="card-body">
+          <div class="row g-2 text-center">
+            <div class="col-4">
+              <div class="small text-muted">Complexidade</div>
+              {% set cx = order.get('complexidade','medio') %}
+              <span class="badge bg-{% if cx=='simples' %}success{% elif cx=='complexo' %}danger{% else %}warning text-dark{% endif %} mt-1">
+                {{ cx|title }}
+              </span>
+            </div>
+            <div class="col-4">
+              <div class="small text-muted">Horas</div>
+              <div class="fw-bold">{{ order.get('horas_estimadas') or '—' }} h</div>
+            </div>
+            <div class="col-4">
+              <div class="small text-muted">R$/Hora</div>
+              <div class="fw-bold">R$ {{ '%.2f'|format(order.get('valor_hora') or 0) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Totais -->
+      <div class="total-box">
+        <div class="linha"><span>Mão de Obra:</span><span>R$ {{ '%.2f'|format(order.get('total_mao_obra') or total_labor or 0) }}</span></div>
+        <div class="linha"><span>Peças:</span><span>R$ {{ '%.2f'|format(order.get('total_pecas') or total_items or 0) }}</span></div>
+        <div class="linha"><span>Desconto:</span><span>R$ {{ '%.2f'|format(order.get('desconto') or 0) }}</span></div>
+        <div class="linha linha-total"><span>TOTAL:</span><span style="color:#08a5b2">R$ {{ '%.2f'|format(order.get('total_geral') or total_cost or 0) }}</span></div>
+      </div>
     </div>
 
-    <h1 class="mt-4">Ordem de Serviço: {{ order.order_number }}</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ url_for('service_order.service_order_list') }}">Ordens de Serviço</a></li>
-        <li class="breadcrumb-item active">Visualizar OS</li>
-    </ol>
-    
-    <div class="row">
-        <div class="col-xl-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Informações da OS
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-3">
-                        <h5>Status: 
-                            {% if order.status == 'open' %}
-                            <span class="badge bg-primary">Aberta</span>
-                            {% elif order.status == 'in_progress' %}
-                            <span class="badge bg-warning">Em Andamento</span>
-                            {% elif order.status == 'completed' %}
-                            <span class="badge bg-success">Concluída</span>
-                            {% elif order.status == 'canceled' %}
-                            <span class="badge bg-danger">Cancelada</span>
-                            {% endif %}
-                        </h5>
-                        <h5>
-                            {% if order.type == 'preventive' %}
-                            <span class="badge bg-success">Preventiva</span>
-                            {% elif order.type == 'corrective' %}
-                            <span class="badge bg-danger">Corretiva</span>
-                            {% elif order.type == 'predictive' %}
-                            <span class="badge bg-info">Preditiva</span>
-                            {% endif %}
-                        </h5>
-                    </div>
-                    
-                    <table class="table table-borderless">
-                        <tr>
-                            <th>Cliente:</th>
-                            <td>
-                                <a href="{{ url_for('cliente.cliente_visualizar', id=order.customer_id) }}">
-                                    {{ order.customer_name }}
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Equipamento:</th>
-                            <td>
-                                <a href="{{ url_for('equipamento.equipamento_visualizar', id=order.equipment_id) }}">
-                                    {{ order.equipment_name }}
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Componente:</th>
-                            <td>
-                                {% if order.supply_id %}
-                                <a href="{{ url_for('insumo.insumo_visualizar', id=order.supply_id) }}">
-                                    {{ order.supply_name }}
-                                </a>
-                                {% else %}
-                                <span class="text-muted">N/A</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Plano de Manutenção:</th>
-                            <td>
-                                {% if order.maintenance_plan_id %}
-                                <a href="{{ url_for('maintenance_plan.maintenance_plan_view', plan_id=order.maintenance_plan_id) }}">
-                                    {{ order.maintenance_plan_task }}
-                                </a>
-                                {% else %}
-                                <span class="text-muted">N/A</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Técnico:</th>
-                            <td>{{ order.technician_name or 'Não atribuído' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Data de Abertura:</th>
-                            <td>{{ order.open_date.strftime('%d/%m/%Y %H:%M') }}</td>
-                        </tr>
-                        <tr>
-                            <th>Data de Conclusão:</th>
-                            <td>
-                                {% if order.completion_date %}
-                                {{ order.completion_date.strftime('%d/%m/%Y %H:%M') }}
-                                {% else %}
-                                <span class="text-muted">N/A</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Tempo de Parada:</th>
-                            <td>{{ order.downtime_minutes }} minutos</td>
-                        </tr>
-                        <tr>
-                            <th>Observações:</th>
-                            <td>
-                                {% if order.observations %}
-                                <pre class="bg-light p-2 rounded">{{ order.observations }}</pre>
-                                {% else %}
-                                <span class="text-muted">Nenhuma observação</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <div class="mt-3">
-                        {% if order.status != 'completed' and order.status != 'canceled' %}
-                        <a href="{{ url_for('service_order.service_order_edit', order_id=order.id) }}" class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
-                        <form action="{{ url_for('service_order.service_order_cancel', order_id=order.id) }}" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja cancelar esta ordem de serviço?');">
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-ban"></i> Cancelar OS
-                            </button>
-                        </form>
-                        {% endif %}
-                        <a href="{{ url_for('service_order.service_order_list') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Voltar
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <!-- COLUNA DIREITA: itens + histórico -->
+    <div class="col-lg-7">
+      <!-- Peças e Materiais -->
+      <div class="section-card card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-cogs me-2 text-secondary"></i>Peças e Materiais</span>
         </div>
-        
-        <div class="col-xl-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-dollar-sign me-1"></i>
-                    Resumo de Custos
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card bg-primary text-white mb-4">
-                                <div class="card-body">
-                                    <h5 class="text-center">Peças</h5>
-                                    <h3 class="text-center">R$ {{ "%.2f"|format(total_items) }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-success text-white mb-4">
-                                <div class="card-body">
-                                    <h5 class="text-center">Mão de Obra</h5>
-                                    <h3 class="text-center">R$ {{ "%.2f"|format(total_labor) }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-warning text-white mb-4">
-                                <div class="card-body">
-                                    <h5 class="text-center">Total</h5>
-                                    <h3 class="text-center">R$ {{ "%.2f"|format(total_cost) }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-cogs me-1"></i>
-                    Peças Utilizadas
-                </div>
-                <div class="card-body">
-                    {% if items %}
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Peça</th>
-                                    <th>Quantidade</th>
-                                    <th>Custo Unit.</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in items %}
-                                <tr>
-                                    <td>{{ item.supply_name }}</td>
-                                    <td>{{ item.quantity }}</td>
-                                    <td>R$ {{ "%.2f"|format(item.unit_cost) }}</td>
-                                    <td>R$ {{ "%.2f"|format(item.quantity * item.unit_cost) }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="3" class="text-end">Total:</th>
-                                    <th>R$ {{ "%.2f"|format(total_items) }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info">
-                        Nenhuma peça utilizada nesta ordem de serviço.
-                    </div>
-                    {% endif %}
-                    
-                    {% if order.status != 'completed' and order.status != 'canceled' %}
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                            <i class="fas fa-plus"></i> Adicionar Peça
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-user-clock me-1"></i>
-                    Horas Trabalhadas
-                </div>
-                <div class="card-body">
-                    {% if labor %}
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Técnico</th>
-                                    <th>Horas</th>
-                                    <th>Taxa/Hora</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for l in labor %}
-                                <tr>
-                                    <td>{{ l.technician_name }}</td>
-                                    <td>{{ l.hours_worked }}</td>
-                                    <td>R$ {{ "%.2f"|format(l.hourly_rate) }}</td>
-                                    <td>R$ {{ "%.2f"|format(l.hours_worked * l.hourly_rate) }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="3" class="text-end">Total:</th>
-                                    <th>R$ {{ "%.2f"|format(total_labor) }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info">
-                        Nenhuma hora trabalhada registrada nesta ordem de serviço.
-                    </div>
-                    {% endif %}
-                    
-                    {% if order.status != 'completed' and order.status != 'canceled' %}
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLaborModal">
-                            <i class="fas fa-plus"></i> Adicionar Horas
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="card-body p-0">
+          {% if items %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr><th>Descrição</th><th class="text-center">Qtd</th><th class="text-end">Unit.</th><th class="text-end">Total</th></tr>
+              </thead>
+              <tbody>
+                {% for item in items %}
+                <tr>
+                  <td>{{ item.get('descricao') or item.get('supply_name') or '—' }}</td>
+                  <td class="text-center">{{ item.get('quantidade') or item.get('quantity') or 1 }}</td>
+                  <td class="text-end">R$ {{ '%.2f'|format(item.get('valor_unitario') or item.get('unit_cost') or 0) }}</td>
+                  <td class="text-end fw-bold">R$ {{ '%.2f'|format(item.get('valor_total') or ((item.get('quantidade') or item.get('quantity') or 1) * (item.get('valor_unitario') or item.get('unit_cost') or 0))) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot class="table-light">
+                <tr>
+                  <td colspan="3" class="text-end fw-bold">Subtotal Peças:</td>
+                  <td class="text-end fw-bold">R$ {{ '%.2f'|format(order.get('total_pecas') or total_items or 0) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-4"><i class="fas fa-cogs fa-2x mb-2 opacity-25"></i><p class="small">Nenhuma peça registrada.</p></div>
+          {% endif %}
         </div>
+      </div>
+
+      <!-- Horas de trabalho (tabela legada) -->
+      {% if labor %}
+      <div class="section-card card">
+        <div class="card-header"><i class="fas fa-clock me-2 text-success"></i>Horas Trabalhadas</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Técnico</th><th>Horas</th><th>R$/h</th><th class="text-end">Subtotal</th></tr></thead>
+            <tbody>
+              {% for l in labor %}
+              <tr>
+                <td>{{ l.technician_name }}</td>
+                <td>{{ l.hours_worked }}</td>
+                <td>R$ {{ "%.2f"|format(l.hourly_rate) }}</td>
+                <td class="text-end">R$ {{ "%.2f"|format(l.hours_worked * l.hourly_rate) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Datas e tempos -->
+      <div class="section-card card">
+        <div class="card-header"><i class="fas fa-calendar me-2"></i>Linha do Tempo</div>
+        <div class="card-body">
+          <div class="row g-2 text-center">
+            <div class="col-3">
+              <div class="small text-muted">Abertura</div>
+              <div class="fw-semibold small">{{ order.open_date.strftime('%d/%m/%Y') if order.open_date else '—' }}</div>
+            </div>
+            <div class="col-3">
+              <div class="small text-muted">Início Serviço</div>
+              <div class="fw-semibold small">
+                {% if order.get('data_inicio_servico') %}{{ order.data_inicio_servico.strftime('%d/%m %H:%M') }}
+                {% else %}<span class="text-muted">—</span>{% endif %}
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="small text-muted">Fim Serviço</div>
+              <div class="fw-semibold small">
+                {% if order.get('data_fim_servico') %}{{ order.data_fim_servico.strftime('%d/%m %H:%M') }}
+                {% else %}<span class="text-muted">—</span>{% endif %}
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="small text-muted">WhatsApp</div>
+              <div class="fw-semibold small">
+                {% if order.get('phone_notificado') %}<span class="text-success">✅ Enviado</span>
+                {% else %}<span class="text-muted">—</span>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+  </div>
 </div>
 
-<!-- Modal para adicionar peça -->
-<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addItemModalLabel">Adicionar Peça</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('service_order.service_order_add_item', order_id=order.id) }}" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="supply_id" class="form-label">Peça <span class="text-danger">*</span></label>
-                        <select class="form-select" id="supply_id" name="supply_id" required>
-                            <option value="">Selecione uma peça</option>
-                            {% for supply in supplies %}
-                            <option value="{{ supply.id }}">
-                                {{ supply.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantidade <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="unit_cost" class="form-label">Custo Unitário (R$) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="unit_cost" name="unit_cost" min="0" step="0.01" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Adicionar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para adicionar horas trabalhadas -->
-<div class="modal fade" id="addLaborModal" tabindex="-1" aria-labelledby="addLaborModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addLaborModalLabel">Adicionar Horas Trabalhadas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('service_order.service_order_add_labor', order_id=order.id) }}" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="technician_id" class="form-label">Técnico <span class="text-danger">*</span></label>
-                        <select class="form-select" id="technician_id" name="technician_id" required>
-                            <option value="">Selecione um técnico</option>
-                            {% for technician in technicians %}
-                            <option value="{{ technician.id }}">
-                                {{ technician.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="hours_worked" class="form-label">Horas Trabalhadas <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="hours_worked" name="hours_worked" min="0.5" step="0.5" value="1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="hourly_rate" class="form-label">Taxa Horária (R$) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="hourly_rate" name="hourly_rate" min="0" step="0.01" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Adicionar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
+{% if order.get('data_inicio_servico') and not order.get('data_fim_servico') %}
 <script>
-    $(document).ready(function() {
-        // Preencher o custo unitário ao selecionar uma peça
-        $('#supply_id').change(function() {
-            var supplyId = $(this).val();
-            if (supplyId) {
-                // Aqui você pode implementar uma chamada AJAX para buscar o preço da peça
-                // Por enquanto, vamos apenas sugerir um valor padrão
-                $('#unit_cost').val('0.00');
-            }
-        });
-        
-        // Preencher a taxa horária ao selecionar um técnico
-        $('#technician_id').change(function() {
-            var technicianId = $(this).val();
-            if (technicianId) {
-                // Aqui você pode implementar uma chamada AJAX para buscar a taxa do técnico
-                // Por enquanto, vamos apenas sugerir um valor padrão
-                $('#hourly_rate').val('50.00');
-            }
-        });
-    });
+(function() {
+  const inicio = new Date("{{ order.data_inicio_servico.strftime('%Y-%m-%dT%H:%M:%S') }}");
+  function update() {
+    const now = new Date();
+    const diff = Math.floor((now - inicio) / 1000);
+    const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+    const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+    const s = String(diff % 60).padStart(2, '0');
+    const el = document.getElementById('cronometro');
+    if (el) el.textContent = h + ':' + m + ':' + s;
+  }
+  update();
+  setInterval(update, 1000);
+})();
 </script>
+{% endif %}
 {% endblock %}

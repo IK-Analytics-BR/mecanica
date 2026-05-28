@@ -174,6 +174,22 @@
                                 <input type="text" class="form-control" id="contact_role" name="contact_role" value="{{ cliente.contact_role if cliente and cliente.contact_role != None else '' }}">
                             </div>
                         </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card border-0 bg-light p-3">
+                                    <div class="fw-semibold mb-2"><i class="fab fa-whatsapp text-success me-1"></i> Comunicação WhatsApp</div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="permitir_whatsapp" name="permitir_whatsapp" value="1"
+                                            {% if (cliente and cliente.get('permitir_whatsapp', 1)) or not cliente %}checked{% endif %}>
+                                        <label class="form-check-label" for="permitir_whatsapp">
+                                            Permitir envio de mensagens automáticas via WhatsApp
+                                            <small class="text-muted d-block">Notificações de orçamento, serviço concluído e lembretes de revisão serão enviados ao número do cliente.</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <div class="row mb-3">
                             <div class="col-md-3">

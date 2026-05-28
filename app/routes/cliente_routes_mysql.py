@@ -339,6 +339,7 @@ def cliente_cadastrar():
         email = request.form.get('email', '')
         contact_name = request.form.get('contact_name', '')
         contact_role = request.form.get('contact_role', '')
+        permitir_whatsapp = 1 if request.form.get('permitir_whatsapp') else 0
         
         # Dados de georreferenciamento
         latitude = request.form.get('latitude', '')
@@ -368,12 +369,12 @@ def cliente_cadastrar():
         query = """
             INSERT INTO customers (name, razao_social, cnpj, ie, cep, address, number, complement, 
                                  neighborhood, reference, city, state, phone, email, 
-                                 contact_name, contact_role, latitude, longitude)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                 contact_name, contact_role, latitude, longitude, permitir_whatsapp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (name, razao_social, cnpj, ie, cep, address, number, complement, 
                  neighborhood, reference, city, state, phone, email, 
-                 contact_name, contact_role, latitude, longitude)
+                 contact_name, contact_role, latitude, longitude, permitir_whatsapp)
         
         cliente_id = db.insert(query, params)
         
@@ -414,6 +415,7 @@ def cliente_cadastrar_forcar():
         email = request.form.get('email', '')
         contact_name = request.form.get('contact_name', '')
         contact_role = request.form.get('contact_role', '')
+        permitir_whatsapp = 1 if request.form.get('permitir_whatsapp') else 0
         
         # Dados de georreferenciamento
         latitude = request.form.get('latitude', '')
@@ -443,12 +445,12 @@ def cliente_cadastrar_forcar():
         query = """
             INSERT INTO customers (name, razao_social, cnpj, ie, cep, address, number, complement, 
                                  neighborhood, reference, city, state, phone, email, 
-                                 contact_name, contact_role, latitude, longitude)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                 contact_name, contact_role, latitude, longitude, permitir_whatsapp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (name, razao_social, cnpj, ie, cep, address, number, complement, 
                  neighborhood, reference, city, state, phone, email, 
-                 contact_name, contact_role, latitude, longitude)
+                 contact_name, contact_role, latitude, longitude, permitir_whatsapp)
         
         cliente_id = db.insert(query, params)
         
@@ -497,6 +499,7 @@ def cliente_editar(id):
         email = request.form.get('email', '')
         contact_name = request.form.get('contact_name', '')
         contact_role = request.form.get('contact_role', '')
+        permitir_whatsapp = 1 if request.form.get('permitir_whatsapp') else 0
         
         # Dados de georreferenciamento
         latitude = request.form.get('latitude', '')
@@ -526,12 +529,13 @@ def cliente_editar(id):
             UPDATE customers
             SET name = %s, razao_social = %s, cnpj = %s, ie = %s, cep = %s, address = %s, 
                 number = %s, complement = %s, neighborhood = %s, reference = %s, city = %s, state = %s, 
-                phone = %s, email = %s, contact_name = %s, contact_role = %s, latitude = %s, longitude = %s
+                phone = %s, email = %s, contact_name = %s, contact_role = %s, latitude = %s, longitude = %s,
+                permitir_whatsapp = %s
             WHERE id = %s
         """
         params = (name, razao_social, cnpj, ie, cep, address, number, complement, 
                  neighborhood, reference, city, state, phone, email, 
-                 contact_name, contact_role, latitude, longitude, id)
+                 contact_name, contact_role, latitude, longitude, permitir_whatsapp, id)
         
         affected_rows = db.update(query, params)
         

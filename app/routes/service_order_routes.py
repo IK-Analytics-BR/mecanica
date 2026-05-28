@@ -4,7 +4,7 @@ Rotas para gerenciamento de ordens de serviço.
 Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
 from datetime import datetime
 
@@ -49,6 +49,140 @@ def service_order_list():
         active_page='service_orders'
     )
 
+# ──────────────────────────────────────────────────────────────────────────────
+# APIs JSON — usadas pelo formulário inteligente de OS (AJAX)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@service_order_bp.route('/api/clientes/buscar')
+@login_required
+def api_buscar_cliente():
+    """Busca cliente por CPF/CNPJ ou nome (retorna JSON)."""
+    db = get_db()
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify([])
+    # Busca por CPF/CNPJ (apenas dígitos) ou por nome
+    q_digits = ''.join(filter(str.isdigit, q))
+    results = []
+    if q_digits and len(q_digits) >= 3:
+        rows = db.fetch_all(
+            "SELECT id, name, cnpj, phone, email FROM customers "
+            "WHERE active=TRUE AND REPLACE(REPLACE(REPLACE(cnpj,'.',''),'-',''),'/','') LIKE %s "
+            "ORDER BY name LIMIT 10",
+            (f'%{q_digits}%',)
+        )
+        results.extend(rows)
+    if len(results) < 10:
+        rows2 = db.fetch_all(
+            "SELECT id, name, cnpj, phone, email FROM customers "
+            "WHERE active=TRUE AND name LIKE %s "
+            "ORDER BY name LIMIT %s",
+            (f'%{q}%', 10 - len(results))
+        )
+        # evitar duplicatas
+        ids_ja = {r['id'] for r in results}
+        results.extend(r for r in rows2 if r['id'] not in ids_ja)
+    return jsonify([dict(r) for r in results])
+
+
+@service_order_bp.route('/api/clientes/cadastrar-rapido', methods=['POST'])
+@login_required
+def api_cadastrar_cliente_rapido():
+    """Cadastra cliente mínimo inline (nome + CPF/CNPJ + telefone)."""
+    db = get_db()
+    data = request.get_json() or {}
+    nome  = (data.get('name') or '').strip()
+    cpf   = (data.get('cnpj') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    if not nome:
+        return jsonify({'ok': False, 'erro': 'Nome obrigatório'}), 400
+    # Evitar duplicata por CPF
+    if cpf:
+        cpf_digits = ''.join(filter(str.isdigit, cpf))
+        existe = db.fetch_one(
+            "SELECT id, name FROM customers WHERE "
+            "REPLACE(REPLACE(REPLACE(cnpj,'.',''),'-',''),'/','')=%s AND active=TRUE",
+            (cpf_digits,)
+        )
+        if existe:
+            return jsonify({'ok': True, 'id': existe['id'], 'name': existe['name'], 'ja_existia': True})
+    cid = db.insert(
+        "INSERT INTO customers (name, cnpj, phone, address, number, city, state, cep, active) "
+        "VALUES (%s,%s,%s,'Não informado','S/N','Não informada','MS','00000-000',TRUE)",
+        (nome, cpf or '00.000.000/0000-00', phone)
+    )
+    if cid:
+        return jsonify({'ok': True, 'id': cid, 'name': nome, 'ja_existia': False})
+    return jsonify({'ok': False, 'erro': 'Erro ao salvar'}), 500
+
+
+@service_order_bp.route('/api/veiculos/por-cliente/<int:customer_id>')
+@login_required
+def api_veiculos_por_cliente(customer_id):
+    """Retorna veículos do cliente (para popular o select de veículo)."""
+    db = get_db()
+    rows = db.fetch_all(
+        "SELECT id, name, serial_number as placa, model, manufacturer "
+        "FROM equipment WHERE customer_id=%s AND active=TRUE ORDER BY name",
+        (customer_id,)
+    )
+    return jsonify([dict(r) for r in rows])
+
+
+@service_order_bp.route('/api/veiculos/buscar-placa')
+@login_required
+def api_buscar_placa():
+    """Busca veículo pela placa (serial_number) — retorna cliente vinculado também."""
+    db = get_db()
+    placa = request.args.get('placa', '').strip().upper()
+    if not placa:
+        return jsonify(None)
+    row = db.fetch_one(
+        "SELECT e.id, e.name, e.serial_number as placa, e.model, e.manufacturer, "
+        "       e.customer_id, c.name as customer_name, c.cnpj, c.phone "
+        "FROM equipment e "
+        "LEFT JOIN customers c ON e.customer_id = c.id "
+        "WHERE e.serial_number = %s AND e.active=TRUE LIMIT 1",
+        (placa,)
+    )
+    return jsonify(dict(row) if row else None)
+
+
+@service_order_bp.route('/api/veiculos/cadastrar-rapido', methods=['POST'])
+@login_required
+def api_cadastrar_veiculo_rapido():
+    """Cadastra veículo mínimo inline (placa + modelo + customer_id)."""
+    db = get_db()
+    data = request.get_json() or {}
+    placa       = (data.get('placa') or '').strip().upper()
+    modelo      = (data.get('modelo') or '').strip()
+    fabricante  = (data.get('fabricante') or '').strip()
+    customer_id = data.get('customer_id')
+    ano         = data.get('ano') or None
+    if not placa or not customer_id:
+        return jsonify({'ok': False, 'erro': 'Placa e cliente são obrigatórios'}), 400
+    # Checar se placa já existe
+    existe = db.fetch_one(
+        "SELECT id, name, customer_id FROM equipment WHERE serial_number=%s AND active=TRUE",
+        (placa,)
+    )
+    if existe:
+        return jsonify({'ok': True, 'id': existe['id'], 'name': existe['name'],
+                        'placa': placa, 'ja_existia': True,
+                        'customer_id': existe['customer_id']})
+    nome_veiculo = f'{fabricante} {modelo}'.strip() or placa
+    vid = db.insert(
+        "INSERT INTO equipment (name, serial_number, model, manufacturer, customer_id, installation_date, active) "
+        "VALUES (%s,%s,%s,%s,%s,CURDATE(),TRUE)",
+        (nome_veiculo, placa, modelo, fabricante, customer_id)
+    )
+    if vid:
+        return jsonify({'ok': True, 'id': vid, 'name': nome_veiculo, 'placa': placa, 'ja_existia': False})
+    return jsonify({'ok': False, 'erro': 'Erro ao salvar'}), 500
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+
 @service_order_bp.route('/service_orders/add', methods=['GET', 'POST'])
 @login_required
 def service_order_add():
@@ -58,60 +192,85 @@ def service_order_add():
     print("[DEBUG] Conexão com o banco de dados estabelecida")
     
     if request.method == 'POST':
-        # Obter dados do formulário
+        import json
         customer_id = request.form.get('customer_id')
         equipment_id = request.form.get('equipment_id')
-        supply_id = request.form.get('supply_id') or None
-        maintenance_plan_id = request.form.get('maintenance_plan_id') or None
-        order_type = request.form.get('type')
+        order_type = request.form.get('type', 'corrective')
         technician_id = request.form.get('technician_id') or None
-        observations = request.form.get('observations')
-        
-        # Validar dados
+        observations = request.form.get('observations', '')
+        diagnostico = request.form.get('diagnostico', '')
+        complexidade = request.form.get('complexidade', 'medio')
+        horas_estimadas = request.form.get('horas_estimadas') or 0
+        valor_hora = request.form.get('valor_hora') or 0
+        total_mao_obra = request.form.get('total_mao_obra') or 0
+        total_pecas = request.form.get('total_pecas') or 0
+        desconto = request.form.get('desconto') or 0
+        total_geral = request.form.get('total_geral') or 0
+        km_entrada = request.form.get('km_entrada') or None
+        status_orcamento = request.form.get('status_orcamento', 'rascunho')
+        acao = request.form.get('acao', 'salvar')
+        pecas_json = request.form.get('pecas_json', '[]')
+
         if not customer_id or not equipment_id or not order_type:
             flash('Por favor, preencha todos os campos obrigatórios.', 'danger')
             return redirect(url_for('service_order.service_order_add'))
-        
-        # Gerar número da OS (formato: OS-YYYYMMDD-XXX)
+
+        if acao == 'enviar':
+            status_orcamento = 'enviado'
+        elif acao == 'aprovar':
+            status_orcamento = 'aprovado'
+
         today = datetime.now().strftime('%Y%m%d')
         last_order = db.fetch_one("""
             SELECT order_number FROM service_orders
             WHERE order_number LIKE %s
             ORDER BY id DESC LIMIT 1
         """, (f'OS-{today}-%',))
-        
         if last_order:
             last_number = int(last_order['order_number'].split('-')[-1])
             order_number = f'OS-{today}-{last_number + 1:03d}'
         else:
             order_number = f'OS-{today}-001'
-        
-        # Inserir ordem de serviço no banco de dados
+
         query = """
             INSERT INTO service_orders (
-                order_number, customer_id, equipment_id, supply_id, 
-                maintenance_plan_id, type, technician_id, observations
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                order_number, customer_id, equipment_id, type, technician_id,
+                observations, diagnostico, complexidade, horas_estimadas, valor_hora,
+                total_mao_obra, total_pecas, desconto, total_geral,
+                km_entrada, status_orcamento
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """
         params = (
-            order_number, customer_id, equipment_id, supply_id,
-            maintenance_plan_id, order_type, technician_id, observations
+            order_number, customer_id, equipment_id, order_type, technician_id,
+            observations, diagnostico, complexidade, horas_estimadas, valor_hora,
+            total_mao_obra, total_pecas, desconto, total_geral,
+            km_entrada, status_orcamento
         )
-        
         order_id = db.insert(query, params)
-        
+
         if order_id:
-            flash(f'Ordem de serviço {order_number} cadastrada com sucesso!', 'success')
-            
-            # Criar alerta para a nova OS
-            NotificationService.create_alert(
-                equipment_id=equipment_id,
-                supply_id=supply_id,
-                alert_type='os_created',
-                message=f'Nova ordem de serviço {order_number} criada para o equipamento.',
-                priority='medium'
-            )
-            
+            # Salvar itens de peças
+            try:
+                itens = json.loads(pecas_json)
+                for item in itens:
+                    if item.get('descricao') and float(item.get('valor_unitario', 0)) > 0:
+                        db.insert("""
+                            INSERT INTO service_order_items
+                            (service_order_id, supply_id, descricao, quantidade, valor_unitario, valor_total, quantity, unit_cost)
+                            VALUES (%s, NULL, %s, %s, %s, %s, %s, %s)
+                        """, (
+                            order_id,
+                            item.get('descricao', ''),
+                            float(item.get('quantidade', 1)),
+                            float(item.get('valor_unitario', 0)),
+                            float(item.get('valor_total', 0)),
+                            float(item.get('quantidade', 1)),
+                            float(item.get('valor_unitario', 0))
+                        ))
+            except Exception as e:
+                print(f'[OS] Erro ao salvar itens: {e}')
+
+            flash(f'OS {order_number} salva com sucesso!', 'success')
             return redirect(url_for('service_order.service_order_view', order_id=order_id))
         else:
             flash('Erro ao cadastrar ordem de serviço.', 'danger')
@@ -235,7 +394,16 @@ def service_order_edit(order_id):
     
     if request.method == 'POST':
         # Obter dados do formulário
-        technician_id = request.form.get('technician_id') or None
+        _tech_raw = request.form.get('technician_id', '').strip()
+        try:
+            technician_id = int(_tech_raw) if _tech_raw else None
+        except (ValueError, TypeError):
+            technician_id = None
+        # Garantir que o técnico existe antes de salvar (evita FK violation)
+        if technician_id:
+            _tech_exists = db.fetch_one("SELECT id FROM users WHERE id=%s", (technician_id,))
+            if not _tech_exists:
+                technician_id = None
         status = request.form.get('status')
         observations = request.form.get('observations')
         downtime_minutes = request.form.get('downtime_minutes') or 0
@@ -330,15 +498,14 @@ def service_order_view(order_id):
     
     # Buscar a ordem de serviço
     order = db.fetch_one("""
-        SELECT so.*, c.name as customer_name, e.name as equipment_name, 
-               s.name as supply_name, t.name as technician_name,
-               mp.task as maintenance_plan_task
+        SELECT so.*, c.name as customer_name, c.phone as customer_phone,
+               e.name as equipment_name, e.serial_number as placa,
+               e.manufacturer as fabricante, e.model as modelo,
+               t.name as technician_name
         FROM service_orders so
-        JOIN customers c ON so.customer_id = c.id
-        JOIN equipment e ON so.equipment_id = e.id
-        LEFT JOIN supplies s ON so.supply_id = s.id
+        LEFT JOIN customers c ON so.customer_id = c.id
+        LEFT JOIN equipment e ON so.equipment_id = e.id
         LEFT JOIN technicians t ON so.technician_id = t.id
-        LEFT JOIN maintenance_plans mp ON so.maintenance_plan_id = mp.id
         WHERE so.id = %s
     """, (order_id,))
     
@@ -350,23 +517,30 @@ def service_order_view(order_id):
     items = db.fetch_all("""
         SELECT i.*, s.name as supply_name
         FROM service_order_items i
-        JOIN supplies s ON i.supply_id = s.id
+        LEFT JOIN supplies s ON i.supply_id = s.id
         WHERE i.service_order_id = %s
     """, (order_id,))
-    
-    # Buscar horas trabalhadas
-    labor = db.fetch_all("""
-        SELECT l.*, t.name as technician_name
-        FROM service_order_labor l
-        JOIN technicians t ON l.technician_id = t.id
-        WHERE l.service_order_id = %s
-    """, (order_id,))
-    
-    # Calcular totais
-    total_items = sum(item['quantity'] * item['unit_cost'] for item in items)
-    total_labor = sum(l['hours_worked'] * l['hourly_rate'] for l in labor)
-    total_cost = total_items + total_labor
-    
+
+    # Buscar horas trabalhadas (tabela legada)
+    labor = []
+    try:
+        labor = db.fetch_all("""
+            SELECT l.*, t.name as technician_name
+            FROM service_order_labor l
+            LEFT JOIN technicians t ON l.technician_id = t.id
+            WHERE l.service_order_id = %s
+        """, (order_id,))
+    except Exception:
+        pass
+
+    # Calcular totais (fallback se campos novos ainda não existem)
+    total_items = sum(
+        float(i.get('valor_total') or (float(i.get('quantidade') or i.get('quantity') or 1) * float(i.get('valor_unitario') or i.get('unit_cost') or 0)))
+        for i in items
+    )
+    total_labor = sum(float(l.get('hours_worked', 0)) * float(l.get('hourly_rate', 0)) for l in labor)
+    total_cost = float(order.get('total_geral') or 0) or (total_items + total_labor)
+
     return render_template(
         'service_order_view.html',
         order=order,
@@ -375,7 +549,6 @@ def service_order_view(order_id):
         total_items=total_items,
         total_labor=total_labor,
         total_cost=total_cost,
-        active_page='service_orders'
     )
 
 @service_order_bp.route('/service_orders/add_item/<int:order_id>', methods=['POST'])
@@ -548,6 +721,317 @@ def service_order_cancel(order_id):
         flash('Erro ao cancelar ordem de serviço.', 'danger')
     
     return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+# ─────────────────────────────────────────────────────────────
+# ITEM 3 — Controle início / fim do serviço pelo mecânico
+# ─────────────────────────────────────────────────────────────
+
+@service_order_bp.route('/service_orders/<int:order_id>/iniciar', methods=['POST'])
+@login_required
+def service_order_iniciar(order_id):
+    """Mecânico inicia o serviço — registra data_inicio_servico."""
+    db = get_db()
+    order = db.fetch_one("SELECT * FROM service_orders WHERE id = %s", (order_id,))
+    if not order:
+        flash('OS não encontrada.', 'danger')
+        return redirect(url_for('service_order.service_order_list'))
+    if order.get('data_inicio_servico'):
+        flash('Serviço já foi iniciado.', 'warning')
+        return redirect(url_for('service_order.service_order_view', order_id=order_id))
+    db.update("""
+        UPDATE service_orders
+        SET data_inicio_servico = NOW(), status = 'in_progress'
+        WHERE id = %s
+    """, (order_id,))
+    flash(f'Serviço da OS {order["order_number"]} iniciado! Cronômetro ativo.', 'success')
+    return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+
+@service_order_bp.route('/service_orders/<int:order_id>/finalizar', methods=['POST'])
+@login_required
+def service_order_finalizar(order_id):
+    """Mecânico finaliza o serviço — registra data_fim_servico e calcula tempo real."""
+    db = get_db()
+    order = db.fetch_one("SELECT * FROM service_orders WHERE id = %s", (order_id,))
+    if not order:
+        flash('OS não encontrada.', 'danger')
+        return redirect(url_for('service_order.service_order_list'))
+    if order.get('data_fim_servico'):
+        flash('Serviço já foi finalizado.', 'warning')
+        return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+    db.update("""
+        UPDATE service_orders
+        SET data_fim_servico = NOW(), status = 'completed', completion_date = NOW()
+        WHERE id = %s
+    """, (order_id,))
+
+    # Lançar automaticamente em Contas a Receber se orçamento aprovado
+    _lancar_contas_receber(db, order)
+
+    flash(f'OS {order["order_number"]} concluída! Financeiro atualizado.', 'success')
+    return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+
+# ─────────────────────────────────────────────────────────────
+# ITEM 5 — Lançamento automático em Contas a Receber
+# ─────────────────────────────────────────────────────────────
+
+def _lancar_contas_receber(db, order):
+    """Cria lançamento em accounts_receivable quando OS é aprovada/concluída."""
+    try:
+        order_id = order['id']
+        total = float(order.get('total_geral') or 0)
+        if total <= 0:
+            return
+
+        # Verifica se já existe lançamento para esta OS
+        existente = db.fetch_one(
+            "SELECT id FROM accounts_receivable WHERE notes LIKE %s AND active = TRUE",
+            (f'%OS-{order["order_number"]}%',)
+        )
+        if existente:
+            return
+
+        from datetime import date, timedelta
+        vencimento = (date.today() + timedelta(days=3)).strftime('%Y-%m-%d')
+
+        db.insert("""
+            INSERT INTO accounts_receivable
+            (customer_id, total_amount, due_date, status, description, notes,
+             payment_method, origin, issue_date, installments)
+            VALUES (%s, %s, %s, 'pending', %s, %s, 'pix', 'service', CURDATE(), 1)
+        """, (
+            order.get('customer_id'),
+            total,
+            vencimento,
+            f'OS {order["order_number"]} — Serviço mecânico',
+            f'Lançamento automático — OS-{order["order_number"]} | Total: R$ {total:.2f}'
+        ))
+    except Exception as e:
+        print(f'[OS] Erro ao lançar C/R: {e}')
+
+
+@service_order_bp.route('/service_orders/<int:order_id>/aprovar', methods=['POST'])
+@login_required
+def service_order_aprovar(order_id):
+    """Marca orçamento como aprovado e lança em C/R."""
+    db = get_db()
+    order = db.fetch_one("SELECT * FROM service_orders WHERE id = %s", (order_id,))
+    if not order:
+        flash('OS não encontrada.', 'danger')
+        return redirect(url_for('service_order.service_order_list'))
+
+    db.update("""
+        UPDATE service_orders SET status_orcamento = 'aprovado', status = 'in_progress'
+        WHERE id = %s
+    """, (order_id,))
+
+    _lancar_contas_receber(db, order)
+    flash(f'OS {order["order_number"]} aprovada! Lançada em Contas a Receber.', 'success')
+    return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+
+# ─────────────────────────────────────────────────────────────
+# ITEM 4 — Histórico do veículo (todas OS por equipment_id)
+# ─────────────────────────────────────────────────────────────
+
+@service_order_bp.route('/veiculos/<int:equipment_id>/historico')
+@login_required
+def veiculo_historico(equipment_id):
+    """Histórico completo de OS de um veículo."""
+    db = get_db()
+    veiculo = db.fetch_one("""
+        SELECT e.*, c.name as customer_name, c.phone as customer_phone
+        FROM equipment e
+        LEFT JOIN customers c ON c.id = e.customer_id
+        WHERE e.id = %s
+    """, (equipment_id,))
+    if not veiculo:
+        flash('Veículo não encontrado.', 'danger')
+        return redirect(url_for('equipamento.equipamentos'))
+
+    historico = db.fetch_all("""
+        SELECT so.*,
+               t.name as technician_name,
+               TIMESTAMPDIFF(MINUTE, so.data_inicio_servico, so.data_fim_servico) as minutos_servico
+        FROM service_orders so
+        LEFT JOIN technicians t ON t.id = so.technician_id
+        WHERE so.equipment_id = %s
+        ORDER BY so.open_date DESC
+    """, (equipment_id,))
+
+    # Totais do veículo
+    total_gasto = sum(float(o.get('total_geral') or 0) for o in historico)
+    total_os = len(historico)
+    os_concluidas = sum(1 for o in historico if o['status'] == 'completed')
+
+    return render_template('veiculo_historico.html',
+        veiculo=veiculo,
+        historico=historico,
+        total_gasto=total_gasto,
+        total_os=total_os,
+        os_concluidas=os_concluidas
+    )
+
+
+# ─────────────────────────────────────────────────────────────
+# ITEM 2 — Orçamento avulso (sem cliente cadastrado)
+# ─────────────────────────────────────────────────────────────
+
+@service_order_bp.route('/service_orders/avulso', methods=['GET', 'POST'])
+@login_required
+def service_order_avulso():
+    """Abre OS/Orçamento avulso para cliente sem cadastro."""
+    db = get_db()
+
+    if request.method == 'POST':
+        import json
+        # Dados do cliente eventual (sem cadastro)
+        nome_eventual = request.form.get('nome_eventual', 'Cliente Eventual')
+        phone_eventual = request.form.get('phone_eventual', '')
+
+        # Garantir que existe o cliente "eventual" genérico
+        cliente_eventual = db.fetch_one(
+            "SELECT id FROM customers WHERE cnpj = '00.000.000/0000-00' LIMIT 1"
+        )
+        if not cliente_eventual:
+            customer_id = db.insert("""
+                INSERT INTO customers
+                    (name, cnpj, phone, address, number, city, state, cep, active)
+                VALUES ('Cliente Eventual', '00.000.000/0000-00', '', 'Sem endereco', 'S/N', 'Campo Grande', 'MS', '00000-000', TRUE)
+            """, ())
+        else:
+            customer_id = cliente_eventual['id']
+
+        # Garantir veículo avulso
+        placa_eventual = request.form.get('placa_eventual', 'SEM-PLACA')
+        veiculo_eventual = db.fetch_one(
+            "SELECT id FROM equipment WHERE serial_number = %s LIMIT 1", (placa_eventual,)
+        )
+        if not veiculo_eventual:
+            equipment_id = db.insert("""
+                INSERT INTO equipment (name, serial_number, customer_id, installation_date, active)
+                VALUES (%s, %s, %s, CURDATE(), TRUE)
+            """, (f'{nome_eventual} — {placa_eventual}', placa_eventual, customer_id))
+        else:
+            equipment_id = veiculo_eventual['id']
+
+        order_type = request.form.get('type', 'corrective')
+        observations = request.form.get('observations', '')
+        diagnostico = request.form.get('diagnostico', '')
+        complexidade = request.form.get('complexidade', 'medio')
+        horas_estimadas = request.form.get('horas_estimadas') or 0
+        valor_hora = request.form.get('valor_hora') or 120
+        total_mao_obra = request.form.get('total_mao_obra') or 0
+        total_pecas = request.form.get('total_pecas') or 0
+        desconto = request.form.get('desconto') or 0
+        total_geral = request.form.get('total_geral') or 0
+        km_entrada = request.form.get('km_entrada') or None
+        pecas_json = request.form.get('pecas_json', '[]')
+
+        today = datetime.now().strftime('%Y%m%d')
+        last_order = db.fetch_one("""
+            SELECT order_number FROM service_orders
+            WHERE order_number LIKE %s ORDER BY id DESC LIMIT 1
+        """, (f'OS-{today}-%',))
+        if last_order:
+            last_number = int(last_order['order_number'].split('-')[-1])
+            order_number = f'OS-{today}-{last_number + 1:03d}'
+        else:
+            order_number = f'OS-{today}-001'
+
+        # Adicionar nota com nome/phone do cliente eventual nas observações
+        obs_final = f'[Cliente: {nome_eventual} | Tel: {phone_eventual}]\n{observations}'
+
+        order_id = db.insert("""
+            INSERT INTO service_orders
+            (order_number, customer_id, equipment_id, type, observations,
+             diagnostico, complexidade, horas_estimadas, valor_hora,
+             total_mao_obra, total_pecas, desconto, total_geral,
+             km_entrada, status_orcamento)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'rascunho')
+        """, (order_number, customer_id, equipment_id, order_type, obs_final,
+              diagnostico, complexidade, horas_estimadas, valor_hora,
+              total_mao_obra, total_pecas, desconto, total_geral, km_entrada))
+
+        if order_id:
+            try:
+                itens = json.loads(pecas_json)
+                for item in itens:
+                    if item.get('descricao') and float(item.get('valor_unitario', 0)) > 0:
+                        db.insert("""
+                            INSERT INTO service_order_items
+                            (service_order_id, supply_id, descricao, quantidade,
+                             valor_unitario, valor_total, quantity, unit_cost)
+                            VALUES (%s, NULL, %s, %s, %s, %s, %s, %s)
+                        """, (order_id, item['descricao'],
+                              float(item.get('quantidade', 1)),
+                              float(item.get('valor_unitario', 0)),
+                              float(item.get('valor_total', 0)),
+                              float(item.get('quantidade', 1)),
+                              float(item.get('valor_unitario', 0))))
+            except Exception as e:
+                print(f'[OS Avulsa] Erro itens: {e}')
+
+            flash(f'OS Avulsa {order_number} criada!', 'success')
+            return redirect(url_for('service_order.service_order_view', order_id=order_id))
+        else:
+            flash('Erro ao criar OS avulsa.', 'danger')
+
+    technicians = db.fetch_all(
+        "SELECT id, name FROM technicians WHERE active = TRUE ORDER BY name"
+    )
+    return render_template('service_order_avulso.html', technicians=technicians)
+
+
+# ─────────────────────────────────────────────────────────────
+# ITEM 1 — PDF / Impressão da OS (Prisma de Diagnóstico)
+# ─────────────────────────────────────────────────────────────
+
+@service_order_bp.route('/service_orders/<int:order_id>/pdf')
+@login_required
+def service_order_pdf(order_id):
+    """Gera PDF da OS (Prisma de Diagnóstico) — usa WeasyPrint se disponível, senão HTML imprimível."""
+    db = get_db()
+    order = db.fetch_one("""
+        SELECT so.*,
+               c.name as customer_name, c.phone as customer_phone,
+               c.cnpj as customer_doc,
+               e.name as equipment_name, e.serial_number as placa,
+               e.manufacturer as fabricante, e.model as modelo,
+               t.name as technician_name
+        FROM service_orders so
+        LEFT JOIN customers c ON c.id = so.customer_id
+        LEFT JOIN equipment e ON e.id = so.equipment_id
+        LEFT JOIN technicians t ON t.id = so.technician_id
+        WHERE so.id = %s
+    """, (order_id,))
+
+    if not order:
+        flash('OS não encontrada.', 'danger')
+        return redirect(url_for('service_order.service_order_list'))
+
+    itens = db.fetch_all("""
+        SELECT descricao, quantidade, valor_unitario, valor_total
+        FROM service_order_items
+        WHERE service_order_id = %s
+    """, (order_id,))
+
+    # Tenta WeasyPrint para PDF real
+    try:
+        from weasyprint import HTML
+        from flask import make_response
+        html_str = render_template('service_order_pdf.html', order=order, itens=itens)
+        pdf = HTML(string=html_str).write_pdf()
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=OS-{order["order_number"]}.pdf'
+        return response
+    except ImportError:
+        # Sem WeasyPrint: retorna HTML com CSS @media print
+        return render_template('service_order_pdf.html', order=order, itens=itens)
+
 
 @service_order_bp.route('/service_orders/dashboard')
 @login_required

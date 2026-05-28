@@ -1,16 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Ordens de Serviço - Sistema de Gestão de Suprimentos{% endblock %}
+{% block title %}Ordens de Serviço - IKFlow Mecânica{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
-    <div class="alert alert-info">
-        <strong>Nota:</strong> Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
-    </div>
-
     <h1 class="mt-4">Ordens de Serviço</h1>
     <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('bem_vindo') }}">Início</a></li>
         <li class="breadcrumb-item active">Ordens de Serviço</li>
     </ol>
     

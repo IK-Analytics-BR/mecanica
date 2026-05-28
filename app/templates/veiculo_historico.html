@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Histórico do Veículo — {{ veiculo.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('bem_vindo') }}">Início</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('equipamento.equipamentos') }}">Veículos</a></li>
+    <li class="breadcrumb-item active">Histórico</li>
+  </ol>
+
+  <!-- Header veículo -->
+  <div class="card mb-4 border-0 shadow-sm" style="background:linear-gradient(135deg,#0b2447,#08a5b2);color:#fff;border-radius:12px;">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h4 class="mb-1"><i class="fas fa-car me-2"></i>{{ veiculo.name }}</h4>
+        <div class="opacity-75">
+          {% if veiculo.serial_number %}<span class="me-3"><i class="fas fa-id-card me-1"></i>{{ veiculo.serial_number }}</span>{% endif %}
+          {% if veiculo.manufacturer %}<span class="me-3">{{ veiculo.manufacturer }}</span>{% endif %}
+          {% if veiculo.model %}<span class="me-3">{{ veiculo.model }}</span>{% endif %}
+          {% if veiculo.customer_name %}<span><i class="fas fa-user me-1"></i>{{ veiculo.customer_name }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="d-flex gap-3 text-center">
+        <div><div style="font-size:1.8rem;font-weight:800">{{ total_os }}</div><small>Total de OS</small></div>
+        <div><div style="font-size:1.8rem;font-weight:800">{{ os_concluidas }}</div><small>Concluídas</small></div>
+        <div><div style="font-size:1.8rem;font-weight:800">R$ {{ '%.0f'|format(total_gasto) }}</div><small>Total Gasto</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline de OS -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+      <span><i class="fas fa-history me-2 text-info"></i>Histórico Completo de Serviços</span>
+      <a href="{{ url_for('service_order.service_order_add') }}?equipment_id={{ veiculo.id }}"
+         class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i> Nova OS</a>
+    </div>
+    <div class="card-body p-0">
+      {% if historico %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>OS</th>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Mecânico</th>
+              <th>Diagnóstico</th>
+              <th>Status OS</th>
+              <th>Orçamento</th>
+              <th>KM</th>
+              <th>Duração</th>
+              <th class="text-end">Total (R$)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for os in historico %}
+            <tr>
+              <td><strong>{{ os.order_number }}</strong></td>
+              <td>{{ os.open_date.strftime('%d/%m/%Y') if os.open_date else '—' }}</td>
+              <td>
+                {% if os.type == 'corrective' %}<span class="badge bg-danger">Corretiva</span>
+                {% elif os.type == 'preventive' %}<span class="badge bg-success">Preventiva</span>
+                {% else %}<span class="badge bg-info">Preditiva</span>{% endif %}
+              </td>
+              <td>{{ os.technician_name or '—' }}</td>
+              <td>
+                {% if os.get('diagnostico') %}
+                  <span title="{{ os.diagnostico }}" data-bs-toggle="tooltip">
+                    {{ os.diagnostico[:50] }}{% if os.diagnostico|length > 50 %}…{% endif %}
+                  </span>
+                {% else %}<span class="text-muted">—</span>{% endif %}
+              </td>
+              <td>
+                {% set s = os.status %}
+                {% if s == 'open' %}<span class="badge bg-secondary">Aberta</span>
+                {% elif s == 'in_progress' %}<span class="badge bg-primary">Em Execução</span>
+                {% elif s == 'completed' %}<span class="badge bg-success">Concluída</span>
+                {% elif s == 'canceled' %}<span class="badge bg-dark">Cancelada</span>
+                {% else %}<span class="badge bg-light text-dark">{{ s }}</span>{% endif %}
+              </td>
+              <td>
+                {% set so = os.get('status_orcamento','') %}
+                {% if so == 'aprovado' %}<span class="badge bg-success">Aprovado</span>
+                {% elif so == 'enviado' %}<span class="badge bg-primary">Enviado</span>
+                {% elif so == 'reprovado' %}<span class="badge bg-danger">Reprovado</span>
+                {% else %}<span class="badge bg-light text-dark">Rascunho</span>{% endif %}
+              </td>
+              <td>{{ os.get('km_entrada') or '—' }}</td>
+              <td>
+                {% if os.get('minutos_servico') %}
+                  {% set h = (os.minutos_servico // 60)|int %}
+                  {% set m = (os.minutos_servico % 60)|int %}
+                  {{ h }}h{{ '%02d'|format(m) }}m
+                {% else %}—{% endif %}
+              </td>
+              <td class="text-end fw-bold">{{ '%.2f'|format(os.get('total_geral') or 0) }}</td>
+              <td>
+                <a href="{{ url_for('service_order.service_order_view', order_id=os.id) }}"
+                   class="btn btn-sm btn-outline-primary" title="Ver OS">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('service_order.service_order_pdf', order_id=os.id) }}"
+                   class="btn btn-sm btn-outline-secondary" title="PDF" target="_blank">
+                  <i class="fas fa-print"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light">
+            <tr>
+              <td colspan="9" class="text-end fw-bold">TOTAL HISTÓRICO:</td>
+              <td class="text-end fw-bold text-primary">R$ {{ '%.2f'|format(total_gasto) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="fas fa-clipboard fa-3x mb-3 opacity-25"></i>
+        <p>Nenhuma OS registrada para este veículo ainda.</p>
+        <a href="{{ url_for('service_order.service_order_add') }}" class="btn btn-primary mt-2">
+          <i class="fas fa-plus me-1"></i> Criar primeira OS
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+  new bootstrap.Tooltip(el);
+});
+</script>
+{% endblock %}

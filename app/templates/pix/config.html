@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}PIX — Configuração{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('pix.pix_painel') }}">PIX</a></li>
+    <li class="breadcrumb-item active">Configuração</li>
+  </ol>
+  <h4 class="mb-4"><i class="fas fa-qrcode me-2" style="color:#32bcad"></i>Configuração PIX</h4>
+  <div class="row g-4">
+    <div class="col-md-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">Dados PIX</div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('pix.pix_config') }}" enctype="multipart/form-data">
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label fw-semibold">Chave PIX <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="chave_pix" value="{{ cfg.get('chave_pix','') }}" placeholder="CNPJ, telefone, email ou chave aleatória" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Provider</label>
+                <select class="form-select" name="provider">
+                  <option value="estatico" {% if cfg.get('provider','estatico')=='estatico' %}selected{% endif %}>PIX Estático (QR local)</option>
+                  <option value="bradesco" {% if cfg.get('provider')=='bradesco' %}selected{% endif %}>Bradesco API</option>
+                  <option value="itau" {% if cfg.get('provider')=='itau' %}selected{% endif %}>Itaú API</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Nome Recebedor</label>
+                <input type="text" class="form-control" name="nome_recebedor" value="{{ cfg.get('nome_recebedor','') }}" placeholder="Nome na chave PIX">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Cidade</label>
+                <input type="text" class="form-control" name="cidade" value="{{ cfg.get('cidade','Campo Grande') }}" placeholder="Cidade">
+              </div>
+              <div class="col-12">
+                <hr class="my-1">
+                <small class="text-muted fw-semibold">Para PIX dinâmico via API Bancária (opcional)</small>
+              </div>
+              <div class="col-12">
+                <label class="form-label">URL da API</label>
+                <input type="url" class="form-control" name="api_url" value="{{ cfg.get('api_url','') }}" placeholder="https://api.bradesco.com.br/...">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Client ID</label>
+                <input type="text" class="form-control" name="client_id" value="{{ cfg.get('client_id','') }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Client Secret</label>
+                <input type="password" class="form-control" name="client_secret" value="{{ cfg.get('client_secret','') }}">
+              </div>
+              <div class="col-md-8">
+                <label class="form-label">Certificado mTLS <small class="text-muted">(.pem ou .p12 — exigido pelo Bradesco/Itaú)</small></label>
+                <input type="file" class="form-control" name="cert_file" accept=".pem,.p12,.pfx,.crt">
+                {% if cfg.get('cert_path') %}
+                <div class="mt-1"><small class="text-success"><i class="fas fa-check-circle me-1"></i>Certificado atual: <code>{{ cfg.cert_path | basename if cfg.cert_path else '' }}</code></small></div>
+                {% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Senha do Certificado</label>
+                <input type="password" class="form-control" name="cert_senha" placeholder="Senha do .p12/.pfx">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3"><i class="fas fa-save me-1"></i> Salvar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body">
+          <h6 class="fw-bold"><i class="fas fa-info-circle text-info me-1"></i>Como funciona</h6>
+          <ul class="small text-muted ps-3">
+            <li><strong>PIX Estático</strong>: QR Code gerado localmente sem API bancária. Simples e funciona de imediato com qualquer banco.</li>
+            <li class="mt-2"><strong>PIX Dinâmico</strong>: Requer homologação na API do seu banco (Bradesco, Itaú etc.). Permite webhook de confirmação automática.</li>
+            <li class="mt-2">O pagamento PIX atualiza automaticamente a OS e baixa o lançamento em <strong>Contas a Receber</strong>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

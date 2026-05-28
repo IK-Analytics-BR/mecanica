@@ -1092,7 +1092,7 @@ def lista():
             o.prazo_entrega,
             o.empresa_id,
             c.name AS cliente_nome,
-            COALESCE(c.cnpj, c.cpf) AS cliente_documento,
+            c.cnpj AS cliente_documento,
             c.email AS cliente_email,
             s.name AS vendedor_nome,
             o.pedido_id,
@@ -1190,7 +1190,7 @@ def novo():
     
     # Buscar dados necessários
     clientes = db.fetch_all("""
-        SELECT id, name, COALESCE(cnpj, cpf) AS document, phone, email 
+        SELECT id, name, cnpj AS document, phone, email 
         FROM customers 
         WHERE active = 1 
         ORDER BY name 
@@ -1319,7 +1319,7 @@ def editar(id):
     cliente = cliente[0] if cliente else None
     
     # Buscar dados para selects
-    clientes = db.fetch_all("SELECT id, name, COALESCE(cnpj, cpf) AS document FROM customers WHERE active = 1 ORDER BY name LIMIT 1000")
+    clientes = db.fetch_all("SELECT id, name, cnpj AS document FROM customers WHERE active = 1 ORDER BY name LIMIT 1000")
     vendedores = db.fetch_all("SELECT id, name FROM users WHERE is_seller = 1 AND status = 'active' ORDER BY name")
     empresas = db.fetch_all("SELECT id, razao_social, nome_fantasia FROM empresas WHERE ativo = 1")
     formas_pagamento = db.fetch_all("""
@@ -1385,7 +1385,7 @@ def visualizar(id):
     orcamento = db.fetch_all("""
         SELECT o.*,
             c.name AS cliente_nome,
-            COALESCE(c.cnpj, c.cpf) AS cliente_documento,
+            c.cnpj AS cliente_documento,
             c.phone AS cliente_telefone,
             c.email AS cliente_email,
             c.address AS cliente_endereco,
@@ -2548,14 +2548,14 @@ def api_buscar_clientes():
     
     clientes = db.fetch_all("""
         SELECT 
-            id, name AS nome, COALESCE(cnpj, cpf) AS documento,
+            id, name AS nome, cnpj AS documento,
             phone AS telefone, email, city AS cidade, state AS estado
         FROM customers
         WHERE active = 1
-        AND (name LIKE %s OR cnpj LIKE %s OR cpf LIKE %s)
+        AND (name LIKE %s OR cnpj LIKE %s)
         ORDER BY name
         LIMIT 20
-    """, [f'%{termo}%', f'%{termo}%', f'%{termo}%'])
+    """, [f'%{termo}%', f'%{termo}%'])
     
     return jsonify(clientes or [])
 
@@ -2577,14 +2577,14 @@ def api_buscar_transportadoras():
     # Buscar na tabela de transportadoras
     transportadoras = db.fetch_all("""
         SELECT 
-            id, nome, COALESCE(cnpj, cpf) AS documento,
+            id, nome, cnpj AS documento,
             telefone, email, cidade, estado
         FROM transportadoras
         WHERE active = 1
-        AND (nome LIKE %s OR cnpj LIKE %s OR cpf LIKE %s OR codigo LIKE %s)
+        AND (nome LIKE %s OR cnpj LIKE %s OR codigo LIKE %s)
         ORDER BY nome
         LIMIT 20
-    """, [f'%{termo}%', f'%{termo}%', f'%{termo}%', f'%{termo}%'])
+    """, [f'%{termo}%', f'%{termo}%', f'%{termo}%'])
     
     return jsonify(transportadoras or [])
 
@@ -2602,7 +2602,7 @@ def gerar_pdf(id):
     orcamento = db.fetch_one("""
         SELECT o.*, 
                c.name AS cliente_nome,
-               COALESCE(c.cnpj, c.cpf) AS cliente_documento,
+               c.cnpj AS cliente_documento,
                c.address AS cliente_endereco,
                c.number AS cliente_numero,
                c.neighborhood AS cliente_bairro,
@@ -2679,7 +2679,7 @@ def download_pdf(id):
     orcamento = db.fetch_one("""
         SELECT o.*, 
                c.name AS cliente_nome,
-               COALESCE(c.cnpj, c.cpf) AS cliente_documento,
+               c.cnpj AS cliente_documento,
                c.address AS cliente_endereco,
                c.number AS cliente_numero,
                c.neighborhood AS cliente_bairro,
@@ -2749,7 +2749,7 @@ def enviar_email(id):
         SELECT o.*, 
                c.name AS cliente_nome,
                c.email AS cliente_email,
-               COALESCE(c.cnpj, c.cpf) AS cliente_documento,
+               c.cnpj AS cliente_documento,
                c.address AS cliente_endereco,
                c.number AS cliente_numero,
                c.neighborhood AS cliente_bairro,

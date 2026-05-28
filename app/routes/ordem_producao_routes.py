@@ -35,6 +35,43 @@ try:
 except ImportError:
     from services.exchange_rate_service import ExchangeRateService
 
+def _is_lider():
+    """Verifica se o usuário logado é líder de equipe.
+    Consulta o banco como fallback para sessões anteriores à criação da coluna."""
+    if session.get('role') == 'admin':
+        return True
+    val = session.get('eh_lider_equipe')
+    if val is not None:
+        return bool(val)
+    # Fallback: consultar banco e atualizar sessão
+    try:
+        db = get_db()
+        u = db.fetch_one("SELECT eh_lider_equipe FROM users WHERE id=%s", (session.get('user_id'),))
+        v = bool(u.get('eh_lider_equipe')) if u else False
+        session['eh_lider_equipe'] = v
+        return v
+    except Exception:
+        return False
+
+
+def _is_operador():
+    """Verifica se o usuário logado é operador.
+    Consulta o banco como fallback para sessões anteriores à criação da coluna."""
+    if session.get('role') == 'admin':
+        return True
+    val = session.get('eh_operador')
+    if val is not None:
+        return bool(val)
+    try:
+        db = get_db()
+        u = db.fetch_one("SELECT eh_operador FROM users WHERE id=%s", (session.get('user_id'),))
+        v = bool(u.get('eh_operador')) if u else False
+        session['eh_operador'] = v
+        return v
+    except Exception:
+        return False
+
+
 # Decorators para permissões granulares de Indústria
 def industria_ops_visualizar_required(f):
     @wraps(f)
@@ -288,7 +325,6 @@ def producao_gantt():
             LEFT JOIN orcamento_op_itens oi ON oi.ordem_producao_id = v.id
             LEFT JOIN orcamento_op_grupos og ON og.id = oi.grupo_id
             LEFT JOIN orcamentos o ON o.id = og.orcamento_id
-            LEFT JOIN planejamentos_semanais ps ON ps.id = op.planejamento_id
             LEFT JOIN lider_operadores lo ON lo.operador_id = l.operador_id
             LEFT JOIN users u_lider ON u_lider.id = lo.lider_id
             LEFT JOIN users u_operador ON u_operador.id = l.operador_id
@@ -524,8 +560,7 @@ def producao_gantt_v2():
                 og.id AS grupo_id,
                 o.id AS orcamento_id,
                 o.numero AS orcamento_numero,
-                op.planejamento_id,
-                ps.codigo AS planejamento_codigo
+                op.planejamento_id
             FROM op_lotes l
             INNER JOIN ordens_producao op ON op.id = l.ordem_producao_id
             INNER JOIN vw_ordens_producao_resumo v ON v.id = op.id
@@ -533,7 +568,6 @@ def producao_gantt_v2():
             LEFT JOIN orcamento_op_itens oi ON oi.ordem_producao_id = v.id
             LEFT JOIN orcamento_op_grupos og ON og.id = oi.grupo_id
             LEFT JOIN orcamentos o ON o.id = og.orcamento_id
-            LEFT JOIN planejamentos_semanais ps ON ps.id = op.planejamento_id
             WHERE 1=1
         """
 
@@ -4660,7 +4694,7 @@ def meu_gantt_iniciar_producao():
     """Operador inicia produção de um lote, informando quantidade e etapa.
     Se quantidade parcial, divide o lote (parte em_producao, parte em_espera).
     Se já existe lote em_producao na mesma etapa, faz merge."""
-    if not session.get('eh_operador'):
+    if not _is_operador():
         return jsonify({'success': False, 'error': 'Acesso restrito a operadores.'}), 403
     
     db = get_db()
@@ -4842,7 +4876,7 @@ def meu_gantt_iniciar_producao():
 @login_required
 def meu_gantt_alterar_etapa():
     """Operador altera a etapa do lote em produção. Se quantidade parcial, divide o lote."""
-    if not session.get('eh_operador'):
+    if not _is_operador():
         return jsonify({'success': False, 'error': 'Acesso restrito a operadores.'}), 403
     
     db = get_db()
@@ -5029,7 +5063,7 @@ def meu_gantt_alterar_etapa():
 @login_required
 def meu_gantt_despachar():
     """Operador despacha lote para próxima etapa."""
-    if not session.get('eh_operador'):
+    if not _is_operador():
         return jsonify({'success': False, 'error': 'Acesso restrito a operadores.'}), 403
     
     db = get_db()
@@ -5203,7 +5237,7 @@ def meu_gantt_despachar():
 @login_required
 def meu_gantt_corrigir_despacho():
     """Operador corrige um despacho errado - altera etapa destino e/ou arara."""
-    if not session.get('eh_operador'):
+    if not _is_operador():
         return jsonify({'success': False, 'error': 'Acesso restrito a operadores.'}), 403
     
     db = get_db()
@@ -5291,7 +5325,7 @@ def lider_painel():
     user_id = session.get('user_id')
     
     # Verificar se é líder
-    if not session.get('eh_lider_equipe'):
+    if not _is_lider():
         flash('Acesso restrito a líderes de equipe.', 'warning')
         return redirect(url_for('ordem_producao.producao_gantt'))
     
@@ -5410,7 +5444,7 @@ def lider_atribuir_lote():
     """Líder atribui lote (ou parte dele) a um operador com prioridade.
     Se quantidade < total do lote, divide o lote em dois.
     """
-    if not session.get('eh_lider_equipe'):
+    if not _is_lider():
         return jsonify({'success': False, 'error': 'Acesso restrito a líderes.'}), 403
     
     db = get_db()
@@ -5538,7 +5572,7 @@ def lider_gerenciar_equipe():
     db = get_db()
     user_id = session.get('user_id')
     
-    if not session.get('eh_lider_equipe'):
+    if not _is_lider():
         flash('Acesso restrito a líderes de equipe.', 'warning')
         return redirect(url_for('ordem_producao.producao_gantt'))
     
@@ -5592,7 +5626,7 @@ def lider_gerenciar_equipe():
 @login_required
 def lider_vincular_operador():
     """Vincula operador à equipe do líder."""
-    if not session.get('eh_lider_equipe'):
+    if not _is_lider():
         return jsonify({'success': False, 'error': 'Acesso restrito a líderes.'}), 403
     
     db = get_db()
@@ -5618,7 +5652,7 @@ def lider_vincular_operador():
 @login_required
 def lider_desvincular_operador():
     """Remove operador da equipe do líder."""
-    if not session.get('eh_lider_equipe'):
+    if not _is_lider():
         return jsonify({'success': False, 'error': 'Acesso restrito a líderes.'}), 403
     
     db = get_db()
@@ -5641,7 +5675,7 @@ def lider_desvincular_operador():
 @login_required
 def lider_vincular_etapa():
     """Vincula etapa ao controle do líder."""
-    if not session.get('eh_lider_equipe'):
+    if not _is_lider():
         return jsonify({'success': False, 'error': 'Acesso restrito a líderes.'}), 403
     
     db = get_db()
@@ -5667,7 +5701,7 @@ def lider_vincular_etapa():
 @login_required
 def lider_desvincular_etapa():
     """Remove etapa do controle do líder."""
-    if not session.get('eh_lider_equipe'):
+    if not _is_lider():
         return jsonify({'success': False, 'error': 'Acesso restrito a líderes.'}), 403
     
     db = get_db()

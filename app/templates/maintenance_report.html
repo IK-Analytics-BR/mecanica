@@ -242,7 +242,7 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <h6>Peças Utilizadas</h6>
-                                                {% if order.items %}
+                                                {% if order.order_items %}
                                                 <table class="table table-bordered table-sm">
                                                     <thead>
                                                         <tr>
@@ -253,7 +253,7 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {% for item in order.items %}
+                                                        {% for item in order.order_items %}
                                                         <tr>
                                                             <td>{{ item.supply_name }}</td>
                                                             <td>{{ item.quantity }}</td>

@@ -41,11 +41,6 @@ alert_bp = _try_import('routes.alert_routes', 'alert_bp')
 dashboard_bp = _try_import('routes.dashboard_routes', 'dashboard_bp')
 integration_bp = _try_import('routes.integration_routes', 'integration_bp')
 vendedor_bp = _try_import('routes.vendedor_routes', 'vendedor_bp')
-rota_vendas_bp = _try_import('routes.rota_vendas_routes', 'rota_vendas_bp')
-romaneio_bp = _try_import('routes.romaneio_routes', 'romaneio_bp')
-venda_bp = _try_import('routes.venda_routes', 'venda_bp')
-pdv_bp = _try_import('routes.pdv_profissional_routes', 'pdv_bp')
-pdv_config_bp = _try_import('routes.pdv_config_routes', 'pdv_config_bp')
 cash_register_bp = _try_import('routes.cash_register_routes', 'cash_register_bp')
 company_bp = _try_import('routes.company_routes', 'company_bp')
 segment_bp = _try_import('routes.segment_routes', 'segment_bp')
@@ -94,6 +89,8 @@ importar_clientes_bp = _try_import('routes.importar_clientes_routes', 'importar_
 
 # Módulo de Clientes em Potencial
 clientes_potenciais_bp = _try_import('routes.clientes_potenciais_routes', 'clientes_potenciais_bp')
+rota_vendas_bp       = _try_import('routes.rota_vendas_routes', 'rota_vendas_bp')
+questionario_visita_bp = _try_import('routes.questionario_visita_routes', 'questionario_visita_bp')
 
 # Módulo de Importação de NF-e
 importar_nfe_bp = _try_import('routes.importar_nfe', 'importar_nfe')
@@ -109,8 +106,10 @@ nfce_bp = _try_import('routes.nfce_routes', 'nfce_bp')
 # Módulo de Empresas
 empresa_bp = _try_import('routes.empresa_routes', 'empresa_bp')
 
-# Módulo Indústria
+# Módulo Jornada / Ponto
 jornada_trabalho_bp = _try_import('routes.jornada_trabalho_routes', 'jornada_trabalho_bp')
+
+# Módulo Execução de Serviços (adaptado de Produção Industrial)
 ordem_producao_bp = _try_import('routes.ordem_producao_routes', 'ordem_producao_bp')
 producao_pausas_bp = _try_import('routes.producao_pausas_routes', 'producao_pausas_bp')
 config_producao_bp = _try_import('routes.config_producao_routes', 'config_producao_bp')
@@ -122,22 +121,20 @@ orcamento_dna_bp = _try_import('routes.orcamento_dna_routes', 'orcamento_dna_bp'
 # Módulo de Lista de Preços
 lista_preco_bp = _try_import('routes.lista_preco_routes', 'lista_preco_bp')
 
+# Módulo PDV Profissional (Balcão)
+pdv_bp       = _try_import('routes.pdv_profissional_routes', 'pdv_bp')
+pdv_config_bp = _try_import('routes.pdv_config_routes',     'pdv_config_bp')
+
+# Módulos portados do Holding
+whatsapp_bp = _try_import('routes.whatsapp_routes', 'whatsapp_bp')
+pix_bp      = _try_import('routes.pix_routes',      'pix_bp')
+nfse_bp2    = _try_import('routes.nfse_routes',     'nfse_bp')
+
 # Cadastros Auxiliares
 transportadora_bp = _try_import('routes.transportadora_routes', 'transportadora_bp')
 condicao_pagamento_bp = _try_import('routes.condicao_pagamento_routes', 'condicao_pagamento_bp')
 currency_bp = _try_import('routes.currency_routes', 'currency_bp')
 
-# Módulo de Fichas Técnicas de Produção
-ficha_tecnica_bp = _try_import('routes.ficha_tecnica_routes', 'ficha_tecnica_bp')
-
-# Módulo de Especificações Técnicas de Produto (DNA)
-produto_especificacoes_bp = _try_import('routes.produto_especificacoes_routes', 'produto_especificacoes_bp')
-
-# Módulo de Questionário de Visita – Indústria de Salgados Congelados
-questionario_visita_bp = _try_import('routes.questionario_visita_routes', 'questionario_visita_bp')
-
-# Portal de Desenvolvimento Econômico Municipal - MS
-dev_economico_bp = _try_import('routes.dev_economico_routes', 'dev_economico_bp')
 
 # Importar módulos para servir arquivos markdown
 from flask import send_from_directory, abort
@@ -155,9 +152,9 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Por favor, faça login para acessar esta página.'
 login_manager.login_message_category = 'danger'
 
-APP_MODE = (os.getenv('APP_MODE') or 'global').strip().lower()
-if APP_MODE not in ('global', 'industrial', 'varejo'):
-    APP_MODE = 'global'
+APP_MODE = (os.getenv('APP_MODE') or 'mecanica').strip().lower()
+if APP_MODE not in ('global', 'industrial', 'varejo', 'mecanica'):
+    APP_MODE = 'mecanica'
 
 
 class User(UserMixin):
@@ -219,11 +216,6 @@ for _bp in (
     dashboard_bp,
     integration_bp,
     vendedor_bp,
-    rota_vendas_bp,
-    romaneio_bp,
-    venda_bp,
-    pdv_bp,
-    pdv_config_bp,
     cash_register_bp,
     company_bp,
     bank_account_bp,
@@ -251,6 +243,8 @@ for _bp in (
     product_model_bp,
     importar_clientes_bp,
     clientes_potenciais_bp,
+    rota_vendas_bp,
+    questionario_visita_bp,
     importar_nfe_bp,
     importar_nfe_entrada_bp,
     nfe_upload_bp,
@@ -264,13 +258,14 @@ for _bp in (
     orcamento_bp,
     orcamento_dna_bp,
     lista_preco_bp,
+    whatsapp_bp,
+    pix_bp,
+    nfse_bp2,
     transportadora_bp,
     condicao_pagamento_bp,
-    ficha_tecnica_bp,
-    produto_especificacoes_bp,
     currency_bp,
-    questionario_visita_bp,
-    dev_economico_bp,
+    pdv_bp,
+    pdv_config_bp,
 ):
     _register(_bp)
 
@@ -290,8 +285,8 @@ def inject_datetime():
             m = (value or '').strip().lower()
         except Exception:
             m = ''
-        if m not in ('global', 'industrial', 'varejo'):
-            return 'global'
+        if m not in ('global', 'industrial', 'varejo', 'mecanica'):
+            return 'mecanica'
         return m
 
     def get_effective_app_mode() -> str:
@@ -349,13 +344,19 @@ def inject_datetime():
         'pode_excluir': pode_excluir
     }
 
+@app.template_filter('basename')
+def _filter_basename(path):
+    import os as _os
+    return _os.path.basename(path or '')
+
+
 def _normalize_mode_value(value: str) -> str:
     try:
         m = (value or '').strip().lower()
     except Exception:
         m = ''
-    if m not in ('global', 'industrial', 'varejo'):
-        return 'global'
+    if m not in ('global', 'industrial', 'varejo', 'mecanica'):
+        return 'mecanica'
     return m
 
 def _get_user_empresas(user_id: int):
@@ -713,7 +714,124 @@ def apresentacao_ikflow_v2():
 @login_required
 def em_desenvolvimento(funcionalidade=None):
     """Página padrão para funcionalidades em desenvolvimento"""
-    return render_template('em_desenvolvimento.html', funcionalidade=funcionalidade)
+    _MODULOS = {
+        'agenda': {
+            'titulo': 'Agenda & Agendamento Inteligente',
+            'icone': '📅',
+            'descricao': 'Calendário visual por mecânico, agendamento com horário marcado e agendamento preventivo automático com base no histórico do veículo.',
+            'prazo': 'Julho / 2026',
+            'features': [
+                {'icone': '📆', 'titulo': 'Calendário por Mecânico', 'desc': 'Visualização diária e semanal da agenda de cada profissional.'},
+                {'icone': '⏰', 'titulo': 'Agendamento com Confirmação', 'desc': 'Cliente agenda horário + serviço. Sistema envia confirmação via WhatsApp.'},
+                {'icone': '🔁', 'titulo': 'Preventivo Automático', 'desc': 'Ao concluir OS, calcula e agenda próxima revisão por KM ou prazo automaticamente.'},
+                {'icone': '🔔', 'titulo': 'Lembrete de Revisão', 'desc': 'Disparo automático 7 dias antes da revisão programada via WhatsApp.'},
+            ]
+        },
+        'comissoes': {
+            'titulo': 'Comissionamento de Mecânicos',
+            'icone': '💰',
+            'descricao': 'Cálculo automático de comissões por OS concluída, valor de mão de obra ou peças vendidas. Relatório mensal por colaborador.',
+            'prazo': 'Agosto / 2026',
+            'features': [
+                {'icone': '🔧', 'titulo': 'Comissão por OS', 'desc': 'Percentual sobre o valor total ou apenas mão de obra por OS concluída.'},
+                {'icone': '🏷️', 'titulo': 'Comissão por Captação', 'desc': 'Percentual para vendedor/indicador que trouxe o cliente.'},
+                {'icone': '📊', 'titulo': 'Relatório Mensal', 'desc': 'Extrato individual por colaborador com valores apurados.'},
+                {'icone': '📤', 'titulo': 'Exportação para Folha', 'desc': 'Exportação em planilha para integração com sistema de RH.'},
+            ]
+        },
+        'garantia': {
+            'titulo': 'Controle de Garantia',
+            'icone': '🛡️',
+            'descricao': 'Registro de garantia por serviço e peça trocada, com alertas automáticos de vencimento e histórico de acionamentos.',
+            'prazo': 'Agosto / 2026',
+            'features': [
+                {'icone': '📋', 'titulo': 'Garantia por OS', 'desc': 'Prazo de garantia do serviço vinculado à OS concluída.'},
+                {'icone': '🔩', 'titulo': 'Garantia por Peça', 'desc': 'Prazo de garantia individual de cada peça trocada com número de série.'},
+                {'icone': '🔔', 'titulo': 'Alertas de Vencimento', 'desc': 'Notificação ao cliente e à equipe quando garantia está próxima do fim.'},
+                {'icone': '📝', 'titulo': 'Histórico de Acionamentos', 'desc': 'Registro de todas as reclamações e retornos em garantia.'},
+            ]
+        },
+        'venda-balcao': {
+            'titulo': 'Venda no Balcão (PDV)',
+            'icone': '🛒',
+            'descricao': 'Venda direta de peças e serviços no balcão com emissão de cupom, NF-e e integração com estoque em tempo real.',
+            'prazo': 'Junho / 2026',
+            'features': [
+                {'icone': '⚡', 'titulo': 'PDV Rápido', 'desc': 'Interface otimizada para venda ágil com busca por código ou nome da peça.'},
+                {'icone': '💳', 'titulo': 'Multi-pagamento', 'desc': 'PIX, cartão, dinheiro, crédito da loja — tudo em uma tela.'},
+                {'icone': '🧾', 'titulo': 'Cupom / NF-e / NFC-e', 'desc': 'Emissão fiscal integrada ao momento da venda.'},
+                {'icone': '📦', 'titulo': 'Baixa Automática de Estoque', 'desc': 'Cada item vendido deduz automaticamente do estoque.'},
+            ]
+        },
+        'boleto': {
+            'titulo': 'Boleto Bancário',
+            'icone': '📄',
+            'descricao': 'Emissão de boletos pelo Banco do Brasil e Mercado Pago, com envio automático por WhatsApp e baixa automática ao confirmar pagamento.',
+            'prazo': 'Setembro / 2026',
+            'features': [
+                {'icone': '🏦', 'titulo': 'Banco do Brasil', 'desc': 'Integração com API do BB para emissão de boletos registrados.'},
+                {'icone': '🛒', 'titulo': 'Mercado Pago', 'desc': 'Boleto + link de pagamento via Mercado Pago.'},
+                {'icone': '📲', 'titulo': 'Envio por WhatsApp', 'desc': 'Boleto enviado automaticamente no WhatsApp ao gerar.'},
+                {'icone': '✅', 'titulo': 'Baixa Automática', 'desc': 'Confirmação via webhook — Contas a Receber atualizado automaticamente.'},
+            ]
+        },
+        'ponto': {
+            'titulo': 'Controle de Ponto e RH',
+            'icone': '👷',
+            'descricao': 'Registro de ponto ao logar no sistema, controle de jornada, faltas e atrasos com relatório mensal para folha de pagamento.',
+            'prazo': 'Agosto / 2026',
+            'features': [
+                {'icone': '🕐', 'titulo': 'Ponto Digital', 'desc': 'Registro de entrada/saída ao acessar o sistema, com geolocalização por rede.'},
+                {'icone': '📅', 'titulo': 'Espelho de Ponto', 'desc': 'Relatório mensal individual com horas trabalhadas, extras, faltas.'},
+                {'icone': '⚠️', 'titulo': 'Alertas de Atraso', 'desc': 'Notificação ao gestor em tempo real quando há atraso ou ausência.'},
+                {'icone': '📊', 'titulo': 'Relatório para Folha', 'desc': 'Exportação das informações para cálculo de folha de pagamento.'},
+            ]
+        },
+        'app-mecanico': {
+            'titulo': 'App Mobile do Mecânico',
+            'icone': '📱',
+            'descricao': 'Aplicativo para Android e iOS que permite ao mecânico visualizar sua fila de OS, iniciar/finalizar serviços e registrar ponto pelo celular.',
+            'prazo': 'Outubro / 2026',
+            'features': [
+                {'icone': '📋', 'titulo': 'Fila de OS', 'desc': 'Mecânico vê suas OS do dia ordenadas por prioridade.'},
+                {'icone': '▶️', 'titulo': 'Iniciar/Finalizar Serviço', 'desc': 'Toque para iniciar e concluir — cronômetro automático.'},
+                {'icone': '📸', 'titulo': 'Fotos do Serviço', 'desc': 'Registrar fotos antes e depois do serviço diretamente na OS.'},
+                {'icone': '⏱️', 'titulo': 'Ponto pelo App', 'desc': 'Registro de ponto com validação por WiFi da oficina.'},
+            ]
+        },
+        'portal-cliente': {
+            'titulo': 'Portal do Cliente',
+            'icone': '🌐',
+            'descricao': 'Área exclusiva onde o cliente acessa o histórico completo do veículo, acompanha OS em aberto, baixa notas fiscais e aprova orçamentos.',
+            'prazo': 'Setembro / 2026',
+            'features': [
+                {'icone': '🚗', 'titulo': 'Histórico do Veículo', 'desc': 'Todas as OS e serviços realizados, organizados por data.'},
+                {'icone': '📊', 'titulo': 'OS em Tempo Real', 'desc': 'Acompanhe o andamento do serviço em tempo real.'},
+                {'icone': '✅', 'titulo': 'Aprovar Orçamento Online', 'desc': 'Cliente aprova orçamento com um clique pelo celular.'},
+                {'icone': '🧾', 'titulo': 'Download de Notas', 'desc': 'Acesse e baixe NF-e e NFS-e emitidas para cada serviço.'},
+            ]
+        },
+        'relatorios': {
+            'titulo': 'Relatórios Gerenciais',
+            'icone': '📊',
+            'descricao': 'Dashboard executivo com KPIs da oficina: faturamento, produtividade por mecânico, peças mais consumidas, clientes VIP e projeções.',
+            'prazo': 'Julho / 2026',
+            'features': [
+                {'icone': '💵', 'titulo': 'Faturamento por Período', 'desc': 'Receita bruta, serviços x peças, comparativo mensal/anual.'},
+                {'icone': '🔧', 'titulo': 'Produtividade por Mecânico', 'desc': 'OS concluídas, tempo médio, comissões geradas.'},
+                {'icone': '📦', 'titulo': 'Peças Mais Consumidas', 'desc': 'Ranking de peças por quantidade e valor, auxiliando no estoque mínimo.'},
+                {'icone': '⭐', 'titulo': 'Clientes VIP', 'desc': 'Ranking de clientes por faturamento e frequência de visita.'},
+            ]
+        },
+    }
+    dados = _MODULOS.get(funcionalidade, {
+        'titulo': 'Módulo em Implantação',
+        'icone': '⚙️',
+        'descricao': 'Esta funcionalidade está sendo desenvolvida especialmente para você. Em breve estará disponível!',
+        'prazo': None,
+        'features': []
+    })
+    return render_template('em_desenvolvimento.html', funcionalidade=funcionalidade, **dados)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

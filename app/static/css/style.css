@@ -57,6 +57,31 @@ ul ul a {
     background: #6d7fcc;
 }
 
+/* Separador de seção dentro dos submenus */
+#sidebar ul li.menu-header {
+    padding: 8px 10px 4px 30px;
+    font-size: 0.68em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: rgba(255,255,255,.45);
+    pointer-events: none;
+    background: transparent;
+    border-top: 1px solid rgba(255,255,255,.08);
+    margin-top: 4px;
+}
+
+/* Link desabilitado / "em breve" */
+#sidebar ul ul a.disabled,
+#sidebar ul ul a[href*="em-desenvolvimento"] {
+    opacity: 0.75;
+    font-style: italic;
+}
+#sidebar ul ul a[href*="em-desenvolvimento"]:hover {
+    color: #08a5b2 !important;
+    background: rgba(8,165,178,.12) !important;
+}
+
 /* Content */
 #content {
     width: 100%;
