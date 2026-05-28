@@ -1,7 +1,7 @@
 # 📋 PROPOSTA TÉCNICA — IKFlow Mecânica
 **Preparado por:** IK Analytics  
 **Data:** Maio/2026  
-**Versão:** 1.3 — WhatsApp UazAPI testado e funcionando (28/05/2026)  
+**Versão:** 1.4 — PDV testado em produção + 78% do MVP entregue (28/05/2026)  
 
 ---
 
@@ -9,8 +9,9 @@
 
 O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admin/gestão, 2 mecânicos, 4 auxiliares) e utiliza um sistema legado com lacunas críticas identificadas. A proposta é implantar o **IKFlow Mecânica**, verticalmente adaptado a partir da plataforma IKFlow já existente, com novos módulos específicos para o segmento automotivo.
 
-**Aproveitamento estimado da base existente: ~65%**  
-**Tempo total estimado de implantação: 10 a 14 semanas**
+**Aproveitamento real da base existente: ~78% já entregue**  
+**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 73 de 93 funcionalidades ativas  
+**Tempo restante estimado para MVP completo: 3 a 4 semanas**
 
 ---
 
@@ -68,9 +69,13 @@ O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admi
 | Jornada de Trabalho | ✅ Adaptar para controle de ponto |
 | Comissionamento | ✅ Adaptar (mecânico + captação marketing) |
 | Dashboard | ✅ Adaptar KPIs para mecânica |
-| PDV Profissional | ✅ **Ativado no balcão** — blueprint registrado em `/vendas/pdv` |
+| PDV Profissional | ✅ **Testado em produção** — venda finalizada, CONSUMIDOR FINAL auto-criado, schema corrigido |
+| Histórico de Vendas | ✅ **Ativo** — `venda_bp` registrado, menu `/vendas/relacao` |
 | Caixa PDV (Abrir/Fechar/Sangria/Suprimento) | ✅ **Desbloqueado** — stored procedures substituídas por SQL direto |
 | WhatsApp Business (UazAPI) | ✅ **Testado e funcionando** — header `token:`, endpoint `/send/text`, config completa no banco |
+| Fluxo de Caixa | ✅ **Desbloqueado** — `python-dateutil` instalado |
+| Relatórios Gerenciais | ✅ **Desbloqueado** — `python-dateutil` instalado |
+| NCM / NFC-e / Moedas / Transportadoras | ✅ **Corrigidos** — imports `app.database` → `database` |
 | Produção / Ficha Técnica / Pausas | ❌ Não se aplica — remover |
 | Romaneio / Manifesto | ❌ Não se aplica — remover |
 | NFC-e | ⚠️ Opcional (balcão) |
@@ -145,18 +150,16 @@ O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admi
 
 ### 🔴 MÓDULO 5 — WHATSAPP AUTOMÁTICO
 **Origem:** Portar `WhatsappController.php` do Holding  
-**Features:**
-- Configuração da API WhatsApp Business (token, número)
-- Fluxos automáticos:
-  - Envio de orçamento por WhatsApp (PDF ou link)
-  - Pós-atendimento: "Como foi sua experiência?"
-  - Lembrete de revisão
-  - Aviso de OS pronta para retirada
-  - Cobrança amigável (integrado ao financeiro)
-- Templates configuráveis por tipo de disparo
-- Histórico de mensagens enviadas por cliente
+**Já entregue:** Configuração UazAPI testada e funcionando em produção  
+**Pendente (próxima prioridade):**
+- 🔴 Envio de orçamento por WA com botão na OS
+- 🔴 Aviso de OS pronta para retirada (trigger ao finalizar)
+- 🔴 Lembrete de revisão preventiva (cron diário)
+- 🔴 Pesquisa de satisfação pós-OS (1h após entrega)
+- 🔴 Alerta de OS urgente para admin
+- Templates configuráveis + histórico de mensagens
 
-**Estimativa:** 1 semana
+**Estimativa restante:** 1 semana
 
 ---
 
@@ -271,22 +274,30 @@ O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admi
 
 ## 5. CRONOGRAMA ESTIMADO
 
-| Semana | Entrega |
-|--------|---------|
-| 1 | Setup infraestrutura + Cadastros base + OS/Orçamento (estrutura) |
-| 2 | OS completa: Prisma, avulso, histórico veículo, garantia |
-| 3 | Agenda + Agendamento preventivo inteligente |
-| 4 | Financeiro: PIX + Boleto BB + Boleto MP + Pagamento parcial |
-| 5 | WhatsApp automático (fluxos + configuração) |
-| 6 | NF-e adaptada + NFS-e + Fluxo popup pós OS |
-| 7 | Estoque de peças + Comissionamento |
-| 8-9 | Controle de ponto + Restrição WiFi + RH |
-| 10-11 | App mobile (PWA) por perfil |
-| 12 | Lembretes automáticos + Notificações |
-| 13 | Relatórios + Dashboard produtividade |
-| 14 | ETL / Migração legado + Testes finais + Treinamento |
+### ✅ JA ENTREGUE (em produção em `mecanicas.ikflow.cloud`)
+| Semana | Entrega | Status |
+|--------|---------|--------|
+| 1-2 | Setup infra + Cadastros base + OS/Orçamento | ✅ Entregue |
+| 3 | OS completa: Prisma, avulso, histórico veículo | ✅ Entregue |
+| 4 | PDV Balcão + Caixa + Histórico Vendas | ✅ Testado |
+| 5 | Financeiro: PIX + Fluxo de Caixa + C/R + C/P | ✅ Entregue |
+| 6 | WhatsApp (UazAPI) + NFS-e + NF-e + NFC-e | ✅ Entregue |
+| 7 | Estoque + Kardex + Compras + Insumos | ✅ Entregue |
+| 8 | PWA (manifest + service worker + instalável) | ✅ Entregue |
 
-**Total: 14 semanas (~3,5 meses)**
+### 🔄 RESTANTE (próximas semanas)
+| Semana | Entrega |
+|--------|--------|
+| +1 | **Fluxos WhatsApp**: orçamento, OS pronta, lembrete revisão, satisfação |
+| +2 | Agenda por mecânico + Agendamento preventivo automático |
+| +3 | Comissionamento (mecânico + captação) |
+| +4 | Controle de ponto + Restrição WiFi |
+| +5 | Boleto BB + Mercado Pago |
+| +6 | Controle de Garantia por peça/serviço |
+| +7 | Relatórios produtividade + Dashboard avançado |
+| +8 | ETL / Migração legado + Testes finais + Treinamento |
+
+**Total original: 14 semanas | Já executado: ~8 semanas | Restante: ~6 semanas**
 
 ---
 

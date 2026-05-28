@@ -1,5 +1,5 @@
 # 📋 Análise Completa MVP — IKFlow Mecânica
-**Atualizado em:** 28/05/2026 (revisão 4 — WhatsApp UazAPI funcionando)  
+**Atualizado em:** 28/05/2026 (revisão 6 — PDV testado em produção, schema corrigido, Histórico de Vendas ativo, 73/93 = 78%)  
 **Fontes consolidadas:**
 - `PROPOSTA_MECANICA_IKFLOW.md` — proposta técnica completa
 - Fluxo de negócio descrito pelo cliente em sessão
@@ -134,20 +134,20 @@
 
 ---
 
-## 🟡 EXISTE NO PROJETO MAS NÃO ESTÁ NO MENU / PRECISA ADAPTAR
+## ✅ ATIVADOS NO MENU (anteriormente "existe mas não está no menu")
 
-| Módulo | Arquivo | Adaptação necessária |
+| Módulo | Arquivo | Onde aparece no menu |
 |---|---|---|
-| **Clientes em Potencial** | `clientes_potenciais_routes.py` | Adicionar ao menu; renomear para contexto mecânica |
-| **Questionário de Visita** | `questionario_visita_routes.py` | Adaptar para "Pesquisa pós-atendimento" |
-| **Rota de Visitas** | `rota_vendas_routes.py` | Adaptar para "Rota de captação" |
-| **Hora-metro** | `hour_meter_routes.py` | Já útil: registrar KM por atendimento |
-| **Lista de Preços** | `lista_preco_routes.py` | Adaptar como "Tabela de serviços (mão de obra)" |
-| ~~**PDV Profissional**~~ | ~~`pdv_profissional_routes.py`~~ | ✅ **ATIVADO** — blueprint registrado, menu Balcão/PDV atualizado |
-| **Execução de Serviços** | `ordem_producao_routes.py` | Adaptar para controle de execução pelo mecânico |
-| **Pausas de Produção** | `producao_pausas_routes.py` | Adaptar para pausas/motivos durante a OS |
-| **NFC-e** | `nfce_routes.py` | Opcional para venda de peças no balcão |
-| **Insumos** | `insumo_routes_mysql.py` | Renomear para "Peças" nas telas |
+| ~~**Clientes em Potencial**~~ | `clientes_potenciais_routes.py` | ✅ Menu → Clientes → "Clientes em Potencial" |
+| ~~**Questionário de Visita**~~ | `questionario_visita_routes.py` | ✅ Menu → Clientes → "Pesquisa Pós-Atendimento" |
+| ~~**Rota de Visitas**~~ | `rota_vendas_routes.py` | ✅ Menu → Clientes → "Rota de Captação" |
+| ~~**Hora-metro**~~ | `hour_meter_routes.py` | ✅ Menu → Veículos → "KM / Horímetro" |
+| ~~**Lista de Preços**~~ | `lista_preco_routes.py` | ✅ Menu → Balcão/PDV → "Tabela de Serviços / Preços" |
+| ~~**PDV Profissional**~~ | `pdv_profissional_routes.py` | ✅ Menu → Balcão/PDV → "Venda Rápida (PDV)" |
+| ~~**Execução de Serviços**~~ | `ordem_producao_routes.py` | ✅ Menu → Equipe → "Ordens de Execução / Gantt" |
+| ~~**Pausas de Produção**~~ | `producao_pausas_routes.py` | ✅ Menu → Equipe → "Motivos de Pausa" |
+| ~~**Insumos**~~ | `insumo_routes_mysql.py` | ✅ Menu → Peças e Estoque → "Insumos" |
+| ~~**NFC-e**~~ | `nfce_routes.py` | ✅ Blueprint registrado (acesso via Atendimento → Fiscal) |
 
 ---
 

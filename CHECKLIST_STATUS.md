@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 2 — Deploy Hostinger + menu completo + fluxos WhatsApp priorizados)  
+**Última atualização:** 28/05/2026 (revisão 3 — PDV testado e funcionando em produção + Histórico de Vendas ativo)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -90,7 +90,7 @@
 
 | # | Funcionalidade | Status | Observação |
 |---|---|---|---|
-| 6.1 | PDV Profissional (tela de venda) | ⚠️ | Rota ativa; depende de caixa aberto; teste real pendente |
+| 6.1 | PDV Profissional (tela de venda) | ✅ | Testado em produção: venda finalizada, schema corrigido, CONSUMIDOR FINAL auto-criado |
 | 6.2 | Abrir Caixa | ✅ | `/caixa/abrir` — sem stored procedure |
 | 6.3 | Caixa Atual (painel) | ✅ | `/caixa/atual` → detalhe |
 | 6.4 | Fechar Caixa | ✅ | `/caixa/fechar/<id>` — sem stored procedure |
@@ -99,7 +99,7 @@
 | 6.7 | Histórico de Caixas | ✅ | `/caixa/` |
 | 6.8 | Configurações do PDV | ✅ | `/vendas/pdv/configuracoes` |
 | 6.9 | Novo PDV (cadastro) | ✅ | `/vendas/pdv/novo` |
-| 6.10 | Histórico de Vendas | ⚠️ | Depende de `venda_routes.py` registrado |
+| 6.10 | Histórico de Vendas | ✅ | `venda_bp` registrado, menu ativo, rota `/vendas/relacao` |
 | 6.11 | NFC-e (cupom fiscal) | ⚠️ | Módulo existe, opcional para balcão |
 
 ---
@@ -182,13 +182,13 @@
 | Veículos | 5 | 4 | 0 | 1 |
 | Equipe / Mecânicos | 10 | 7 | 0 | 3 |
 | Peças e Estoque | 8 | 8 | 0 | 0 |
-| Balcão / PDV | 11 | 8 | 3 | 0 |
+| Balcão / PDV | 11 | 10 | 1 | 0 |
 | Financeiro | 7 | 6 | 0 | 1 |
 | Fiscal / NF | 5 | 4 | 1 | 0 |
 | Comunicação | 8 | 1 | 1 | 6 |
 | PWA / Mobile | 6 | 3 | 2 | 2 (push/offline) |
 | Administrativo | 9 | 8 | 0 | 1 |
-| **TOTAL** | **93** | **71 (76%)** | **8 (9%)** | **14 (15%)** |
+| **TOTAL** | **93** | **73 (78%)** | **6 (6%)** | **14 (15%)** |
 
 ---
 
