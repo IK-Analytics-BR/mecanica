@@ -1,20 +1,21 @@
 # ========================================
-# CONFIGURAÇÃO: AMBIENTE PRODUÇÃO (AWS)
+# CONFIGURAÇÃO: AMBIENTE PRODUÇÃO
+# Lê credenciais do arquivo .env na raiz do projeto
 # ========================================
+import os
 
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'ikflow_user',
-    'password': 'IkFl0w@2024!DB',
-    'database': 'ikflow',
-    'port': 3306,
+    'host':     os.getenv('DB_HOST', 'localhost'),
+    'user':     os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', 'supply_chain_mecanica'),
+    'port':     int(os.getenv('DB_PORT', 3306)),
     'autocommit': True,
     'buffered': True,
     'connection_timeout': 10,
-    'ssl_disabled': True  # Desabilita SSL (conexão direta)
+    'ssl_disabled': True
 }
 
-# Configurações da aplicação
 DEBUG = False
 FLASK_ENV = 'production'
-SECRET_KEY = 'chave_secreta_super_segura_producao_ikflow_2024'
+SECRET_KEY = os.getenv('SECRET_KEY', 'mecanica-ikflow-secret-2026')
