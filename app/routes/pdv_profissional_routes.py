@@ -1606,9 +1606,9 @@ def finalizar_venda():
                 else:
                     db.execute_query("""
                         INSERT INTO customers
-                            (name, cnpj, address, city, state, zip_code, phone, email, active, created_at)
+                            (name, cnpj, address, city, state, active)
                         VALUES
-                            ('CONSUMIDOR FINAL', '00000000000', '', '', '', '', '', '', TRUE, NOW())
+                            ('CONSUMIDOR FINAL', '00000000000', '', '', '', TRUE)
                     """)
                     consumidor_final = db.fetch_one("SELECT id FROM customers WHERE cnpj = '00000000000' LIMIT 1")
                     cliente_id = consumidor_final['id']
