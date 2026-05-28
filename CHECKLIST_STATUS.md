@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (WhatsApp UazAPI testado e funcionando)  
+**Última atualização:** 28/05/2026 (revisão 2 — Deploy Hostinger + menu completo + fluxos WhatsApp priorizados)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -110,7 +110,7 @@
 |---|---|---|---|
 | 7.1 | Contas a Receber | ✅ | `accounts_receivable_routes.py` |
 | 7.2 | Contas a Pagar | ✅ | `accounts_payable_routes.py` |
-| 7.3 | Fluxo de Caixa | ⚠️ | `cash_flow_routes.py` — depende de `python-dateutil` |
+| 7.3 | Fluxo de Caixa | ✅ | `cash_flow_routes.py` — `python-dateutil` adicionado |
 | 7.4 | Contas Bancárias | ✅ | `bank_account_routes.py` |
 | 7.5 | Plano de Contas | ✅ | `chart_of_accounts_routes.py` |
 | 7.6 | PIX (QR code + EMV) | ✅ | `pix_routes.py` |
@@ -122,10 +122,10 @@
 
 | # | Funcionalidade | Status | Observação |
 |---|---|---|---|
-| 8.1 | NF-e emissão | ⚠️ | `nfe_emissao_routes.py` — depende de `app.database` (import quebrado) |
+| 8.1 | NF-e emissão | ⚠️ | `nfe_emissao_routes.py` — try/except duplo já presente; depende de `nfe_service` |
 | 8.2 | NFS-e (nota de serviço) | ✅ | `nfse_routes.py` (ABRASF 2.03) |
-| 8.3 | NFC-e | ⚠️ | Existe, import quebrado (`app.database`) |
-| 8.4 | NCM, CFOP, CST, CNAE | ⚠️ | Módulos com import quebrado (`app.database`) |
+| 8.3 | NFC-e | ✅ | Import `app.database` corrigido para `database` |
+| 8.4 | NCM, CFOP, CST, CNAE | ✅ | Import `app.database` corrigido para `database` |
 | 8.5 | Certificados Digitais | ✅ | Tabela `certificados_digitais` |
 
 ---
@@ -135,8 +135,12 @@
 | # | Funcionalidade | Status | Observação |
 |---|---|---|---|
 | 9.1 | WhatsApp Business | ✅ | `whatsapp_routes.py` — **UazAPI testado** (`token:` header, `/send/text`) |
-| 9.2 | Lembretes automáticos | ❌ | Não implementado |
-| 9.3 | E-mail | ⚠️ | `email_service.py` existe, não integrado ao menu |
+| 9.2 | **Envio de orçamento para aprovação (WA)** | ❌ | Botão na OS → envia link/PDF por WA para cliente aprovar |
+| 9.3 | **Aviso OS pronta para retirada (WA)** | ❌ | Trigger automático ao finalizar OS |
+| 9.4 | **Lembrete de revisão preventiva (WA)** | ❌ | Disparo automático por KM/data (`disparos_ativos`) |
+| 9.5 | **Pesquisa de satisfação pós-OS (WA)** | ❌ | Mensagem automática 1h após entrega |
+| 9.6 | **Alerta de OS urgente para admin (WA)** | ❌ | Notifica `telefones_admin` ao abrir OS urgente |
+| 9.7 | E-mail | ⚠️ | `email_service.py` existe, não integrado ao menu |
 
 ---
 
@@ -160,11 +164,11 @@
 | 11.1 | Usuários e Permissões | ✅ | `users_routes.py` + `permissoes_routes.py` |
 | 11.2 | Cadastro de Empresa | ✅ | `empresa_routes.py` |
 | 11.3 | Segmentos | ✅ | `segment_routes.py` |
-| 11.4 | Moedas | ✅ | `currency_routes.py` — import quebrado (`app.database`) |
+| 11.4 | Moedas | ✅ | `currency_routes.py` — import corrigido |
 | 11.5 | Alertas / Notificações internas | ✅ | `alert_routes.py` |
 | 11.6 | Dashboard | ✅ | `dashboard_routes.py` |
-| 11.7 | Relatórios gerenciais | ⚠️ | `reports_routes.py` — depende de `python-dateutil` |
-| 11.8 | Transportadoras | ⚠️ | Import quebrado (`app.database`) |
+| 11.7 | Relatórios gerenciais | ✅ | `reports_routes.py` — `python-dateutil` adicionado |
+| 11.8 | Transportadoras | ✅ | Import `app.database` corrigido para `database` |
 | 11.9 | ETL / Migração do legado | ❌ | Não implementado |
 
 ---
@@ -179,31 +183,46 @@
 | Equipe / Mecânicos | 10 | 7 | 0 | 3 |
 | Peças e Estoque | 8 | 8 | 0 | 0 |
 | Balcão / PDV | 11 | 8 | 3 | 0 |
-| Financeiro | 7 | 5 | 1 | 1 |
-| Fiscal / NF | 5 | 1 | 3 | 0 (aguarda config) |
-| Comunicação | 3 | 2 | 0 | 1 |
+| Financeiro | 7 | 6 | 0 | 1 |
+| Fiscal / NF | 5 | 4 | 1 | 0 |
+| Comunicação | 8 | 1 | 1 | 6 |
 | PWA / Mobile | 6 | 3 | 2 | 2 (push/offline) |
-| Administrativo | 9 | 6 | 3 | 1 |
-| **TOTAL** | **88** | **63 (72%)** | **13 (15%)** | **12 (14%)** |
+| Administrativo | 9 | 8 | 0 | 1 |
+| **TOTAL** | **93** | **71 (76%)** | **8 (9%)** | **14 (15%)** |
 
 ---
 
 ## PRÓXIMAS PRIORIDADES SUGERIDAS
 
-### 🔴 Alta — Desbloqueiam funcionalidades quebradas
-1. **Instalar `python-dateutil`** → habilita Fluxo de Caixa + Relatórios
-2. **Corrigir imports `app.database`** em NF-e, NFC-e, NCM, Transportadoras, Moedas → 5 módulos em 1 fix
-3. **Teste real do PDV** — venda completa com caixa → conferir template `venda_pdv_profissional.html`
+### 🔴 Alta — Fluxos WhatsApp (alto impacto no cliente)
+1. **Envio de orçamento para aprovação via WA**
+   - Botão "Enviar orçamento" na OS → monta mensagem com valor, peças e link PDF
+   - Atualiza `status_orcamento` para `enviado` após confirmação de envio
+   - Rota: `POST /service_orders/<id>/enviar-orcamento-wa`
+2. **Aviso de OS pronta para retirada**
+   - Trigger automático ao mudar status OS para `concluida`
+   - Mensagem: "Seu veículo [placa] está pronto! Valor: R$ XX. Venha retirar."
+   - Rota: `POST /service_orders/<id>/notificar-pronta`
+3. **Lembrete de revisão preventiva**
+   - Job diário: busca veículos com revisão vencendo em `dias_lembrete` dias
+   - Usa `disparos_ativos` da config WA para habilitar/desabilitar
+   - Rota: `GET /whatsapp/disparar-lembretes` (chamada por cron)
+4. **Pesquisa de satisfação pós-OS**
+   - Enviada automaticamente 1h após status `concluida`
+   - Mensagem curta: "Como foi o atendimento? Responda: 1-Ótimo 2-Bom 3-Regular"
+5. **Alerta de OS urgente para admin**
+   - Ao criar OS com prioridade `urgente` → notifica todos os `telefones_admin`
 
-### 🟠 Média — Completam o MVP
-4. **Agenda por mecânico** (calendário diário)
-5. **Controle de Garantia** (prazo por peça/serviço)
-6. **Ícones PWA finais** (arte da marca)
-7. **Comissões** (mecânico + captação)
+### 🟠 Média — Desbloqueiam módulos quebrados
+6. **Instalar `python-dateutil`** → habilita Fluxo de Caixa + Relatórios
+7. **Corrigir imports `app.database`** em NF-e, NFC-e, NCM, Transportadoras, Moedas → 5 módulos em 1 fix
+8. **Teste real do PDV** — venda completa com caixa aberto
 
-### 🟡 Baixa — Pós-MVP
-8. **Push Notifications** (Web Push API)
-9. **Portal do Cliente**
-10. **Boleto Bancário**
-11. **ETL / Migração do legado**
-12. **Restrição WiFi para ponto**
+### � Baixa — Pós-MVP
+9. **Agenda por mecânico** (calendário diário)
+10. **Controle de Garantia** (prazo por peça/serviço)
+11. **Comissões** (mecânico + captação)
+12. **Portal do Cliente**
+13. **Push Notifications** (Web Push API)
+14. **Boleto Bancário**
+15. **ETL / Migração do legado**

@@ -271,7 +271,7 @@
                         <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='venda-balcao') }}"><i class="fas fa-bolt text-warning"></i> PDV Balcão <span class="badge bg-warning text-dark ms-1" style="font-size:9px">Ativando...</span></a></li>
                         {% endif %}
                         {% if blueprint_exists('venda') %}
-                        <li><a href="{{ url_for('venda.vendas_lista') }}"><i class="fas fa-list"></i> Histórico de Vendas</a></li>
+                        <li><a href="{{ url_for('venda.vendas_relacao') }}"><i class="fas fa-list"></i> Histórico de Vendas</a></li>
                         {% endif %}
                         {% if blueprint_exists('lista_preco') %}
                         <li><a href="{{ url_for('lista_preco.lista') }}"><i class="fas fa-tags"></i> Tabela de Serviços / Preços</a></li>

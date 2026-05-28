@@ -121,9 +121,10 @@ orcamento_dna_bp = _try_import('routes.orcamento_dna_routes', 'orcamento_dna_bp'
 # Módulo de Lista de Preços
 lista_preco_bp = _try_import('routes.lista_preco_routes', 'lista_preco_bp')
 
-# Módulo PDV Profissional (Balcão)
+# Módulo PDV Profissional (Balcão) + Histórico de Vendas
 pdv_bp       = _try_import('routes.pdv_profissional_routes', 'pdv_bp')
 pdv_config_bp = _try_import('routes.pdv_config_routes',     'pdv_config_bp')
+venda_bp      = _try_import('routes.venda_routes',          'venda_bp')
 
 # Módulos portados do Holding
 whatsapp_bp = _try_import('routes.whatsapp_routes', 'whatsapp_bp')
@@ -266,6 +267,7 @@ for _bp in (
     currency_bp,
     pdv_bp,
     pdv_config_bp,
+    venda_bp,
 ):
     _register(_bp)
 
