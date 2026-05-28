@@ -130,27 +130,24 @@ def cash_register_open():
             flash('Você já possui um caixa aberto! Feche o caixa atual antes de abrir outro.', 'warning')
             return redirect(url_for('cash_register.cash_register_current'))
         
-        # Buscar PDVs disponíveis (excluindo os que já têm caixa aberto)
-        pdvs = db.fetch_all("""
-            SELECT 
-                ps.id,
-                ps.pdv_name,
-                ps.pdv_number,
-                ps.company_id,
-                e.nome_fantasia as empresa_nome,
-                CASE 
-                    WHEN cr.id IS NOT NULL THEN 1
-                    ELSE 0
-                END as tem_caixa_aberto,
-                cr.id as caixa_id,
-                cr.cashier_name as caixa_operador
-            FROM pdv_settings ps
-            LEFT JOIN empresas e ON ps.company_id = e.id
-            LEFT JOIN cash_register cr ON cr.pdv_id = ps.id AND cr.status = 'open'
-            WHERE ps.active = 1
-            ORDER BY ps.pdv_number
-        """)
-        
+        # Buscar PDVs disponíveis
+        try:
+            pdvs = db.fetch_all("""
+                SELECT 
+                    ps.id,
+                    ps.pdv_name,
+                    ps.pdv_number,
+                    CASE WHEN cr.id IS NOT NULL THEN 1 ELSE 0 END as tem_caixa_aberto,
+                    cr.id as caixa_id,
+                    cr.cashier_name as caixa_operador
+                FROM pdv_settings ps
+                LEFT JOIN cash_register cr ON cr.pdv_id = ps.id AND cr.status = 'open'
+                WHERE ps.active = 1
+                ORDER BY ps.pdv_number
+            """)
+        except Exception:
+            pdvs = []
+
         return render_template('cash_register_open.html', pdvs=pdvs)
     
     # POST: Processar abertura
@@ -168,9 +165,12 @@ def cash_register_open():
     else:
         pdv_id = int(pdv_id)
     
-    # Buscar empresa do PDV selecionado
-    pdv_info = db.fetch_one("SELECT company_id FROM pdv_settings WHERE id = %s", (pdv_id,))
-    empresa_id = pdv_info['company_id'] if pdv_info else None
+    # Buscar empresa do PDV selecionado (company_id pode não existir em todos os schemas)
+    try:
+        pdv_info = db.fetch_one("SELECT company_id FROM pdv_settings WHERE id = %s", (pdv_id,))
+        empresa_id = pdv_info['company_id'] if pdv_info else None
+    except Exception:
+        empresa_id = None
     
     try:
         from datetime import datetime

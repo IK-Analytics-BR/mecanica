@@ -184,36 +184,56 @@ def carregar_dados_iniciais():
         print(f"[PDV DADOS] Cliente no carrinho: {cliente_atual['nome']}")
         
         # ===== 4. CONFIGURAÇÕES DO PDV =====
+        # Busca pelo pdv_id vinculado ao caixa aberto; fallback para active=TRUE
         try:
             config_pdv = db.fetch_one("""
                 SELECT 
-                    id,
-                    pdv_name,
-                    allow_negative_stock,
-                    check_stock_realtime,
-                    show_stock_quantity,
-                    ask_quantity,
-                    default_quantity,
-                    allow_decimal_quantity,
-                    allow_price_change,
-                    show_discount_button,
-                    allow_item_discount,
-                    allow_total_discount,
-                    max_discount_percent,
-                    require_manager_approval,
-                    require_customer,
-                    auto_focus_product_field,
-                    beep_on_scan,
-                    enable_f2_customer,
-                    enable_f4_discount,
-                    enable_f5_cancel,
-                    enable_f6_search,
-                    enable_f9_finish
-                FROM pdv_settings
-                WHERE active = TRUE
-                ORDER BY id DESC
+                    p.id,
+                    p.pdv_name,
+                    p.allow_negative_stock,
+                    p.check_stock_realtime,
+                    p.show_stock_quantity,
+                    p.ask_quantity,
+                    p.default_quantity,
+                    p.allow_decimal_quantity,
+                    p.allow_price_change,
+                    p.show_discount_button,
+                    p.allow_item_discount,
+                    p.allow_total_discount,
+                    p.max_discount_percent,
+                    p.require_manager_approval,
+                    p.require_customer,
+                    p.auto_focus_product_field,
+                    p.beep_on_scan,
+                    p.enable_f2_customer,
+                    p.enable_f4_discount,
+                    p.enable_f5_cancel,
+                    p.enable_f6_search,
+                    p.enable_f9_finish
+                FROM pdv_settings p
+                INNER JOIN cash_register cr
+                    ON cr.pdv_id = p.id
+                    AND cr.user_id = %s
+                    AND cr.status = 'open'
+                ORDER BY cr.opened_at DESC
                 LIMIT 1
-            """)
+            """, (user_id,))
+
+            # Fallback: se caixa não tiver pdv_id vinculado, pega o ativo
+            if not config_pdv:
+                config_pdv = db.fetch_one("""
+                    SELECT id, pdv_name, allow_negative_stock, check_stock_realtime,
+                           show_stock_quantity, ask_quantity, default_quantity,
+                           allow_decimal_quantity, allow_price_change, show_discount_button,
+                           allow_item_discount, allow_total_discount, max_discount_percent,
+                           require_manager_approval, require_customer, auto_focus_product_field,
+                           beep_on_scan, enable_f2_customer, enable_f4_discount,
+                           enable_f5_cancel, enable_f6_search, enable_f9_finish
+                    FROM pdv_settings
+                    WHERE active = TRUE
+                    ORDER BY id DESC
+                    LIMIT 1
+                """)
             
             if config_pdv:
                 print(f"[PDV CONFIG] Configurações carregadas: ID={config_pdv.get('id')}, ask_quantity={config_pdv.get('ask_quantity')}, allow_negative_stock={config_pdv.get('allow_negative_stock')}")
