@@ -892,30 +892,38 @@ def vendas_relacao():
         params.append(date_to)
 
     where_sql = ("WHERE " + " AND ".join(where)) if where else ""
-
     offset = (page - 1) * per_page
-    rows = db.fetch_all(
-        f"""
-        SELECT s.id, s.sale_date, s.status,
-               s.net_total, s.gross_total, s.discount_total,
-               s.chave_acesso_nfe, s.numero_nfe, s.status_nfe,
-               s.chave_acesso_nfce, s.numero_nfce, s.status_nfce,
-               c.name AS customer_name,
-               u.username AS seller_name
-        FROM sales s
-        LEFT JOIN customers c ON c.id = s.customer_id
-        LEFT JOIN users u ON u.id = s.seller_id
-        {where_sql}
-        ORDER BY s.id DESC
-        LIMIT %s OFFSET %s
-        """,
-        tuple(params + [per_page + 1, offset])
-    )
+
+    try:
+        rows = db.fetch_all(
+            f"""
+            SELECT s.id, s.sale_date, s.status,
+                   s.net_total, s.gross_total, s.discount_total,
+                   COALESCE(s.chave_acesso_nfe, '') AS chave_acesso_nfe,
+                   COALESCE(s.numero_nfe, '') AS numero_nfe,
+                   COALESCE(s.status_nfe, '') AS status_nfe,
+                   COALESCE(s.chave_acesso_nfce, '') AS chave_acesso_nfce,
+                   COALESCE(s.numero_nfce, '') AS numero_nfce,
+                   COALESCE(s.status_nfce, '') AS status_nfce,
+                   c.name AS customer_name,
+                   u.username AS seller_name
+            FROM sales s
+            LEFT JOIN customers c ON c.id = s.customer_id
+            LEFT JOIN users u ON u.id = s.seller_id
+            {where_sql}
+            ORDER BY s.id DESC
+            LIMIT %s OFFSET %s
+            """,
+            tuple(params + [per_page + 1, offset])
+        )
+    except Exception as e:
+        print(f"[VENDAS] Erro ao listar vendas: {e}")
+        flash(f'Erro ao carregar vendas: {e}', 'danger')
+        rows = []
 
     has_next = len(rows) > per_page
     vendas = rows[:per_page]
 
-    # Vendedores para filtro
     try:
         sellers = db.fetch_all(
             "SELECT id, COALESCE(full_name, username) AS name FROM users WHERE is_seller=1 ORDER BY name"

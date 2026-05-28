@@ -1555,43 +1555,42 @@ def finalizar_venda():
         # Validações
         db = get_db()
         
-        # Verificar se cliente é obrigatório nas configurações
-        pdv_id = session.get('pdv_id', 1)
+        # Verificar se cliente é obrigatório — sempre lê do PDV ativo
         pdv_config = db.fetch_one("""
             SELECT require_customer, show_discount_button 
             FROM pdv_settings 
-            WHERE id = %s
-        """, (pdv_id,))
-        require_customer = pdv_config.get('require_customer', True) if pdv_config else True
-        
+            WHERE active = TRUE
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+        require_customer = bool(pdv_config.get('require_customer', True)) if pdv_config else True
+
         cliente_id = carrinho.get('cliente_id')
-        
+
         # Se cliente não foi informado
         if not cliente_id:
             if require_customer:
-                # Se é obrigatório, retorna erro
                 return jsonify({
                     "success": False,
                     "erro": "Cliente não selecionado. Configure o PDV para permitir vendas sem cliente."
                 }), 400
             else:
-                # Se não é obrigatório, buscar cliente padrão "CONSUMIDOR FINAL"
-                # IMPORTANTE: Cliente deve ser criado manualmente no banco antes!
+                # Buscar ou criar CONSUMIDOR FINAL automaticamente
                 consumidor_final = db.fetch_one("""
                     SELECT id FROM customers 
                     WHERE name = 'CONSUMIDOR FINAL' OR cnpj = '00000000000'
                     LIMIT 1
                 """)
-                
                 if consumidor_final:
                     cliente_id = consumidor_final['id']
-                    print(f"[PDV FINALIZAÇÃO] [OK] Venda sem cliente - Usando CONSUMIDOR FINAL (ID: {cliente_id})")
                 else:
-                    # Cliente CONSUMIDOR FINAL não existe!
-                    return jsonify({
-                        "success": False,
-                        "erro": "Cliente CONSUMIDOR FINAL não encontrado! Execute o SQL: CRIAR_CONSUMIDOR_FINAL.sql"
-                    }), 400
+                    db.execute_query("""
+                        INSERT INTO customers (name, cnpj, active, created_at)
+                        VALUES ('CONSUMIDOR FINAL', '00000000000', TRUE, NOW())
+                    """)
+                    consumidor_final = db.fetch_one("SELECT id FROM customers WHERE cnpj = '00000000000' LIMIT 1")
+                    cliente_id = consumidor_final['id']
+                print(f"[PDV FINALIZAÇÃO] Venda sem cliente — CONSUMIDOR FINAL (ID: {cliente_id})")
         
         user_id = session.get('user_id')
         if not user_id:
