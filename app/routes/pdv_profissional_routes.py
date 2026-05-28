@@ -1687,14 +1687,23 @@ def finalizar_venda():
             caixa_id = caixa_row['id'] if caixa_row else None
             print(f"[PDV FINALIZAÇÃO] Caixa buscado do banco: {caixa_id}")
         
-        # Determinar forma de pagamento principal para o campo payment_method
-        # Se múltiplos pagamentos, usar 'misto', senão usar a única forma
-        forma_pagamento_principal = 'misto' if len(pagamentos) > 1 else pagamentos[0]['forma']
+        # Mapear forma de pagamento para ENUM válido: money|pix|debit|credit|boleto
+        _map_pagamento = {
+            'dinheiro': 'money', 'money': 'money', 'especie': 'money',
+            'pix': 'pix',
+            'debito': 'debit', 'debit': 'debit', 'cartao_debito': 'debit',
+            'credito': 'credit', 'credit': 'credit', 'cartao_credito': 'credit',
+            'boleto': 'boleto',
+        }
+        if len(pagamentos) > 1:
+            forma_pagamento_principal = 'money'  # múltiplos: usa money como principal
+        else:
+            raw = (pagamentos[0].get('forma') or 'money').lower()
+            forma_pagamento_principal = _map_pagamento.get(raw, 'money')
         
         sale_id = db.insert("""
             INSERT INTO sales (
                 customer_id,
-                empresa_id,
                 sale_date,
                 payment_method,
                 status,
@@ -1702,20 +1711,17 @@ def finalizar_venda():
                 discount_total,
                 net_total,
                 seller_id,
-                payment_terms,
                 cash_register_id
-            ) VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, NOW(), %s, %s, %s, %s, %s, %s, %s)
         """, (
             cliente_id,
-            company_id,   # empresa_id
             forma_pagamento_principal,
-            'confirmed',  # status
-            subtotal,     # gross_total
+            'confirmed',
+            subtotal,
             desconto_total,
-            total,        # net_total
-            user_id,      # seller_id
-            'a_vista',    # payment_terms
-            caixa_id      # cash_register_id
+            total,
+            user_id,
+            caixa_id
         ))
         
         print(f"[PDV FINALIZAÇÃO] [OK] Venda criada - ID: {sale_id} | Empresa: {company_id}")
