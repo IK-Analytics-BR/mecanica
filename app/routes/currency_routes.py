@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required
 from functools import wraps
 
-from app.database import get_db
+from database import get_db
 
 
 currency_bp = Blueprint('currency', __name__, url_prefix='/moedas')

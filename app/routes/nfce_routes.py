@@ -4,7 +4,7 @@ Rotas para NFC-e (Nota Fiscal de Consumidor Eletrônica)
 
 from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for
 from functools import wraps
-from app.database import Database
+from database import Database
 from datetime import datetime
 
 nfce_bp = Blueprint('nfce', __name__)

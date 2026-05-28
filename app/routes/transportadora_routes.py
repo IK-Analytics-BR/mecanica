@@ -2,7 +2,7 @@
 Rotas para CRUD de Transportadoras
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from app.database import get_db
+from database import get_db
 
 transportadora_bp = Blueprint('transportadoras', __name__, url_prefix='/transportadoras')
 

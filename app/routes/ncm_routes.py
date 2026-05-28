@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
-from app.database import Database
+from database import Database
 
 # Decorator para verificar se o usuário está logado
 def login_required(f):
