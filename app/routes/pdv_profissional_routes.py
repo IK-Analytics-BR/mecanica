@@ -1621,6 +1621,10 @@ def finalizar_venda():
                 "erro": "Usuário não autenticado"
             }), 401
         
+        # Inicializar com valores padrão
+        pdv_id = 1
+        company_id = 1
+
         # Obter empresa do CAIXA ABERTO (empresa vinculada ao caixa)
         caixa_info = db.fetch_one("""
             SELECT empresa_id, pdv_id 
@@ -1630,10 +1634,9 @@ def finalizar_venda():
             LIMIT 1
         """, (user_id,))
         
-        if caixa_info and caixa_info['empresa_id']:
+        if caixa_info and caixa_info.get('empresa_id'):
             company_id = caixa_info['empresa_id']
-            # IMPORTANTE: Usar o pdv_id do caixa para buscar configurações corretas
-            pdv_id = caixa_info.get('pdv_id', pdv_id)
+            pdv_id = caixa_info.get('pdv_id') or pdv_id
             print(f"[PDV FINALIZAÇÃO] [OK] Empresa do caixa: {company_id} | PDV: {pdv_id}")
         else:
             # Fallback: buscar empresa do PDV padrão
