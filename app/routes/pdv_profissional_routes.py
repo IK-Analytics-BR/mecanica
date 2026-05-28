@@ -1605,8 +1605,10 @@ def finalizar_venda():
                     cliente_id = consumidor_final['id']
                 else:
                     db.execute_query("""
-                        INSERT INTO customers (name, cnpj, active, created_at)
-                        VALUES ('CONSUMIDOR FINAL', '00000000000', TRUE, NOW())
+                        INSERT INTO customers
+                            (name, cnpj, address, city, state, zip_code, phone, email, active, created_at)
+                        VALUES
+                            ('CONSUMIDOR FINAL', '00000000000', '', '', '', '', '', '', TRUE, NOW())
                     """)
                     consumidor_final = db.fetch_one("SELECT id FROM customers WHERE cnpj = '00000000000' LIMIT 1")
                     cliente_id = consumidor_final['id']
@@ -1635,11 +1637,11 @@ def finalizar_venda():
             print(f"[PDV FINALIZAÇÃO] [OK] Empresa do caixa: {company_id} | PDV: {pdv_id}")
         else:
             # Fallback: buscar empresa do PDV padrão
-            pdv_padrao = db.fetch_one("SELECT id, company_id FROM pdv_settings ORDER BY id LIMIT 1")
-            if pdv_padrao:
-                company_id = pdv_padrao['company_id'] if pdv_padrao['company_id'] else 1
-                pdv_id = pdv_padrao['id']
-            else:
+            try:
+                pdv_padrao = db.fetch_one("SELECT id, company_id FROM pdv_settings ORDER BY id LIMIT 1")
+                company_id = (pdv_padrao.get('company_id') or 1) if pdv_padrao else 1
+                pdv_id = pdv_padrao['id'] if pdv_padrao else 1
+            except Exception:
                 company_id = 1
                 pdv_id = 1
             print(f"[PDV FINALIZAÇÃO] [AVISO] Caixa sem empresa, usando PDV padrão: {company_id} | PDV: {pdv_id}")
