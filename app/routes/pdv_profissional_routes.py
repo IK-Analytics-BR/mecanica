@@ -273,8 +273,13 @@ def carregar_dados_iniciais():
                 "id": operador['id'],
                 "nome": operador['nome'],
                 "caixa": operador['caixa'],
+                "caixa_numero": operador.get('caixa_numero') or operador['caixa'],
                 "abertura": operador['abertura'],
                 "saldo_abertura": float(operador.get('saldo_abertura', 0))
+            },
+            "pdv": {
+                "id": config_pdv.get('id'),
+                "nome": config_pdv.get('pdv_name', 'PDV Principal')
             },
             "empresa": {
                 "id": empresa.get('id'),

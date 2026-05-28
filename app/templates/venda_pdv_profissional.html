@@ -531,7 +531,8 @@
             <!-- Card Info Operador -->
             <div class="pdv-operator-card">
                 <strong>Operador(a): <span id="pdv-operador-nome">{{ session.get('username', 'Carregando...') }}</span></strong>
-                <div>Caixa: <span id="pdv-caixa-numero">--</span></div>
+                <div>PDV: <span id="pdv-nome">--</span></div>
+                <div>Caixa Nº: <span id="pdv-caixa-numero">--</span></div>
                 <div>Abertura: <span id="pdv-caixa-abertura">--:--</span></div>
             </div>
             
@@ -2431,10 +2432,16 @@
                         operadorNome.textContent = data.operador.nome;
                     }
                     
-                    // Número do caixa (ID)
+                    // Nome do PDV
+                    const pdvNome = document.getElementById('pdv-nome');
+                    if (pdvNome && data.pdv && data.pdv.nome) {
+                        pdvNome.textContent = data.pdv.nome;
+                    }
+
+                    // Número do caixa
                     const caixaNumero = document.getElementById('pdv-caixa-numero');
-                    if (caixaNumero && data.operador.caixa) {
-                        caixaNumero.textContent = data.operador.caixa;
+                    if (caixaNumero) {
+                        caixaNumero.textContent = data.operador.caixa_numero || data.operador.caixa || '--';
                     }
                     
                     // Horário de abertura
