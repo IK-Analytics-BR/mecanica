@@ -1743,6 +1743,11 @@ def finalizar_venda():
             # Buscar informações do produto
             prod = db.fetch_one("SELECT id, name, product_type FROM products WHERE id = %s", (produto_id,))
             
+            _valid_types = ('standalone', 'parent', 'child')
+            _ptype = (prod.get('product_type') if prod else None) or 'standalone'
+            if _ptype not in _valid_types:
+                _ptype = 'standalone'
+
             db.insert("""
                 INSERT INTO sale_items (
                     sale_id,
@@ -1757,7 +1762,7 @@ def finalizar_venda():
             """, (
                 sale_id,
                 produto_id,
-                prod.get('product_type') if prod else None,
+                _ptype,
                 prod.get('name') if prod else 'Produto',
                 quantidade,
                 preco_unitario,
