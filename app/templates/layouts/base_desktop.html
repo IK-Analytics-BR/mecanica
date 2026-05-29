@@ -345,103 +345,31 @@
     {% block styles %}{% endblock %}
 </head>
 <body>
-    <!-- ══ DETECÇÃO PWA ══ -->
+    <!-- ══ PWA MINIMAL TEST v4 ══ -->
     <script>
-        (function() {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 window.navigator.standalone ||
-                                 document.referrer.includes('android-app://');
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (isStandalone) {
-                document.body.classList.add('pwa-standalone');
-            }
-            if (isMobile) {
-                document.body.classList.add('device-mobile');
-                // Redirecionar para mobile layout se necessário
-                if (!window.location.pathname.includes('/mobile/') && 
-                    !window.location.pathname.includes('/mecanico/')) {
-                    // Opcional: redirecionar para versão mobile
-                    // window.location.href = '/mobile' + window.location.pathname;
-                }
-            }
-            
-            sessionStorage.setItem('isStandalone', isStandalone);
-            sessionStorage.setItem('isMobile', isMobile);
-            console.log('[PWA Desktop] Standalone:', isStandalone, 'Mobile:', isMobile);
-        })();
-        
-        // ══ FORÇAR ATUALIZAÇÃO DO PWA ══
-        (function() {
-            // Adicionar timestamp para cache-busting em CSS/JS
-            const timestamp = new Date().getTime();
-            document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
-                const url = el.href || el.src;
-                if (url && url.includes('/static/') && !url.includes('?v=')) {
-                    const newUrl = url + (url.includes('?') ? '&' : '?') + 'v=' + timestamp;
-                    if (el.href) el.href = newUrl;
-                    if (el.src) el.src = newUrl;
-                }
-            });
-            
-            // Forçar atualização do service worker
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistration('/').then(reg => {
-                    if (reg) {
-                        reg.update().then(() => console.log('[PWA] SW update checked'));
-                        // Forçar skipWaiting se houver novo SW esperando
-                        if (reg.waiting) {
-                            reg.waiting.postMessage({ action: 'skipWaiting' });
-                        }
-                    }
-                });
-                
-                // Escutar por novos service workers
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    console.log('[PWA] Novo SW ativado, recarregando...');
-                    window.location.reload();
-                });
-            }
-        })();
-        
-        // ══ iOS PWA ESPECÍFICO ══
-        (function() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isStandalone = window.navigator.standalone === true;
-            
-            if (isIOS && isStandalone) {
-                console.log('[iOS PWA] Modo standalone detectado');
-                
-                // iOS tem cache agressivo em PWAs - forçar no-cache em todos os fetch
-                const originalFetch = window.fetch;
-                const iosVersion = 'v2_' + new Date().toISOString().split('T')[0];
-                
-                window.fetch = function(url, options = {}) {
-                    if (typeof url === 'string') {
-                        options.cache = 'no-store';
-                        // Adicionar versão do dia à URL
-                        if (url.startsWith('/') && !url.includes('_iosv=')) {
-                            const separator = url.includes('?') ? '&' : '?';
-                            url = url + separator + '_iosv=' + iosVersion;
-                        }
-                    }
-                    return originalFetch(url, options);
-                };
-                
-                // Verificar atualização a cada abertura
-                const savedVersion = localStorage.getItem('ikflow_ios_version');
-                if (savedVersion !== iosVersion) {
-                    console.log('[iOS PWA] Nova versão, salvando...');
-                    localStorage.setItem('ikflow_ios_version', iosVersion);
-                    // Recarregar uma vez para aplicar nova versão
-                    if (sessionStorage.getItem('ios_reloaded') !== 'yes') {
-                        sessionStorage.setItem('ios_reloaded', 'yes');
-                        window.location.reload();
-                    }
-                }
-            }
-        })();
+        // VERSAO MINIMA PARA TESTE - v4
+        console.log('[PWA TEST] v4 - 29-05-2025');
+
+        // Detectar PWA standalone
+        const isStandalone = window.navigator.standalone === true;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        if (isStandalone) {
+            console.log('[PWA] Standalone detectado');
+            document.body.classList.add('pwa-standalone');
+        }
+
+        // Service Worker minimal - apenas registrar, nada mais
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/js/service-worker.js')
+                .then(() => console.log('[SW] OK'))
+                .catch(() => console.log('[SW] Erro'));
+        }
     </script>
+    <!-- FIM PWA MINIMAL -->
+
+    <!-- DEBUG: Indicador de versão -->
+    <div id="pwa-version-indicator" style="position:fixed;bottom:4px;right:4px;font-size:11px;background:#08a5b2;color:#fff;padding:2px 6px;border-radius:4px;z-index:99999;font-family:monospace;">v4</div>
 
     <div class="wrapper">
         <!-- Sidebar Desktop -->
