@@ -1,5 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from functools import wraps
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 import sys
 import os
 
@@ -7,18 +6,11 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from database import get_db
+from utils.auth import login_required
 
 product_model_bp = Blueprint('product_model', __name__)
 
 # Auth decorator
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @product_model_bp.route('/produtos/modelos')
 @login_required

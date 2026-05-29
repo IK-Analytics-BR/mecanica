@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para gerenciamento de contas a pagar.
 """
 
@@ -7,19 +7,11 @@ from functools import wraps
 import datetime
 
 from database import get_db
+from utils.auth import login_required
 
 # Criar o blueprint
 accounts_payable_bp = Blueprint('accounts_payable', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @accounts_payable_bp.route('/contas-pagar')
 @login_required

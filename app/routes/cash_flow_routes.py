@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para gerenciamento de fluxo de caixa.
 """
 
@@ -9,19 +9,11 @@ import calendar
 from dateutil.relativedelta import relativedelta
 
 from database import get_db
+from utils.auth import login_required
 
 # Criar o blueprint
 cash_flow_bp = Blueprint('cash_flow', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @cash_flow_bp.route('/fluxo-caixa')
 @login_required

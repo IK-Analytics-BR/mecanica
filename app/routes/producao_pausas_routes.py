@@ -1,23 +1,15 @@
-"""
+﻿"""
 Blueprint para Gestão de Pausas de Produção
 Módulo Indústria
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from database import get_db
-from functools import wraps
+from utils.auth import login_required
 
 producao_pausas_bp = Blueprint('producao_pausas', __name__, url_prefix='/industria/producao-pausas')
 
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'warning')
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 # =====================================================

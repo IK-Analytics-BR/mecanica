@@ -1,23 +1,15 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Rotas para gerenciamento de Listas de Preço
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
-from functools import wraps
 from database import get_db
+from utils.auth import login_required
 
 # Blueprint
 lista_preco_bp = Blueprint('lista_preco', __name__)
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 # =====================================================

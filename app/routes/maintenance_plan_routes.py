@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para gerenciamento de planos de manutenção.
 
 Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
@@ -9,19 +9,11 @@ from functools import wraps
 from datetime import datetime, timedelta
 
 from database import get_db
+from utils.auth import login_required
 
 # Criar o blueprint
 maintenance_plan_bp = Blueprint('maintenance_plan', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @maintenance_plan_bp.route('/maintenance_plans')
 @login_required

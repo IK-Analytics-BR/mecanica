@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para gerenciamento de integrações com ERP e IoT.
 
 Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
@@ -9,21 +9,13 @@ from functools import wraps
 import json
 
 from database import get_db
+from utils.auth import login_required
 from services.erp_integration_service import ERPIntegrationService
 from services.iot_integration_service import IoTIntegrationService
 
 # Criar o blueprint
 integration_bp = Blueprint('integration', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Decorador para verificar se o usuário é administrador
 def admin_required(f):

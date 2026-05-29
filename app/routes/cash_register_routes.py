@@ -1,22 +1,14 @@
-"""
+﻿"""
 Rotas para Controle de Caixa (PDV)
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from database import get_db
+from utils.auth import login_required
 from datetime import datetime
 from functools import wraps
 
 cash_register_bp = Blueprint('cash_register', __name__, url_prefix='/caixa')
 
-# Decorator de login customizado (usando session)
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # =====================================================
 # LISTAGEM DE CAIXAS

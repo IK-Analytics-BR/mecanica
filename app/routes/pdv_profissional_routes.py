@@ -1,10 +1,9 @@
-"""
+﻿"""
 PDV Profissional - Routes
 Backend para o PDV moderno e responsivo
 """
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, session
-from functools import wraps
 from datetime import datetime
 import sys
 import os
@@ -13,6 +12,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from database import get_db
+from utils.auth import login_required
 
 # Helper Kardex
 try:
@@ -25,15 +25,6 @@ pdv_bp = Blueprint('pdv_prof', __name__, url_prefix='/vendas')
 
 
 # ===== DECORADOR DE AUTENTICAÇÃO =====
-def login_required(f):
-    """Requer login para acessar"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session or 'user_id' not in session:
-            flash('[AVISO] Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 # =====================================================

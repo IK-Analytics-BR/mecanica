@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from functools import wraps
 from werkzeug.utils import secure_filename
 import mysql.connector
@@ -36,14 +36,6 @@ def save_photo(photo):
 from db_config import get_db_connection
 from utils.permissoes_helper import tem_permissao
 
-# Decorator para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Decorators para permissões granulares
 def produto_visualizar_required(f):

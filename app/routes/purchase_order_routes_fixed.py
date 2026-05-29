@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para pedidos de compra.
 """
 
@@ -6,17 +6,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 import mysql.connector
 import datetime
 from database import get_db
+from utils.auth import login_required
 from functools import wraps
 
-# Decorator para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Você precisa estar logado para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 purchase_order_bp = Blueprint('purchase_order', __name__)
 

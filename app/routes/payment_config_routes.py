@@ -1,21 +1,13 @@
-"""
+﻿"""
 Rotas para configuração de formas de pagamento.
 Define regras de negócio: taxas, prazos, parcelamento, etc.
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from database import get_db
+from utils.auth import login_required
 from functools import wraps
 
-# Decorator para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Você precisa estar logado para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 payment_config_bp = Blueprint('payment_config', __name__)
 

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+﻿from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from functools import wraps
 import sys
 import os
@@ -7,20 +7,10 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from database import get_db
+from utils.auth import login_required
 
 venda_bp = Blueprint('venda', __name__)
 
-# Decorador simples compatível com o restante do projeto
-from flask import session
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @venda_bp.route('/vendas/nova', methods=['GET'])
 @login_required

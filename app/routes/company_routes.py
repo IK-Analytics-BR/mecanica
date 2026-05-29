@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from functools import wraps
 import sys
 import os
@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 # Importar o módulo de banco de dados
 from database import get_db
+from utils.auth import login_required
 
 # Criar um Blueprint para as rotas de empresa
 company_bp = Blueprint('company', __name__)
@@ -23,15 +24,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Você precisa estar logado para acessar esta página.', 'warning')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # =====================================================
 # ROTAS DE CONFIGURAÇÃO DA EMPRESA

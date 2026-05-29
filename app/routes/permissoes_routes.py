@@ -1,8 +1,9 @@
-"""
+﻿"""
 Rotas para administração de permissões de usuário.
 """
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, session
 from database import get_db
+from utils.auth import login_required
 from utils.permissoes_helper import (
     listar_telas_sistema, 
     listar_permissoes_usuario,
@@ -11,7 +12,6 @@ from utils.permissoes_helper import (
     dar_acesso_total,
     tem_permissao
 )
-from functools import wraps
 
 permissoes_bp = Blueprint('permissoes', __name__, url_prefix='/admin/permissoes')
 
@@ -27,15 +27,6 @@ def admin_required(f):
     return decorated_function
 
 
-def login_required(f):
-    """Decorator que exige login."""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('user_id'):
-            flash('Faça login para acessar.', 'warning')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @permissoes_bp.route('/')

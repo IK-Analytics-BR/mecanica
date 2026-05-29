@@ -1,14 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
 
-# Decorator para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Decorator para verificar se o usuário é admin
 def admin_required(f):

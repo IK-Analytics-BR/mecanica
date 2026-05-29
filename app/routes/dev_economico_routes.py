@@ -1,9 +1,8 @@
-"""
+﻿"""
 Rotas do Portal de Desenvolvimento Econômico Municipal - MS
 Blueprint Flask integrado ao IK Flow / SupplyChainSystem
 """
 from flask import Blueprint, render_template, request, jsonify, session, g
-from functools import wraps
 import json
 
 dev_economico_bp = Blueprint('dev_economico', __name__, url_prefix='/dev-economico')
@@ -11,14 +10,6 @@ dev_economico_bp = Blueprint('dev_economico', __name__, url_prefix='/dev-economi
 # ============================================================
 # Helpers
 # ============================================================
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('username'):
-            from flask import redirect, url_for
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 def get_db():
     """Retorna conexão MySQL usando o padrão do IK Flow"""

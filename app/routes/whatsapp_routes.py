@@ -1,4 +1,4 @@
-"""
+﻿"""
 whatsapp_routes.py — Módulo WhatsApp Business para IKFlow Mecânica
 Provedores suportados:
   - UazAPI       (uazapi.com — CONFIGURADO)
@@ -12,21 +12,13 @@ import json
 import os
 import requests
 from datetime import datetime
-from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database import get_db
+from utils.auth import login_required
 
 whatsapp_bp = Blueprint('whatsapp', __name__)
 
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # ─────────────────────────────────────────────────────────────
 # Helpers internos
@@ -524,7 +516,8 @@ def _disparar_wa_automatico(order_id: int, tipo: str):
     tipo: 'concluido' | 'orcamento' | 'urgente'
     """
     try:
-        from database import get_db as _get_db
+        from database import get_db
+from utils.auth import login_required as _get_db
         db = _get_db()
         cfg = _get_config(db)
         if not cfg or not cfg.get('disparos_ativos'):

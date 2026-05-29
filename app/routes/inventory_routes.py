@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para gerenciamento de estoque.
 """
 
@@ -8,6 +8,7 @@ import datetime
 import json
 
 from database import get_db
+from utils.auth import login_required
 
 # Helper Kardex
 try:
@@ -18,15 +19,6 @@ except ImportError:
 # Criar o blueprint
 inventory_bp = Blueprint('inventory', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @inventory_bp.route('/estoque')
 @login_required

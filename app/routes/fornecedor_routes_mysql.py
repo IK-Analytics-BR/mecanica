@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from functools import wraps
 import sys
 import os
@@ -8,20 +8,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 # Importar o módulo de banco de dados
 from database import get_db
+from utils.auth import login_required
 from utils.permissoes_helper import tem_permissao
 
 # Criar um Blueprint para as rotas de fornecedor
 fornecedor_bp = Blueprint('fornecedor', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Decorators para permissões granulares
 def fornecedor_visualizar_required(f):

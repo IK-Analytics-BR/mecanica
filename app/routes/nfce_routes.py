@@ -1,27 +1,14 @@
-"""
+﻿"""
 Rotas para NFC-e (Nota Fiscal de Consumidor Eletrônica)
 """
 
 from flask import Blueprint, request, jsonify, render_template, session, redirect, url_for
-from functools import wraps
 from database import Database
 from datetime import datetime
 
 nfce_bp = Blueprint('nfce', __name__)
 
 
-def login_required(f):
-    """Decorator para verificar login"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            # Se for requisição AJAX, retorna JSON
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
-                return jsonify({'error': 'Não autorizado'}), 401
-            # Senão, redireciona para login
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @nfce_bp.route('/nfce/emitir/<int:venda_id>', methods=['POST'])

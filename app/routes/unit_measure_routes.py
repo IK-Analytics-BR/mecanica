@@ -1,15 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from functools import wraps
 from database import get_db
+from utils.auth import login_required
 
-# Decorator para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 unit_measure_bp = Blueprint('unit_measure', __name__)
 

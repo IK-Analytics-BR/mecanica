@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para gerenciamento de vendedores.
 """
 
@@ -7,19 +7,11 @@ from functools import wraps
 import re
 
 from database import get_db
+from utils.auth import login_required
 
 # Criar o blueprint
 vendedor_bp = Blueprint('vendedor', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @vendedor_bp.route('/vendedores')
 @login_required

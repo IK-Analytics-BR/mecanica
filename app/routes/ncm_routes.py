@@ -1,15 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
 from database import Database
 
-# Decorator para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Função para obter conexão com o banco de dados (usa configuração automática)
 def get_db():

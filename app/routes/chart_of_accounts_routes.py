@@ -1,21 +1,13 @@
-"""
+﻿"""
 Rotas para gerenciamento de Contas Contábeis (Plano de Contas)
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from database import get_db
+from utils.auth import login_required
 from functools import wraps
 
 chart_of_accounts_bp = Blueprint('chart_of_accounts', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @chart_of_accounts_bp.route('/contas-contabeis')
 @login_required

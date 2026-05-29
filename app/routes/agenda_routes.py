@@ -1,4 +1,4 @@
-"""
+﻿"""
 agenda_routes.py — Agenda de Mecânicos para IKFlow Mecânica
 Funcionalidades:
   - Calendário visual semanal/diário por mecânico (FullCalendar)
@@ -8,21 +8,13 @@ Funcionalidades:
   - Visão geral de carga de trabalho por técnico
 """
 from datetime import datetime, date, timedelta
-from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database import get_db
+from utils.auth import login_required
 
 agenda_bp = Blueprint('agenda', __name__)
 
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 # ─────────────────────────────────────────────────────────────
@@ -287,7 +279,8 @@ def calcular_proximo_preventivo(order_id: int, km_saida: int = None, intervalo_d
     Retorna dict com resultado.
     """
     try:
-        from database import get_db as _get_db
+        from database import get_db
+from utils.auth import login_required as _get_db
         db = _get_db()
 
         order = db.fetch_one("""

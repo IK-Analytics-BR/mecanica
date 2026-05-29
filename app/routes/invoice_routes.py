@@ -1,4 +1,4 @@
-# Helper Kardex
+﻿# Helper Kardex
 try:
     from utils.estoque_helper import registrar_movimentacao
 except ImportError:
@@ -159,19 +159,11 @@ import xml.etree.ElementTree as ET
 import uuid
 
 from database import get_db
+from utils.auth import login_required
 
 # Criar o blueprint
 invoice_bp = Blueprint('invoice', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @invoice_bp.route('/notas-fiscais')
 @login_required

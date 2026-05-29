@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para o módulo de Relatórios.
 """
 
@@ -10,19 +10,11 @@ import json
 from dateutil.relativedelta import relativedelta
 
 from database import get_db
+from utils.auth import login_required
 
 # Criar o blueprint
 reports_bp = Blueprint('reports', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @reports_bp.route('/relatorios')
 @login_required

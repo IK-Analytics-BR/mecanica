@@ -1,4 +1,4 @@
-"""
+﻿"""
 ROTAS FLASK PARA EMISSÃO DE NF-e
 - Vendas pendentes de NF-e
 - Emissão manual (do zero)
@@ -8,7 +8,6 @@ ROTAS FLASK PARA EMISSÃO DE NF-e
 """
 
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, send_file
-from functools import wraps
 from datetime import datetime
 import json
 import os
@@ -16,6 +15,7 @@ import os
 # Imports do sistema
 try:
     from database import get_db
+from utils.auth import login_required
     from services.nfe_service import NFeService
     from services.sefaz_service import SefazService
 except ImportError:
@@ -30,23 +30,6 @@ except ImportError:
 nfe_emissao_bp = Blueprint('nfe_emissao', __name__)
 
 
-def login_required(f):
-    """Decorador para verificar autenticação"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        print(f"\n[NFE-AUTH] Verificando autenticacao para: {f.__name__}")
-        print(f"[NFE-AUTH] Session keys: {list(session.keys())}")
-        print(f"[NFE-AUTH] 'username' in session: {'username' in session}")
-        print(f"[NFE-AUTH] 'user_id' in session: {'user_id' in session}")
-        
-        if 'username' not in session and 'user_id' not in session:
-            print(f"[NFE-AUTH] [ERRO] Nao autenticado! Redirecionando para login")
-            flash('Por favor, faça login para acessar esta página.', 'warning')
-            return redirect(url_for('login'))
-        
-        print(f"[NFE-AUTH] [OK] Autenticado! Executando funcao")
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 # ========================================

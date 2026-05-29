@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+﻿from flask import Blueprint, request, jsonify, session
 from functools import wraps
 import sys
 import os
@@ -8,18 +8,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 # Importar o módulo de banco de dados
 from database import get_db
+from utils.auth import login_required
 
 # Criar um Blueprint para as rotas de API
 api_bp = Blueprint('api', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return jsonify({'error': 'Não autorizado'}), 401
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Rota para buscar subgrupos por grupo
 @api_bp.route('/api/subgroups-by-group/<int:group_id>', methods=['GET'])

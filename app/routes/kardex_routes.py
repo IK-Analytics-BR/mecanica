@@ -1,22 +1,15 @@
-"""
+﻿"""
 Rotas para o sistema Kardex de Estoque.
 Visualização do histórico completo de movimentações.
 """
 
 from flask import Blueprint, render_template, request, jsonify, session
 from database import get_db
-from functools import wraps
+from utils.auth import login_required
 
 kardex_bp = Blueprint('kardex', __name__, url_prefix='/kardex')
 
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return jsonify({'error': 'Não autorizado'}), 401
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @kardex_bp.route('/')

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para gerenciamento de ordens de serviço.
 
 Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
@@ -9,6 +9,7 @@ from functools import wraps
 from datetime import datetime
 
 from database import get_db
+from utils.auth import login_required
 from services.notification_service import NotificationService
 try:
     from routes.whatsapp_routes import _disparar_wa_automatico as _wa
@@ -23,15 +24,6 @@ except Exception:
 # Criar o blueprint
 service_order_bp = Blueprint('service_order', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @service_order_bp.route('/service_orders')
 @login_required

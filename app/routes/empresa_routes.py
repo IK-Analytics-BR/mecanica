@@ -1,4 +1,4 @@
-"""
+﻿"""
 Rotas para o módulo de Cadastro de Empresas.
 CRUD completo: Listar, Cadastrar, Editar, Visualizar
 """
@@ -11,6 +11,7 @@ import os
 
 # Importar o módulo de banco de dados
 from database import get_db
+from utils.auth import login_required
 from utils.permissoes_helper import requer_permissao, tem_permissao
 
 # Configurações de upload
@@ -76,15 +77,6 @@ def _get_countries(db):
     except Exception:
         return []
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Decorators para verificar permissões granulares
 def empresa_visualizar_required(f):
