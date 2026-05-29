@@ -1,5 +1,6 @@
 ﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from functools import wraps
+from utils.auth import login_required
 from werkzeug.utils import secure_filename
 import mysql.connector
 import sys

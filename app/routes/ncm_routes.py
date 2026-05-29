@@ -1,6 +1,7 @@
 ﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
 from database import Database
+from utils.auth import login_required
 
 
 # Função para obter conexão com o banco de dados (usa configuração automática)
