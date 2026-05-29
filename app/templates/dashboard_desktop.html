@@ -1,6 +1,7 @@
 {#
   DASHBOARD DESKTOP - Tela inicial compacta (sem scroll)
   KPIs, gráfico, afazeres e ações em viewport única
+  VERSAO: 2.0 - Build 29-05-2025
 #}
 {% extends 'layouts/base_desktop.html' %}
 
@@ -671,5 +672,11 @@ function addTask() {
     const texto = prompt('Nova tarefa:');
     if (texto) location.reload();
 }
+
+// Indicador de versão para debug
+console.log('[IKFlow] Dashboard v2.0 - Build 29-05-2025');
 </script>
+
+<!-- Debug Version Indicator -->
+<div id="version-debug" style="position:fixed;bottom:4px;right:4px;font-size:10px;color:#94a3b8;opacity:0.7;z-index:9999;">v2.0</div>
 {% endblock %}
