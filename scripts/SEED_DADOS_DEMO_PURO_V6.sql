@@ -87,27 +87,27 @@ ON DUPLICATE KEY UPDATE name = VALUES(name);
 -- ============================================================
 -- 5. VEÍCULOS (20)
 -- ============================================================
-INSERT INTO equipment (name, serial_number, model, fuel_type, accumulated_hours, customer_id, active, created_at) VALUES
-('Honda Civic 2020', 'ABC1234', 'Civic', 'flex', 35000, 1, 1, NOW()),
-('Toyota Corolla 2019', 'ABC1235', 'Corolla', 'flex', 42000, 2, 1, NOW()),
-('VW Gol 2018', 'ABC1236', 'Gol', 'flex', 55000, 3, 1, NOW()),
-('Chevrolet Onix 2021', 'ABC1237', 'Onix', 'flex', 28000, 4, 1, NOW()),
-('Ford Ka 2017', 'ABC1238', 'Ka', 'flex', 62000, 5, 1, NOW()),
-('Fiat Uno 2016', 'ABC1239', 'Uno', 'flex', 78000, 6, 1, NOW()),
-('Hyundai HB20 2020', 'ABC1240', 'HB20', 'flex', 33000, 7, 1, NOW()),
-('Renault Sandero 2019', 'ABC1241', 'Sandero', 'flex', 45000, 8, 1, NOW()),
-('Jeep Compass 2021', 'ABC1242', 'Compass', 'flex', 25000, 9, 1, NOW()),
-('Nissan Kicks 2020', 'ABC1243', 'Kicks', 'flex', 38000, 10, 1, NOW()),
-('Peugeot 208 2019', 'ABC1244', '208', 'flex', 41000, 11, 1, NOW()),
-('Citroën C3 2018', 'ABC1245', 'C3', 'flex', 52000, 12, 1, NOW()),
-('Honda Fit 2017', 'ABC1246', 'Fit', 'flex', 58000, 13, 1, NOW()),
-('Toyota Yaris 2020', 'ABC1247', 'Yaris', 'flex', 32000, 14, 1, NOW()),
-('VW Polo 2021', 'ABC1248', 'Polo', 'flex', 22000, 15, 1, NOW()),
-('Chevrolet Tracker 2020', 'ABC1249', 'Tracker', 'flex', 30000, 1, 1, NOW()),
-('Ford EcoSport 2019', 'ABC1250', 'EcoSport', 'flex', 48000, 2, 1, NOW()),
-('Fiat Strada 2021', 'ABC1251', 'Strada', 'flex', 20000, 3, 1, NOW()),
-('Hyundai Creta 2020', 'ABC1252', 'Creta', 'flex', 36000, 4, 1, NOW()),
-('Renault Duster 2018', 'ABC1253', 'Duster', 'flex', 65000, 5, 1, NOW())
+INSERT INTO equipment (name, serial_number, model, accumulated_hours, customer_id, active, created_at) VALUES
+('Honda Civic 2020', 'ABC1234', 'Civic', 35000, 1, 1, NOW()),
+('Toyota Corolla 2019', 'ABC1235', 'Corolla', 42000, 2, 1, NOW()),
+('VW Gol 2018', 'ABC1236', 'Gol', 55000, 3, 1, NOW()),
+('Chevrolet Onix 2021', 'ABC1237', 'Onix', 28000, 4, 1, NOW()),
+('Ford Ka 2017', 'ABC1238', 'Ka', 62000, 5, 1, NOW()),
+('Fiat Uno 2016', 'ABC1239', 'Uno', 78000, 6, 1, NOW()),
+('Hyundai HB20 2020', 'ABC1240', 'HB20', 33000, 7, 1, NOW()),
+('Renault Sandero 2019', 'ABC1241', 'Sandero', 45000, 8, 1, NOW()),
+('Jeep Compass 2021', 'ABC1242', 'Compass', 25000, 9, 1, NOW()),
+('Nissan Kicks 2020', 'ABC1243', 'Kicks', 38000, 10, 1, NOW()),
+('Peugeot 208 2019', 'ABC1244', '208', 41000, 11, 1, NOW()),
+('Citroën C3 2018', 'ABC1245', 'C3', 52000, 12, 1, NOW()),
+('Honda Fit 2017', 'ABC1246', 'Fit', 58000, 13, 1, NOW()),
+('Toyota Yaris 2020', 'ABC1247', 'Yaris', 32000, 14, 1, NOW()),
+('VW Polo 2021', 'ABC1248', 'Polo', 22000, 15, 1, NOW()),
+('Chevrolet Tracker 2020', 'ABC1249', 'Tracker', 30000, 1, 1, NOW()),
+('Ford EcoSport 2019', 'ABC1250', 'EcoSport', 48000, 2, 1, NOW()),
+('Fiat Strada 2021', 'ABC1251', 'Strada', 20000, 3, 1, NOW()),
+('Hyundai Creta 2020', 'ABC1252', 'Creta', 36000, 4, 1, NOW()),
+('Renault Duster 2018', 'ABC1253', 'Duster', 65000, 5, 1, NOW())
 ON DUPLICATE KEY UPDATE serial_number = VALUES(serial_number);
 
 -- ============================================================
