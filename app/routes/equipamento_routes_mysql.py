@@ -11,6 +11,7 @@ from database import get_db
 from utils.auth import login_required
 from datetime import datetime
 from utils.permissoes_helper import tem_permissao
+from utils.tenant import get_company_id, inject_company_id
 
 # Criar um Blueprint para as rotas de equipamento
 equipamento_bp = Blueprint('equipamento', __name__)
@@ -71,12 +72,13 @@ def equipamento_excluir_required(f):
 def equipamentos():
     # Buscar equipamentos ativos no banco de dados
     db = get_db()
+    company_id = get_company_id()
     equipamentos = db.fetch_all("""
-        SELECT e.*, c.name as customer_name 
+        SELECT e.*, c.name as customer_name
         FROM equipment e
         LEFT JOIN customers c ON e.customer_id = c.id
-        WHERE e.active = TRUE
-    """)
+        WHERE e.active = TRUE AND e.company_id = %s
+    """, (company_id,))
     return render_template('equipamento_list.html', equipamentos=equipamentos)
 
 # Rota para cadastrar um novo equipamento

@@ -10,6 +10,7 @@ from datetime import datetime
 
 from database import get_db
 from utils.auth import login_required
+from utils.tenant import get_company_id, inject_company_id
 from services.notification_service import NotificationService
 try:
     from routes.whatsapp_routes import _disparar_wa_automatico as _wa
@@ -32,17 +33,18 @@ def service_order_list():
     db = get_db()
     
     # Buscar as ordens de serviço
+    company_id = get_company_id()
     orders = db.fetch_all("""
-        SELECT so.*, c.name as customer_name, e.name as equipment_name, 
+        SELECT so.*, c.name as customer_name, e.name as equipment_name,
                s.name as supply_name, t.name as technician_name
         FROM service_orders so
         JOIN customers c ON so.customer_id = c.id
         JOIN equipment e ON so.equipment_id = e.id
         LEFT JOIN supplies s ON so.supply_id = s.id
         LEFT JOIN technicians t ON so.technician_id = t.id
-        WHERE so.active = TRUE
+        WHERE so.active = TRUE AND so.company_id = %s
         ORDER BY so.open_date DESC
-    """)
+    """, (company_id,))
     
     return render_template(
         'service_order_list.html',

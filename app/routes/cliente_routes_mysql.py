@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from database import get_db
 from utils.auth import login_required
 from utils.permissoes_helper import tem_permissao
+from utils.tenant import get_company_id, inject_company_id
 
 # Criar um Blueprint para as rotas de cliente
 cliente_bp = Blueprint('cliente', __name__)
@@ -107,16 +108,17 @@ def clientes():
     db = get_db()
     
     # Construir query base e count query
+    company_id = get_company_id()
     if search_term:
         # Construir a consulta SQL com base no campo de busca
         if search_field == 'name':
-            query = "SELECT * FROM customers WHERE active = TRUE AND name LIKE %s"
-            count_query = "SELECT COUNT(*) as total FROM customers WHERE active = TRUE AND name LIKE %s"
-            params = (f'%{search_term}%',)
+            query = "SELECT * FROM customers WHERE active = TRUE AND company_id = %s AND name LIKE %s"
+            count_query = "SELECT COUNT(*) as total FROM customers WHERE active = TRUE AND company_id = %s AND name LIKE %s"
+            params = (company_id, f'%{search_term}%',)
         elif search_field == 'cnpj':
-            query = "SELECT * FROM customers WHERE active = TRUE AND cnpj LIKE %s"
-            count_query = "SELECT COUNT(*) as total FROM customers WHERE active = TRUE AND cnpj LIKE %s"
-            params = (f'%{search_term}%',)
+            query = "SELECT * FROM customers WHERE active = TRUE AND company_id = %s AND cnpj LIKE %s"
+            count_query = "SELECT COUNT(*) as total FROM customers WHERE active = TRUE AND company_id = %s AND cnpj LIKE %s"
+            params = (company_id, f'%{search_term}%',)
         elif search_field == 'razao_social':
             query = "SELECT * FROM customers WHERE active = TRUE AND razao_social LIKE %s"
             count_query = "SELECT COUNT(*) as total FROM customers WHERE active = TRUE AND razao_social LIKE %s"
