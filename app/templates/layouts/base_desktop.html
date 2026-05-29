@@ -188,10 +188,123 @@
         .dropdown-toggle[aria-expanded="true"]::after {
             transform: translateY(-50%) rotate(90deg);
         }
+
+        /* ═══════════════════════════════════════════════
+           PWA STANDALONE - Mobile Header/Bottom Nav
+        ═══════════════════════════════════════════════ */
+        
+        /* Em modo PWA standalone: mostrar elementos mobile */
+        body.pwa-standalone #mobileHeader,
+        body.pwa-standalone #bottomNav {
+            display: flex !important;
+        }
+        
+        /* Esconder sidebar desktop em PWA */
+        body.pwa-standalone #sidebar {
+            display: none !important;
+        }
+        
+        /* Ajustar conteúdo para mobile */
+        body.pwa-standalone #content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding-top: 56px !important;
+            padding-bottom: 72px !important;
+        }
+        
+        /* Esconder navbar desktop em PWA */
+        body.pwa-standalone .navbar {
+            display: none !important;
+        }
+        
+        /* Em desktop normal: esconder elementos mobile */
+        @media (min-width: 769px) {
+            body:not(.pwa-standalone) #mobileHeader,
+            body:not(.pwa-standalone) #bottomNav {
+                display: none !important;
+            }
+        }
+        
+        /* Mobile Header Styles */
+        #mobileHeader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: linear-gradient(135deg, #0b2447, #08a5b2);
+            color: #fff;
+            display: none;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 1040;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Bottom Nav Styles */
+        #bottomNav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: #fff;
+            display: none;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            z-index: 1040;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        #bottomNav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 11px;
+            gap: 4px;
+        }
+        
+        #bottomNav a i {
+            font-size: 20px;
+        }
+        
+        #bottomNav a.active {
+            color: #08a5b2;
+        }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
+    <!-- ══ DETECÇÃO PWA ══ -->
+    <script>
+        (function() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone ||
+                                 document.referrer.includes('android-app://');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isStandalone) {
+                document.body.classList.add('pwa-standalone');
+            }
+            if (isMobile) {
+                document.body.classList.add('device-mobile');
+                // Redirecionar para mobile layout se necessário
+                if (!window.location.pathname.includes('/mobile/') && 
+                    !window.location.pathname.includes('/mecanico/')) {
+                    // Opcional: redirecionar para versão mobile
+                    // window.location.href = '/mobile' + window.location.pathname;
+                }
+            }
+            
+            sessionStorage.setItem('isStandalone', isStandalone);
+            sessionStorage.setItem('isMobile', isMobile);
+            console.log('[PWA Desktop] Standalone:', isStandalone, 'Mobile:', isMobile);
+        })();
+    </script>
+
     <div class="wrapper">
         <!-- Sidebar Desktop -->
         {% if session.get('username') %}
@@ -369,6 +482,41 @@
             {% block content %}{% endblock %}
         </div>
     </div>
+
+    <!-- ══ MOBILE HEADER (aparece em PWA) ══ -->
+    <header id="mobileHeader">
+        <button class="btn btn-link text-white p-0 me-3" onclick="document.getElementById('mobileMenuDrawer').classList.toggle('show')">
+            <i class="fas fa-bars fa-lg"></i>
+        </button>
+        <span class="fw-bold flex-grow-1">IKFlow Mecânica</span>
+        <a href="{{ url_for('service_order.service_order_add') }}" class="btn btn-sm btn-warning">
+            <i class="fas fa-plus"></i>
+        </a>
+    </header>
+
+    <!-- ══ BOTTOM NAV (aparece em PWA) ══ -->
+    <nav id="bottomNav">
+        <a href="{{ url_for('bem_vindo') }}" class="active">
+            <i class="fas fa-home"></i>
+            <span>Início</span>
+        </a>
+        <a href="{{ url_for('service_order.service_order_list') }}">
+            <i class="fas fa-clipboard-list"></i>
+            <span>OS</span>
+        </a>
+        <a href="{{ url_for('pdv_prof.pdv_tela') }}" class="text-warning">
+            <i class="fas fa-plus-circle fa-2x"></i>
+            <span>PDV</span>
+        </a>
+        <a href="{{ url_for('cliente.clientes') }}">
+            <i class="fas fa-users"></i>
+            <span>Clientes</span>
+        </a>
+        <a href="{{ url_for('users.user_profile') }}">
+            <i class="fas fa-user"></i>
+            <span>Perfil</span>
+        </a>
+    </nav>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
