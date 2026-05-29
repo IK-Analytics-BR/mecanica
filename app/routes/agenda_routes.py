@@ -272,10 +272,13 @@ def agenda_carga_semanal():
 # Preventivo automático — chamado após concluir OS
 # ─────────────────────────────────────────────────────────────
 
-def calcular_proximo_preventivo(order_id: int, km_saida: int = None, intervalo_dias: int = 180):
+def calcular_proximo_preventivo(order_id: int, km_saida: int = None,
+                                intervalo_dias: int = 180, intervalo_km: int = 10000):
     """
     Calcula e agenda próximo preventivo do veículo ao concluir OS.
-    Define equipment.next_maintenance = hoje + intervalo_dias.
+    - Define equipment.next_maintenance = hoje + intervalo_dias (por prazo)
+    - Define equipment.accumulated_hours = km_entrada da OS (km atual do veículo)
+    - Define equipment.adjusted_life_hours = km_atual + intervalo_km (próxima revisão por KM)
     Retorna dict com resultado.
     """
     try:
@@ -283,8 +286,9 @@ def calcular_proximo_preventivo(order_id: int, km_saida: int = None, intervalo_d
         db = _get_db()
 
         order = db.fetch_one("""
-            SELECT so.equipment_id, so.order_number,
+            SELECT so.equipment_id, so.order_number, so.km_entrada,
                    e.serial_number as placa, e.next_maintenance,
+                   e.accumulated_hours as km_atual,
                    c.name as customer_name, c.phone as customer_phone
             FROM service_orders so
             LEFT JOIN equipment e ON e.id = so.equipment_id
@@ -297,15 +301,32 @@ def calcular_proximo_preventivo(order_id: int, km_saida: int = None, intervalo_d
 
         proximo = date.today() + timedelta(days=intervalo_dias)
 
-        db.execute_query(
-            "UPDATE equipment SET next_maintenance=%s WHERE id=%s",
-            (proximo, order['equipment_id'])
-        )
+        # KM atual: prioriza km_entrada da OS, depois o que já estava no equipamento
+        km_atual = int(km_saida or order.get('km_entrada') or order.get('km_atual') or 0)
+        km_proxima = km_atual + intervalo_km if km_atual > 0 else None
+
+        # Atualiza: next_maintenance (por data), accumulated_hours (km atual),
+        # adjusted_life_hours (km próxima revisão)
+        if km_proxima:
+            db.execute_query("""
+                UPDATE equipment
+                SET next_maintenance=%s,
+                    accumulated_hours=%s,
+                    adjusted_life_hours=%s
+                WHERE id=%s
+            """, (proximo, km_atual, km_proxima, order['equipment_id']))
+        else:
+            db.execute_query(
+                "UPDATE equipment SET next_maintenance=%s WHERE id=%s",
+                (proximo, order['equipment_id'])
+            )
 
         return {
             'ok': True,
             'placa': order.get('placa'),
             'proximo_preventivo': str(proximo),
+            'km_atual': km_atual,
+            'km_proxima_revisao': km_proxima,
             'equipment_id': order['equipment_id'],
         }
     except Exception as e:

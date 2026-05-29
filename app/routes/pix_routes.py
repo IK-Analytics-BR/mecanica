@@ -225,6 +225,94 @@ def pix_confirmar(order_id):
     return redirect(url_for('service_order.service_order_view', order_id=order_id))
 
 
+@pix_bp.route('/pix/webhook', methods=['POST'])
+def pix_webhook():
+    """
+    Webhook PIX — recebe notificações do PSP (Bacen API v2 ou Mercado Pago).
+    Bacen: POST /pix/webhook  body: {"pix": [{"txid": "...", "status": "CONCLUIDA", ...}]}
+    Mercado Pago: POST /pix/webhook  body: {"action": "payment.updated", "data": {"id": "..."}}
+    """
+    db = get_db()
+    data = request.get_json(force=True, silent=True) or {}
+
+    pagamentos_baixados = 0
+
+    # ── Formato Bacen OpenPix / PSP padrão ──────────────────────
+    for pix_ev in data.get('pix', []):
+        txid   = pix_ev.get('txid', '')
+        status = pix_ev.get('status', '')
+        if not txid:
+            continue
+        if status in ('CONCLUIDA', 'LIQUIDADA'):
+            _baixar_por_txid(db, txid)
+            pagamentos_baixados += 1
+
+    # ── Formato Mercado Pago ─────────────────────────────────────
+    if data.get('action') == 'payment.updated':
+        mp_id = (data.get('data') or {}).get('id')
+        if mp_id:
+            # Buscar txid pelo id externo salvo
+            cob = db.fetch_one(
+                "SELECT txid, service_order_id FROM pix_cobrancas WHERE external_id=%s LIMIT 1",
+                (str(mp_id),)
+            )
+            if cob:
+                _baixar_por_txid(db, cob['txid'])
+                pagamentos_baixados += 1
+
+    print(f'[PIX WEBHOOK] Recebido — baixas realizadas: {pagamentos_baixados}')
+    return jsonify({'ok': True, 'baixas': pagamentos_baixados}), 200
+
+
+def _baixar_por_txid(db, txid: str):
+    """Confirma cobrança PIX e baixa C/R vinculada."""
+    try:
+        # 1. Marca cobrança como paga
+        db.update("""
+            UPDATE pix_cobrancas SET status='CONCLUIDA', pago_em=NOW()
+            WHERE txid=%s AND status != 'CONCLUIDA'
+        """, (txid,))
+
+        # 2. Busca OS vinculada
+        cob = db.fetch_one(
+            "SELECT service_order_id FROM pix_cobrancas WHERE txid=%s LIMIT 1",
+            (txid,)
+        )
+        if not cob or not cob.get('service_order_id'):
+            return
+
+        order_id = cob['service_order_id']
+        order = db.fetch_one(
+            "SELECT id, order_number, total_geral FROM service_orders WHERE id=%s",
+            (order_id,)
+        )
+        if not order:
+            return
+
+        # 3. Baixa C/R — tenta por referência de OS
+        affected = db.update("""
+            UPDATE accounts_receivable
+            SET status='received', receipt_date=CURDATE(),
+                updated_at=NOW()
+            WHERE (notes LIKE %s OR reference_id=%s)
+              AND status IN ('pending', 'overdue')
+        """, (f'%{order["order_number"]}%', order_id))
+
+        # 4. Fallback: baixa por valor exato e data próxima se não achou por referência
+        if not affected:
+            db.update("""
+                UPDATE accounts_receivable
+                SET status='received', receipt_date=CURDATE(), updated_at=NOW()
+                WHERE amount=%s AND status IN ('pending','overdue')
+                  AND due_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+                LIMIT 1
+            """, (float(order.get('total_geral') or 0),))
+
+        print(f'[PIX WEBHOOK] txid={txid} OS={order["order_number"]} — C/R baixada')
+    except Exception as e:
+        print(f'[PIX WEBHOOK] ERRO txid={txid}: {e}')
+
+
 @pix_bp.route('/pix/historico/<int:order_id>')
 def pix_historico_os(order_id):
     db = get_db()

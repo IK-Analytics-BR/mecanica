@@ -480,7 +480,57 @@ def disparar_lembretes_revisao():
         else:
             erros += 1
 
-    return jsonify({'ok': True, 'enviados': enviados, 'erros': erros, 'total': len(veiculos)})
+    # ── Lembrete por KM ─────────────────────────────────────────
+    # Veículos com km_atual dentro de 1000km da próxima revisão
+    margem_km = 1000
+    try:
+        veiculos_km = db.fetch_all("""
+            SELECT e.id, e.serial_number as placa,
+                   e.accumulated_hours as km_atual,
+                   e.adjusted_life_hours as km_proxima_revisao,
+                   c.name as customer_name, c.phone as customer_phone
+            FROM equipment e
+            LEFT JOIN customers c ON c.id = e.customer_id
+            WHERE e.active = 1
+              AND e.accumulated_hours IS NOT NULL
+              AND e.adjusted_life_hours IS NOT NULL
+              AND e.adjusted_life_hours > 0
+              AND e.accumulated_hours >= (e.adjusted_life_hours - %s)
+              AND e.accumulated_hours < e.adjusted_life_hours
+        """, (margem_km,))
+    except Exception:
+        veiculos_km = []
+
+    for v in veiculos_km:
+        telefone = (v.get('customer_phone') or '').strip()
+        if not telefone:
+            continue
+        km_atual   = int(v.get('km_atual') or 0)
+        km_revisao = int(v.get('km_proxima_revisao') or 0)
+        faltam     = km_revisao - km_atual
+        template_km = (
+            f"Olá {{nome}}, o veículo {{placa}} está a apenas {faltam:,} km "
+            f"da próxima revisão (prevista para {km_revisao:,} km). Agende agora!"
+        )
+        mensagem = template_km.format(
+            nome=v.get('customer_name', 'Cliente'),
+            placa=v.get('placa') or 'veículo',
+        )
+        resultado = _enviar_mensagem(cfg, telefone, mensagem)
+        status_log = 'enviado' if resultado['ok'] else 'erro'
+        _registrar_log(db, 'lembrete_revisao_km', telefone, mensagem, None, status_log, resultado['body'])
+        if resultado['ok']:
+            enviados += 1
+        else:
+            erros += 1
+
+    return jsonify({
+        'ok': True,
+        'enviados': enviados,
+        'erros': erros,
+        'total_data': len(veiculos),
+        'total_km': len(veiculos_km),
+    })
 
 
 @whatsapp_bp.route('/whatsapp/alerta-urgente/<int:order_id>', methods=['POST'])
