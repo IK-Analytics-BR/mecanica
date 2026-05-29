@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 8 — Audit Semanas 5-6: NFS-e protegida, comissões automáticas, garantias 90d, histórico de veículo + KM, relatórios gerenciais | 93/100 = 93%)  
+**Última atualização:** 28/05/2026 (revisão 9 — Audit Semanas 7-8: CSRF global, audit_log, rate limit WA, pesquisa satisfação WA, apresentações protegidas, usuario_bp | 96/100 = 96%)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -146,7 +146,7 @@
 | 9.2 | **Envio de orçamento para aprovação (WA)** | ✅ | Rota `enviar_orcamento_wa` + atualiza `status_orcamento='enviado'` |
 | 9.3 | **Aviso OS pronta para retirada (WA)** | ✅ | Rota `notificar_os_pronta` + trigger auto ao `status=completed` |
 | 9.4 | **Lembrete de revisão preventiva (WA)** | ✅ | Rota `/whatsapp/disparar-lembretes` — cron diário | **testado em produção** `ok:true` |
-| 9.5 | **Pesquisa de satisfação pós-OS (WA)** | ⚠️ | Template `satisfacao` existe — disparo por cron pendente |
+| 9.5 | **Pesquisa de satisfação pós-OS (WA)** | ✅ | Rota `/whatsapp/satisfacao/<id>` + botão na view da OS |
 | 9.6 | **Alerta de OS urgente para admin (WA)** | ✅ | Trigger auto ao criar OS com `type=urgent` → notifica `telefones_admin` |
 | 9.7 | E-mail | ⚠️ | `email_service.py` existe, não integrado ao menu |
 
@@ -169,7 +169,10 @@
 
 | # | Funcionalidade | Status | Observação |
 |---|---|---|---|
-| 11.1 | Usuários e Permissões | ✅ | `users_routes.py` + `permissoes_routes.py` |
+| 11.1 | Usuários e Permissões | ✅ | `usuario_routes_mysql.py` (granular) + `permissoes_routes.py` |
+| 11.10 | Log de auditoria (audit_log) | ✅ | `utils/audit_log.py` + tabela `audit_log` — OS create/cancel |
+| 11.11 | Rate limiting nas rotas WA | ✅ | `utils/rate_limit.py` — 5/min testar, 30/min enviar, 10/min satisfação |
+| 11.12 | CSRF proteção global | ✅ | `Flask-WTF CSRFProtect` + meta token + interceptor fetch/jQuery |
 | 11.2 | Cadastro de Empresa | ✅ | `empresa_routes.py` |
 | 11.3 | Segmentos | ✅ | `segment_routes.py` |
 | 11.4 | Moedas | ✅ | `currency_routes.py` — import corrigido |

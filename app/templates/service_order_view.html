@@ -182,6 +182,16 @@
     </a>
     {% endif %}
 
+    {% if blueprint_exists('whatsapp') and order.status == 'completed' %}
+    <form method="post" action="{{ url_for('whatsapp.whatsapp_satisfacao', order_id=order.id) }}" class="d-inline">
+      <button type="submit" class="btn btn-outline-warning"
+              onclick="return confirm('Enviar pesquisa de satisfação para o cliente via WhatsApp?')"
+              title="Envia mensagem de satisfação pós-atendimento">
+        <i class="fas fa-star me-1"></i> Pesquisa Satisfação
+      </button>
+    </form>
+    {% endif %}
+
     {% if order.equipment_id %}
     <a href="{{ url_for('service_order.veiculo_historico', equipment_id=order.equipment_id) }}"
        class="btn btn-outline-dark">

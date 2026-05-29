@@ -9,6 +9,13 @@ try:
 except ImportError:
     _csrf_available = False
 
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    _limiter_available = True
+except ImportError:
+    _limiter_available = False
+
 # Adicionar o diretório atual ao caminho de importação
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -172,6 +179,17 @@ app.config['WTF_CSRF_TIME_LIMIT'] = 3600
 # Proteção CSRF global (Flask-WTF)
 if _csrf_available:
     _csrf = CSRFProtect(app)
+
+# Rate Limiting (Flask-Limiter)
+if _limiter_available:
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=[],
+        storage_uri='memory://',
+    )
+else:
+    limiter = None
 
 # Flask-Login
 login_manager = LoginManager()

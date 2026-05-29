@@ -15,6 +15,10 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database import get_db
 from utils.auth import login_required
+try:
+    from utils.rate_limit import wa_rate_limit
+except Exception:
+    def wa_rate_limit(**_): return lambda f: f
 
 whatsapp_bp = Blueprint('whatsapp', __name__)
 
@@ -246,6 +250,8 @@ def whatsapp_salvar_template(template_id):
 
 
 @whatsapp_bp.route('/whatsapp/testar', methods=['POST'])
+@login_required
+@wa_rate_limit(limit=5, window_secs=60)
 def whatsapp_testar():
     db = get_db()
     cfg = _get_config(db)
@@ -265,6 +271,8 @@ def whatsapp_testar():
 
 
 @whatsapp_bp.route('/whatsapp/enviar-os/<int:order_id>/<tipo>', methods=['POST'])
+@login_required
+@wa_rate_limit(limit=30, window_secs=60)
 def whatsapp_enviar_os(order_id, tipo):
     """Envia mensagem WhatsApp para o cliente da OS."""
     db = get_db()
@@ -423,6 +431,7 @@ def notificar_os_pronta(order_id):
 
 
 @whatsapp_bp.route('/whatsapp/disparar-lembretes')
+@login_required
 def disparar_lembretes_revisao():
     """
     Job chamado por cron (ou manualmente).
@@ -509,6 +518,49 @@ def alerta_os_urgente(order_id):
         _registrar_log(db, 'urgente', tel, mensagem, order_id, status_log, resultado['body'])
 
 
+@whatsapp_bp.route('/whatsapp/satisfacao/<int:order_id>', methods=['POST'])
+@login_required
+@wa_rate_limit(limit=10, window_secs=60)
+def whatsapp_satisfacao(order_id):
+    """
+    Envia pesquisa de satisfação pós-OS via WhatsApp.
+    Pode ser chamado manualmente ou por trigger automático ao concluir OS.
+    """
+    db = get_db()
+    cfg = _get_config(db)
+    if not cfg:
+        return jsonify({'ok': False, 'msg': 'WhatsApp não configurado.'})
+
+    order = db.fetch_one("""
+        SELECT so.order_number, so.total_geral,
+               c.name as customer_name, c.phone as customer_phone
+        FROM service_orders so
+        LEFT JOIN customers c ON c.id = so.customer_id
+        WHERE so.id = %s AND so.status = 'completed'
+    """, (order_id,))
+
+    if not order:
+        return jsonify({'ok': False, 'msg': 'OS não encontrada ou não concluída.'})
+
+    telefone = (order.get('customer_phone') or '').strip()
+    if not telefone:
+        return jsonify({'ok': False, 'msg': 'Cliente sem telefone cadastrado.'})
+
+    template = _get_template_mensagem(db, 'satisfacao')
+    mensagem = template.format(
+        nome=order.get('customer_name', 'Cliente'),
+        os_numero=order.get('order_number', ''),
+        total=f"R$ {float(order.get('total_geral') or 0):.2f}",
+        placa='',
+    )
+
+    resultado = _enviar_mensagem(cfg, telefone, mensagem)
+    status_log = 'enviado' if resultado['ok'] else 'erro'
+    _registrar_log(db, 'satisfacao', telefone, mensagem, order_id, status_log, resultado['body'])
+
+    return jsonify({'ok': resultado['ok'], 'msg': resultado['body'][:200]})
+
+
 def _disparar_wa_automatico(order_id: int, tipo: str):
     """
     Helper público chamado internamente ao mudar status da OS.
@@ -516,8 +568,7 @@ def _disparar_wa_automatico(order_id: int, tipo: str):
     tipo: 'concluido' | 'orcamento' | 'urgente'
     """
     try:
-        from database import get_db
-from utils.auth import login_required as _get_db
+        from database import get_db as _get_db
         db = _get_db()
         cfg = _get_config(db)
         if not cfg or not cfg.get('disparos_ativos'):
