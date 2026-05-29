@@ -585,14 +585,11 @@ def index():
     return redirect(url_for('login'))
 
 @app.route('/bem-vindo')
+@app.route('/dashboard')
 @login_required
 def bem_vindo():
-    """Página inicial após login - menu, logo e cotações do dia."""
+    """Página inicial após login - Dashboard premium com KPIs."""
     db = get_db()
-
-    # Data de referência: pode ser forçada via querystring (fx_date),
-    # senão usa a última data disponível em exchange_rates ou ontem, se não houver.
-    from datetime import date, timedelta
 
     rate_date = None
     rate_date_param = request.args.get('fx_date')
@@ -814,15 +811,20 @@ def bem_vindo():
     else:
         saudacao = 'Boa noite'
     
-    return render_template('dashboard_desktop.html',
-                           kpi=kpi,
-                           os_andamento=os_andamento or [],
-                           os_recentes=os_recentes or [],
-                           grafico_vendas=grafico_vendas,
-                           alertas=alertas,
-                           tarefas=tarefas,
-                           saudacao=saudacao,
-                           data_atual=hoje.strftime('%A, %d de %B de %Y').capitalize())
+    # Verificar qual template usar (para permitir fallback)
+    try:
+        return render_template('dashboard_desktop.html',
+                               kpi=kpi,
+                               os_andamento=os_andamento or [],
+                               os_recentes=os_recentes or [],
+                               grafico_vendas=grafico_vendas,
+                               alertas=alertas,
+                               tarefas=tarefas,
+                               saudacao=saudacao,
+                               data_atual=hoje.strftime('%A, %d de %B de %Y').capitalize())
+    except:
+        # Fallback para template antigo se houver erro
+        return render_template('bem_vindo.html')
 
 
 @app.route('/bem-vindo/atualizar-fx', methods=['POST'])
