@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 7 — Audit Semanas 1-4: auth central, APP_MODE guards, dashboard automotivo, multi-tenant company_id, baixa estoque na OS, PIX protegido | 86/93 = 92%)  
+**Última atualização:** 28/05/2026 (revisão 8 — Audit Semanas 5-6: NFS-e protegida, comissões automáticas, garantias 90d, histórico de veículo + KM, relatórios gerenciais | 93/100 = 93%)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -24,7 +24,11 @@
 | 1.14 | Lançamento automático C/R ao aprovar | ✅ | `_lancar_contas_receber()` |
 | 1.15 | Envio de orçamento por WhatsApp | ✅ | UazAPI configurado, testado e funcionando |
 | 1.16 | Agendamento preventivo automático | ✅ | `calcular_proximo_preventivo()` ao concluir OS |
-| 1.17 | Controle de Garantia por peça/serviço | ❌ | Não implementado |
+| 1.17 | Controle de Garantia por peça/serviço | ✅ | `garantia_routes.py` — auto 90d + acionamento |
+| 1.21 | Comissões automáticas por mecânico | ✅ | `comissao_routes.py` — % configurável + painel |
+| 1.22 | Histórico de veículo + evolução de KM | ✅ | `/veiculos/<id>/historico` + gráfico Chart.js |
+| 1.23 | Relatório desempenho mecânicos | ✅ | `/relatorios/mecanicos` com gráfico de receita |
+| 1.24 | Ranking serviços/peças + top clientes | ✅ | `/relatorios/servicos` + gráfico pizza tipo OS |
 | 1.18 | Popup pós-OS "Emitir NF-e?" | ❌ | Não implementado |
 | 1.19 | Baixa automática de estoque ao concluir OS | ✅ | `registrar_movimentacao` disparado ao status=completed |
 | 1.20 | Botão Cobrar via PIX na view da OS | ✅ | Visível quando orçamento aprovado ou OS concluída |

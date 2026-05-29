@@ -489,7 +489,8 @@
                         <li><a href="{{ url_for('dashboard.cost_report') }}"><i class="fas fa-coins"></i> Custos</a></li>
                         <li><a href="{{ url_for('dashboard.performance_report') }}"><i class="fas fa-chart-line"></i> Desempenho</a></li>
                         {% endif %}
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='relatorios') }}"><i class="fas fa-star text-warning"></i> Relatórios Gerenciais <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
+                        <li><a href="{{ url_for('reports.relatorio_mecanicos') }}"><i class="fas fa-user-cog text-primary"></i> Desempenho Mecânicos</a></li>
+                        <li><a href="{{ url_for('reports.relatorio_servicos') }}"><i class="fas fa-list-ol text-info"></i> Ranking de Serviços</a></li>
                         {% if blueprint_exists('comissao') %}
                         <li><a href="{{ url_for('comissao.comissao_lista') }}"><i class="fas fa-percentage text-success"></i> Comissões</a></li>
                         {% else %}

@@ -722,3 +722,132 @@ def consolidated_report():
         title=title,
         active_page='consolidated_report'
     )
+
+
+# ─────────────────────────────────────────────────────────────
+# Desempenho por Mecânico
+# ─────────────────────────────────────────────────────────────
+@reports_bp.route('/relatorios/mecanicos')
+@login_required
+def relatorio_mecanicos():
+    """Relatório de desempenho por mecânico com filtro de período."""
+    db = get_db()
+
+    mes_ref = request.args.get('mes_ref', datetime.datetime.now().strftime('%Y-%m'))
+    try:
+        ano, mes = int(mes_ref[:4]), int(mes_ref[5:7])
+    except Exception:
+        ano, mes = datetime.datetime.now().year, datetime.datetime.now().month
+
+    ultimo_dia = calendar.monthrange(ano, mes)[1]
+    data_ini = f"{ano}-{mes:02d}-01"
+    data_fim = f"{ano}-{mes:02d}-{ultimo_dia}"
+
+    mecanicos = db.fetch_all("""
+        SELECT
+            t.id,
+            t.name                                                          AS nome,
+            t.specialty                                                     AS especialidade,
+            COUNT(so.id)                                                    AS total_os,
+            SUM(so.status = 'completed')                                    AS os_concluidas,
+            SUM(so.status = 'canceled')                                     AS os_canceladas,
+            COALESCE(SUM(CASE WHEN so.status='completed' THEN so.total_geral END), 0) AS receita,
+            ROUND(AVG(CASE WHEN so.status='completed' AND so.minutos_servico > 0
+                      THEN so.minutos_servico END) / 60, 1)                AS media_horas,
+            ROUND(COALESCE(SUM(CASE WHEN so.status='completed' THEN so.total_geral END), 0)
+                  / NULLIF(SUM(so.status='completed'), 0), 2)              AS ticket_medio
+        FROM technicians t
+        LEFT JOIN service_orders so
+               ON so.technician_id = t.id
+              AND so.open_date BETWEEN %s AND %s
+              AND so.active = TRUE
+        WHERE t.active = TRUE
+        GROUP BY t.id, t.name, t.specialty
+        ORDER BY receita DESC
+    """, (data_ini, data_fim)) or []
+
+    # KPIs gerais do período
+    kpis = db.fetch_one("""
+        SELECT
+            COUNT(*)                                                          AS total_os,
+            SUM(status='completed')                                           AS concluidas,
+            COALESCE(SUM(CASE WHEN status='completed' THEN total_geral END), 0) AS receita_total,
+            COUNT(DISTINCT technician_id)                                     AS tecnicos_ativos
+        FROM service_orders
+        WHERE open_date BETWEEN %s AND %s AND active = TRUE
+    """, (data_ini, data_fim)) or {}
+
+    return render_template('relatorio_mecanicos.html',
+        mecanicos=mecanicos, kpis=kpis,
+        mes_ref=mes_ref, data_ini=data_ini, data_fim=data_fim)
+
+
+# ─────────────────────────────────────────────────────────────
+# Ranking de Serviços Mais Executados
+# ─────────────────────────────────────────────────────────────
+@reports_bp.route('/relatorios/servicos')
+@login_required
+def relatorio_servicos():
+    """Ranking dos serviços mais executados com filtro de período."""
+    db = get_db()
+
+    mes_ref = request.args.get('mes_ref', datetime.datetime.now().strftime('%Y-%m'))
+    try:
+        ano, mes = int(mes_ref[:4]), int(mes_ref[5:7])
+    except Exception:
+        ano, mes = datetime.datetime.now().year, datetime.datetime.now().month
+
+    ultimo_dia = calendar.monthrange(ano, mes)[1]
+    data_ini = f"{ano}-{mes:02d}-01"
+    data_fim = f"{ano}-{mes:02d}-{ultimo_dia}"
+
+    # Ranking por tipo de OS (corretiva / preventiva / preditiva)
+    por_tipo = db.fetch_all("""
+        SELECT
+            COALESCE(type, 'corrective')           AS tipo,
+            COUNT(*)                               AS total,
+            SUM(status='completed')                AS concluidas,
+            COALESCE(SUM(CASE WHEN status='completed' THEN total_geral END), 0) AS receita
+        FROM service_orders
+        WHERE open_date BETWEEN %s AND %s AND active = TRUE
+        GROUP BY tipo
+        ORDER BY total DESC
+    """, (data_ini, data_fim)) or []
+
+    # Itens / peças mais usados nas OS (top 20)
+    top_pecas = db.fetch_all("""
+        SELECT
+            COALESCE(soi.descricao, s.name, 'Item sem nome')   AS descricao,
+            SUM(soi.quantidade)                                 AS qtd_total,
+            COUNT(DISTINCT soi.service_order_id)                AS em_os,
+            ROUND(AVG(soi.valor_unitario), 2)                   AS preco_medio,
+            SUM(soi.valor_total)                                AS receita_total
+        FROM service_order_items soi
+        LEFT JOIN supplies s ON s.id = soi.supply_id
+        JOIN service_orders so ON so.id = soi.service_order_id
+        WHERE so.open_date BETWEEN %s AND %s
+          AND so.active = TRUE AND so.status = 'completed'
+        GROUP BY descricao
+        ORDER BY qtd_total DESC
+        LIMIT 20
+    """, (data_ini, data_fim)) or []
+
+    # Clientes que mais geraram receita
+    top_clientes = db.fetch_all("""
+        SELECT
+            c.name                                                        AS cliente,
+            COUNT(so.id)                                                  AS total_os,
+            COALESCE(SUM(so.total_geral), 0)                              AS receita,
+            ROUND(AVG(so.total_geral), 2)                                 AS ticket_medio
+        FROM service_orders so
+        JOIN customers c ON c.id = so.customer_id
+        WHERE so.open_date BETWEEN %s AND %s
+          AND so.active = TRUE AND so.status = 'completed'
+        GROUP BY c.id, c.name
+        ORDER BY receita DESC
+        LIMIT 10
+    """, (data_ini, data_fim)) or []
+
+    return render_template('relatorio_servicos.html',
+        por_tipo=por_tipo, top_pecas=top_pecas, top_clientes=top_clientes,
+        mes_ref=mes_ref, data_ini=data_ini, data_fim=data_fim)

@@ -130,13 +130,55 @@
       {% endif %}
     </div>
   </div>
+
+  {% if km_logs %}
+  <!-- Gráfico de Evolução de KM -->
+  <div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white fw-bold">
+      <i class="fas fa-tachometer-alt me-2 text-primary"></i>Evolução de KM
+    </div>
+    <div class="card-body">
+      <canvas id="kmChart" height="80"></canvas>
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
   new bootstrap.Tooltip(el);
 });
+
+{% if km_logs %}
+const kmLabels = {{ km_logs | map(attribute='registrado_em') | list | tojson }};
+const kmValues = {{ km_logs | map(attribute='km') | list | tojson }};
+new Chart(document.getElementById('kmChart'), {
+  type: 'line',
+  data: {
+    labels: kmLabels.map(d => d ? d.substring(0,10) : ''),
+    datasets: [{
+      label: 'KM',
+      data: kmValues,
+      borderColor: '#08a5b2',
+      backgroundColor: 'rgba(8,165,178,0.08)',
+      tension: 0.3,
+      fill: true,
+      pointRadius: 4,
+      pointBackgroundColor: '#0b2447',
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: false, title: { display: true, text: 'KM' } },
+      x: { title: { display: true, text: 'Data' } }
+    }
+  }
+});
+{% endif %}
 </script>
 {% endblock %}

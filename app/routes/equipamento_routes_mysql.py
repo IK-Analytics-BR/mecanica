@@ -198,7 +198,77 @@ def equipamento_visualizar(id):
     # Renderizar a visualização do equipamento
     return render_template('equipamento_view.html', equipamento=equipamento, cliente=cliente, insumos_instalados=insumos_instalados)
 
+# ─────────────────────────────────────────────────────────────
+# Histórico completo do veículo (OS + KM)
+# ─────────────────────────────────────────────────────────────
+@equipamento_bp.route('/veiculos/<int:vid>/historico')
+@login_required
+def veiculo_historico(vid):
+    """Histórico completo de OS e evolução de KM do veículo."""
+    db = get_db()
+    company_id = get_company_id()
+
+    veiculo = db.fetch_one("""
+        SELECT e.*, c.name as customer_name
+        FROM equipment e
+        LEFT JOIN customers c ON c.id = e.customer_id
+        WHERE e.id = %s AND e.company_id = %s
+    """, (vid, company_id))
+
+    if not veiculo:
+        flash('Veículo não encontrado.', 'danger')
+        return redirect(url_for('equipamento.equipamentos'))
+
+    # Timeline de OS
+    historico = db.fetch_all("""
+        SELECT so.id, so.order_number, so.status, so.open_date,
+               so.completion_date, so.total_geral,
+               so.observations, so.diagnostico,
+               so.km_entrada,
+               t.name as technician_name,
+               so.status_orcamento
+        FROM service_orders so
+        LEFT JOIN technicians t ON t.id = so.technician_id
+        WHERE so.equipment_id = %s AND so.active = TRUE
+        ORDER BY so.open_date DESC
+    """, (vid,)) or []
+
+    # KPIs
+    total_os       = len(historico)
+    os_concluidas  = sum(1 for o in historico if o['status'] == 'completed')
+    total_gasto    = sum(float(o['total_geral'] or 0) for o in historico if o['status'] == 'completed')
+
+    # Histórico de KM (pode não existir ainda)
+    try:
+        km_logs = db.fetch_all("""
+            SELECT km, registrado_em, origem
+            FROM km_historico
+            WHERE equipment_id = %s AND company_id = %s
+            ORDER BY registrado_em ASC
+        """, (vid, company_id)) or []
+    except Exception:
+        km_logs = []
+
+    # Se não há tabela km_historico ainda, monta evolução a partir das OS
+    if not km_logs:
+        km_logs = [
+            {'km': o['km_entrada'], 'registrado_em': o['open_date'], 'origem': 'os'}
+            for o in reversed(historico) if o.get('km_entrada')
+        ]
+
+    return render_template('veiculo_historico.html',
+        veiculo=veiculo,
+        historico=historico,
+        km_logs=km_logs,
+        total_os=total_os,
+        os_concluidas=os_concluidas,
+        total_gasto=total_gasto,
+    )
+
+
+# ─────────────────────────────────────────────────────────────
 # Rota para excluir um equipamento
+# ─────────────────────────────────────────────────────────────
 @equipamento_bp.route('/equipamentos/excluir/<id>')
 @equipamento_excluir_required
 def equipamento_excluir(id):
