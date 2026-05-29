@@ -256,10 +256,19 @@ def clientes():
     params = params + (per_page, offset)
     
     clientes = db.fetch_all(query, params)
-    
-    return render_template('cliente_list.html', 
-                         clientes=clientes, 
-                         search_term=search_term, 
+
+    # Detectar se é mobile ou PWA para usar template apropriado
+    user_agent = request.headers.get('User-Agent', '').lower()
+    is_mobile = any(device in user_agent for device in ['iphone', 'ipad', 'android', 'mobile'])
+    is_pwa = request.headers.get('X-Requested-With') == 'com.ikflow.pwa' or \
+             request.args.get('standalone') == 'true' or \
+             'standalone' in request.cookies.get('pwa_mode', '')
+
+    template_name = 'mobile/cliente_list_mobile.html' if (is_mobile or is_pwa) else 'cliente_list.html'
+
+    return render_template(template_name,
+                         clientes=clientes,
+                         search_term=search_term,
                          search_field=search_field,
                          page=page,
                          per_page=per_page,
