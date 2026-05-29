@@ -279,8 +279,7 @@ def calcular_proximo_preventivo(order_id: int, km_saida: int = None, intervalo_d
     Retorna dict com resultado.
     """
     try:
-        from database import get_db
-from utils.auth import login_required as _get_db
+        from database import get_db as _get_db
         db = _get_db()
 
         order = db.fetch_one("""

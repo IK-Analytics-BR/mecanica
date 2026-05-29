@@ -38,7 +38,7 @@ def _gerar_token(db, customer_id: int, company_id: int) -> str:
 def _validar_token(db, token: str):
     """Retorna dict do cliente se token válido, None caso contrário."""
     row = db.fetch_one("""
-        SELECT pt.*, c.name as customer_name, c.phone, c.email, c.cpf_cnpj
+        SELECT pt.*, c.name as customer_name, c.phone, c.email
         FROM portal_tokens pt
         JOIN customers c ON c.id = pt.customer_id
         WHERE pt.token = %s AND pt.ativo = 1 AND pt.expira_em > NOW()
