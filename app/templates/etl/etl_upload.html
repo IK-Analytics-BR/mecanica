@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }} — ETL{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4><i class="fas fa-upload me-2 text-primary"></i>{{ titulo }}</h4>
+  <a href="{{ url_for('etl.etl_painel') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-arrow-left me-1"></i>Voltar
+  </a>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header fw-bold">Formato do CSV</div>
+  <div class="card-body">
+    <p class="text-muted small mb-2">Colunas esperadas (* obrigatória):</p>
+    <div class="d-flex gap-2 flex-wrap">
+      {% for col in colunas %}
+      <span class="badge {% if col.endswith('*') %}bg-danger{% else %}bg-secondary{% endif %}">{{ col }}</span>
+      {% endfor %}
+    </div>
+    <p class="text-muted small mt-3 mb-0">
+      <i class="fas fa-info-circle me-1"></i>
+      Separador: vírgula ou ponto-e-vírgula. Encoding: UTF-8.
+      Campos duplicados (placa / CPF) são atualizados, não duplicados.
+    </p>
+  </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" action="{{ url_for('etl.etl_' + tipo) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3">
+    <label class="form-label fw-bold">Arquivo CSV</label>
+    <input type="file" name="arquivo" class="form-control" accept=".csv,.txt" required>
+  </div>
+  <button type="submit" class="btn btn-primary">
+    <i class="fas fa-database me-2"></i>Importar agora
+  </button>
+</form>
+{% endblock %}

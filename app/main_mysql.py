@@ -163,6 +163,10 @@ garantia_bp = _try_import('routes.garantia_routes', 'garantia_bp')
 push_bp   = _try_import('routes.push_routes',   'push_bp')
 portal_bp = _try_import('routes.portal_routes', 'portal_bp')
 
+# Módulos Semana 10: Boleto Bancário + ETL
+boleto_bp = _try_import('routes.boleto_routes', 'boleto_bp')
+etl_bp    = _try_import('routes.etl_routes',    'etl_bp')
+
 # Cadastros Auxiliares
 transportadora_bp = _try_import('routes.transportadora_routes', 'transportadora_bp')
 condicao_pagamento_bp = _try_import('routes.condicao_pagamento_routes', 'condicao_pagamento_bp')
@@ -312,6 +316,8 @@ for _bp in (
     garantia_bp,
     push_bp,
     portal_bp,
+    boleto_bp,
+    etl_bp,
     transportadora_bp,
     condicao_pagamento_bp,
     currency_bp,

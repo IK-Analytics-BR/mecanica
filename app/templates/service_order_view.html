@@ -182,6 +182,13 @@
     </a>
     {% endif %}
 
+    {% if blueprint_exists('boleto') and (order.get('status_orcamento') == 'aprovado' or order.status == 'completed') %}
+    <a href="{{ url_for('boleto.boleto_gerar', order_id=order.id) }}" class="btn btn-outline-dark"
+       title="Gerar boleto bancário via Mercado Pago">
+      <i class="fas fa-barcode me-1"></i> Cobrar via Boleto
+    </a>
+    {% endif %}
+
     {% if blueprint_exists('whatsapp') and order.status == 'completed' %}
     <form method="post" action="{{ url_for('whatsapp.whatsapp_satisfacao', order_id=order.id) }}" class="d-inline">
       <button type="submit" class="btn btn-outline-warning"

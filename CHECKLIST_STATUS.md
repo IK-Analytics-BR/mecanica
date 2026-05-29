@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 10 — Semana 9: Push Notifications PWA, Portal do Cliente com token, aprovação de orçamento remota | 98/100 = 98%)  
+**Última atualização:** 28/05/2026 (revisão 11 — Semana 10: Boleto Bancário Mercado Pago, webhook baixa automática, ETL migração legado CSV | 100/100 = 100%)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -122,7 +122,7 @@
 | 7.4 | Contas Bancárias | ✅ | `bank_account_routes.py` |
 | 7.5 | Plano de Contas | ✅ | `chart_of_accounts_routes.py` |
 | 7.6 | PIX (QR code + EMV) | ✅ | `pix_routes.py` |
-| 7.7 | Boleto Bancário | ❌ | Não implementado |
+| 7.7 | Boleto Bancário | ✅ | `boleto_routes.py` — Mercado Pago API + webhook baixa automática C/R |
 
 ---
 
@@ -180,7 +180,7 @@
 | 11.6 | Dashboard | ✅ | `dashboard_routes.py` |
 | 11.7 | Relatórios gerenciais | ✅ | `reports_routes.py` — `python-dateutil` adicionado |
 | 11.8 | Transportadoras | ✅ | Import `app.database` corrigido para `database` |
-| 11.9 | ETL / Migração do legado | ❌ | Não implementado |
+| 11.9 | ETL / Migração do legado | ✅ | `etl_routes.py` — CSV clientes, veículos, OS históricas + log |
 
 ---
 

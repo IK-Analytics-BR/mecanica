@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Gerar Boleto — OS #{{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4><i class="fas fa-barcode me-2 text-primary"></i>Gerar Boleto</h4>
+  <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-arrow-left me-1"></i>Voltar
+  </a>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="text-muted small">OS</div>
+        <strong>#{{ order.order_number }}</strong>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Cliente</div>
+        <strong>{{ order.customer_name or '—' }}</strong>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Valor</div>
+        <strong class="text-success fs-5">R$ {{ "%.2f"|format(order.valor|float) if order.valor else '0,00' }}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if not order.cpf_cnpj %}
+<div class="alert alert-warning">
+  <i class="fas fa-exclamation-triangle me-2"></i>
+  O cliente não possui CPF/CNPJ cadastrado. O boleto pode ser gerado, mas a confirmação de pagamento pode falhar.
+  <a href="{{ url_for('cliente.cliente_editar', id=order.customer_id) }}" class="alert-link ms-1">Cadastrar agora</a>
+</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('boleto.boleto_gerar', order_id=order.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    O boleto será gerado via <strong>Mercado Pago</strong> com vencimento em <strong>3 dias úteis</strong>.
+    O pagamento será baixado automaticamente via webhook.
+  </div>
+  <button type="submit" class="btn btn-primary">
+    <i class="fas fa-barcode me-2"></i>Confirmar e Gerar Boleto
+  </button>
+</form>
+{% endblock %}

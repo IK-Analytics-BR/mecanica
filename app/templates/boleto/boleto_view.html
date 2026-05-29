@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Boleto — OS #{{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4><i class="fas fa-barcode me-2 text-primary"></i>Boleto Bancário</h4>
+  <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-arrow-left me-1"></i>Voltar à OS
+  </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="alert alert-{{ cat }}">{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center
+    {% if boleto.status == 'approved' %}bg-success text-white
+    {% elif boleto.status == 'pending' %}bg-warning text-dark
+    {% elif boleto.status in ('cancelled','rejected') %}bg-danger text-white
+    {% else %}bg-secondary text-white{% endif %}">
+    <span><i class="fas fa-barcode me-2"></i>OS #{{ order.order_number }}</span>
+    {% set s_map = {'pending':'Aguardando pagamento','approved':'Pago','cancelled':'Cancelado','rejected':'Rejeitado','in_process':'Em processamento'} %}
+    <span class="badge bg-white text-dark">{{ s_map.get(boleto.status, boleto.status) }}</span>
+  </div>
+  <div class="card-body">
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="text-muted small">Cliente</div>
+        <strong>{{ order.customer_name or '—' }}</strong>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Valor</div>
+        <strong class="text-success fs-5">R$ {{ "%.2f"|format(boleto.valor|float) }}</strong>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Vencimento</div>
+        <strong>{{ boleto.vencimento.strftime('%d/%m/%Y') if boleto.vencimento else '—' }}</strong>
+      </div>
+    </div>
+
+    {% if boleto.barcode %}
+    <div class="mb-3">
+      <label class="form-label fw-bold">Linha digitável</label>
+      <div class="input-group">
+        <input type="text" class="form-control font-monospace" id="barcode" value="{{ boleto.barcode }}" readonly>
+        <button class="btn btn-outline-secondary" onclick="copiarCodigo()" title="Copiar código">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if boleto.boleto_url %}
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ boleto.boleto_url }}" target="_blank" class="btn btn-primary">
+        <i class="fas fa-external-link-alt me-2"></i>Abrir / Imprimir Boleto
+      </a>
+      <button class="btn btn-outline-secondary" onclick="verificarStatus({{ order.id }})">
+        <i class="fas fa-sync-alt me-1"></i>Verificar Pagamento
+      </button>
+    </div>
+    {% endif %}
+
+    <div id="statusMsg" class="mt-3"></div>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+function copiarCodigo() {
+  const el = document.getElementById('barcode');
+  if (el) { el.select(); document.execCommand('copy'); }
+  event.target.closest('button').innerHTML = '<i class="fas fa-check"></i>';
+  setTimeout(() => { event.target.closest('button').innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
+}
+
+async function verificarStatus(orderId) {
+  document.getElementById('statusMsg').innerHTML =
+    '<div class="spinner-border spinner-border-sm text-primary me-2"></div>Verificando...';
+  try {
+    const r    = await fetch(`/boleto/status/${orderId}`);
+    const data = await r.json();
+    const map  = { pending:'Aguardando pagamento', approved:'✅ Pago!', cancelled:'Cancelado', rejected:'Rejeitado' };
+    const txt  = map[data.status] || data.status;
+    const cls  = data.status === 'approved' ? 'success' : data.status === 'pending' ? 'warning' : 'danger';
+    document.getElementById('statusMsg').innerHTML =
+      `<div class="alert alert-${cls} py-2">${txt}</div>`;
+    if (data.status === 'approved') setTimeout(() => location.reload(), 1500);
+  } catch(e) {
+    document.getElementById('statusMsg').innerHTML =
+      `<div class="alert alert-danger py-2">Erro: ${e}</div>`;
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}

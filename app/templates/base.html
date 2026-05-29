@@ -553,6 +553,11 @@
                             <a href="{{ url_for('nfe_emissao.numeracao_config') }}"><i class="fas fa-hashtag"></i> Numeração NF-e</a>
                         </li>
                         {% endif %}
+                        {% if is_admin and blueprint_exists('etl') %}
+                        <li>
+                            <a href="{{ url_for('etl.etl_painel') }}"><i class="fas fa-database text-warning"></i> ETL / Migração Legado</a>
+                        </li>
+                        {% endif %}
                         <li>
                             <a href="{{ url_for('em_desenvolvimento', funcionalidade='seguranca_auditoria') }}"><i class="fas fa-shield-alt"></i> Segurança & Auditoria</a>
                         </li>
