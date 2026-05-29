@@ -100,6 +100,7 @@
             </div>
             <div class="card-body">
                 <form method="post" action="{{ url_for('login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-floating">
                         <input type="text" class="form-control" id="username" name="username" placeholder="Nome de usuário" autocomplete="username" required autofocus>
                         <label for="username">Nome de usuário</label>
