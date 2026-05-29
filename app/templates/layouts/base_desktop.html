@@ -190,6 +190,55 @@
         }
 
         /* ═══════════════════════════════════════════════
+           DRAWER MENU (para PWA/mobile)
+        ═══════════════════════════════════════════════ */
+        
+        /* Overlay do drawer */
+        #sidebarOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1040;
+            backdrop-filter: blur(2px);
+        }
+        #sidebarOverlay.show { display: block; }
+        
+        /* Sidebar como drawer em PWA */
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                top: 0;
+                left: -280px;
+                width: 280px;
+                height: 100vh;
+                z-index: 1050;
+                transition: left 0.3s ease;
+                overflow-y: auto;
+            }
+            
+            #sidebar.drawer-open {
+                left: 0 !important;
+            }
+        }
+        
+        /* Drawer também funciona em PWA em telas maiores */
+        body.pwa-standalone #sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            z-index: 1050;
+            transition: left 0.3s ease;
+            display: block !important;
+        }
+        
+        body.pwa-standalone #sidebar.drawer-open {
+            left: 0 !important;
+        }
+
+        /* ═══════════════════════════════════════════════
            PWA STANDALONE - Mobile Header/Bottom Nav
         ═══════════════════════════════════════════════ */
         
@@ -483,9 +532,12 @@
         </div>
     </div>
 
+    <!-- ══ OVERLAY DO DRAWER ══ -->
+    <div id="sidebarOverlay" onclick="closeDrawer()"></div>
+
     <!-- ══ MOBILE HEADER (aparece em PWA) ══ -->
     <header id="mobileHeader">
-        <button class="btn btn-link text-white p-0 me-3" onclick="document.getElementById('mobileMenuDrawer').classList.toggle('show')">
+        <button class="btn btn-link text-white p-0 me-3" onclick="openDrawer()">
             <i class="fas fa-bars fa-lg"></i>
         </button>
         <span class="fw-bold flex-grow-1">IKFlow Mecânica</span>
@@ -529,6 +581,34 @@
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
                 $('#content').toggleClass('active');
+            });
+        });
+    </script>
+
+    <!-- Drawer Menu Script -->
+    <script>
+        function openDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.add('drawer-open');
+            if (overlay) overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.remove('drawer-open');
+            if (overlay) overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // Fechar drawer ao clicar em link (mobile)
+        document.querySelectorAll('#sidebar a[href]').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768 || document.body.classList.contains('pwa-standalone')) {
+                    closeDrawer();
+                }
             });
         });
     </script>
