@@ -1,5 +1,5 @@
 # 📋 Análise Completa MVP — IKFlow Mecânica
-**Atualizado em:** 28/05/2026 (revisão 6 — PDV testado em produção, schema corrigido, Histórico de Vendas ativo, 73/93 = 78%)  
+**Atualizado em:** 28/05/2026 (revisão 7 — Fluxos WhatsApp implementados: orçamento, OS pronta, lembrete revisão, alerta urgente | 77/93 = 83%)  
 **Fontes consolidadas:**
 - `PROPOSTA_MECANICA_IKFLOW.md` — proposta técnica completa
 - Fluxo de negócio descrito pelo cliente em sessão

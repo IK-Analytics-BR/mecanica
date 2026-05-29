@@ -312,6 +312,247 @@ def whatsapp_enviar_os(order_id, tipo):
     return redirect(url_for('service_order.service_order_view', order_id=order_id))
 
 
+@whatsapp_bp.route('/whatsapp/enviar-orcamento-wa/<int:order_id>', methods=['POST'])
+@login_required
+def enviar_orcamento_wa(order_id):
+    """Envia orçamento ao cliente via WA e marca status_orcamento='enviado'."""
+    db = get_db()
+    cfg = _get_config(db)
+    if not cfg:
+        flash('Configure o WhatsApp antes de enviar.', 'danger')
+        return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+    order = db.fetch_one("""
+        SELECT so.*, c.name as customer_name, c.phone as customer_phone,
+               e.serial_number as placa
+        FROM service_orders so
+        LEFT JOIN customers c ON c.id = so.customer_id
+        LEFT JOIN equipment e ON e.id = so.equipment_id
+        WHERE so.id = %s
+    """, (order_id,))
+
+    if not order:
+        flash('OS não encontrada.', 'danger')
+        return redirect(url_for('service_order.service_order_list'))
+
+    telefone = (order.get('customer_phone') or '').strip()
+    if not telefone:
+        flash('Cliente sem telefone cadastrado. Cadastre o telefone antes de enviar.', 'warning')
+        return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+    template = _get_template_mensagem(db, 'orcamento')
+    mensagem = template.format(
+        nome=order.get('customer_name', 'Cliente'),
+        os_numero=order.get('order_number', ''),
+        placa=order.get('placa') or 'veículo',
+        total=f"{float(order.get('total_geral') or 0):.2f}".replace('.', ','),
+    )
+
+    resultado = _enviar_mensagem(cfg, telefone, mensagem)
+    status_log = 'enviado' if resultado['ok'] else 'erro'
+    _registrar_log(db, 'orcamento', telefone, mensagem, order_id, status_log, resultado['body'])
+
+    if resultado['ok']:
+        try:
+            db.execute_query(
+                "UPDATE service_orders SET status_orcamento='enviado', phone_notificado=NOW() WHERE id=%s",
+                (order_id,)
+            )
+        except Exception:
+            pass
+        flash(f'Orçamento enviado via WhatsApp para {telefone}!', 'success')
+    else:
+        flash(f'Falha ao enviar WhatsApp: {resultado["body"][:150]}', 'danger')
+
+    return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+
+@whatsapp_bp.route('/whatsapp/notificar-pronta/<int:order_id>', methods=['POST'])
+@login_required
+def notificar_os_pronta(order_id):
+    """Notifica cliente que o veículo está pronto para retirada."""
+    db = get_db()
+    cfg = _get_config(db)
+    if not cfg:
+        flash('Configure o WhatsApp antes de enviar.', 'danger')
+        return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+    order = db.fetch_one("""
+        SELECT so.*, c.name as customer_name, c.phone as customer_phone,
+               e.serial_number as placa
+        FROM service_orders so
+        LEFT JOIN customers c ON c.id = so.customer_id
+        LEFT JOIN equipment e ON e.id = so.equipment_id
+        WHERE so.id = %s
+    """, (order_id,))
+
+    if not order:
+        flash('OS não encontrada.', 'danger')
+        return redirect(url_for('service_order.service_order_list'))
+
+    telefone = (order.get('customer_phone') or '').strip()
+    if not telefone:
+        flash('Cliente sem telefone cadastrado.', 'warning')
+        return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+    template = _get_template_mensagem(db, 'concluido')
+    mensagem = template.format(
+        nome=order.get('customer_name', 'Cliente'),
+        os_numero=order.get('order_number', ''),
+        placa=order.get('placa') or 'veículo',
+        total=f"{float(order.get('total_geral') or 0):.2f}".replace('.', ','),
+    )
+
+    resultado = _enviar_mensagem(cfg, telefone, mensagem)
+    status_log = 'enviado' if resultado['ok'] else 'erro'
+    _registrar_log(db, 'concluido', telefone, mensagem, order_id, status_log, resultado['body'])
+
+    if resultado['ok']:
+        try:
+            db.execute_query("UPDATE service_orders SET phone_notificado=NOW() WHERE id=%s", (order_id,))
+        except Exception:
+            pass
+        flash(f'Notificação "pronto para retirada" enviada para {telefone}!', 'success')
+    else:
+        flash(f'Falha ao enviar WhatsApp: {resultado["body"][:150]}', 'danger')
+
+    return redirect(url_for('service_order.service_order_view', order_id=order_id))
+
+
+@whatsapp_bp.route('/whatsapp/disparar-lembretes')
+def disparar_lembretes_revisao():
+    """
+    Job chamado por cron (ou manualmente).
+    Busca veículos com km próximo de revisão e envia WA.
+    Usa dias_lembrete da config e disparos_ativos=1.
+    """
+    db = get_db()
+    cfg = _get_config(db)
+    if not cfg or not cfg.get('disparos_ativos'):
+        return jsonify({'ok': False, 'msg': 'Disparos desativados ou WhatsApp não configurado.'})
+
+    dias = int(cfg.get('dias_lembrete') or 7)
+    enviados, erros = 0, 0
+
+    try:
+        veiculos = db.fetch_all("""
+            SELECT e.id, e.serial_number as placa, e.next_maintenance_date,
+                   c.name as customer_name, c.phone as customer_phone
+            FROM equipment e
+            LEFT JOIN customers c ON c.id = e.customer_id
+            WHERE e.active = 1
+              AND e.next_maintenance_date IS NOT NULL
+              AND e.next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL %s DAY)
+              AND e.next_maintenance_date >= CURDATE()
+            ORDER BY e.next_maintenance_date ASC
+        """, (dias,))
+    except Exception as e:
+        return jsonify({'ok': False, 'msg': f'Erro na consulta: {e}'})
+
+    for v in veiculos:
+        telefone = (v.get('customer_phone') or '').strip()
+        if not telefone:
+            continue
+        template = _get_template_mensagem(db, 'lembrete_revisao')
+        mensagem = template.format(
+            nome=v.get('customer_name', 'Cliente'),
+            placa=v.get('placa') or 'veículo',
+            os_numero='',
+            total='',
+        )
+        resultado = _enviar_mensagem(cfg, telefone, mensagem)
+        status_log = 'enviado' if resultado['ok'] else 'erro'
+        _registrar_log(db, 'lembrete_revisao', telefone, mensagem, None, status_log, resultado['body'])
+        if resultado['ok']:
+            enviados += 1
+        else:
+            erros += 1
+
+    return jsonify({'ok': True, 'enviados': enviados, 'erros': erros, 'total': len(veiculos)})
+
+
+@whatsapp_bp.route('/whatsapp/alerta-urgente/<int:order_id>', methods=['POST'])
+@login_required
+def alerta_os_urgente(order_id):
+    """Notifica admins sobre OS urgente."""
+    db = get_db()
+    cfg = _get_config(db)
+    if not cfg:
+        return  # silencioso
+
+    order = db.fetch_one("""
+        SELECT so.order_number, c.name as customer_name, e.serial_number as placa
+        FROM service_orders so
+        LEFT JOIN customers c ON c.id = so.customer_id
+        LEFT JOIN equipment e ON e.id = so.equipment_id
+        WHERE so.id = %s
+    """, (order_id,))
+    if not order:
+        return
+
+    telefones_admin = (cfg.get('telefones_admin') or '').strip()
+    if not telefones_admin:
+        return
+
+    mensagem = (
+        f"⚠️ OS URGENTE: {order.get('order_number')} | "
+        f"Cliente: {order.get('customer_name')} | "
+        f"Veículo: {order.get('placa')} | "
+        f"Ação imediata necessária."
+    )
+    for tel in [t.strip() for t in telefones_admin.split(',') if t.strip()]:
+        resultado = _enviar_mensagem(cfg, tel, mensagem)
+        status_log = 'enviado' if resultado['ok'] else 'erro'
+        _registrar_log(db, 'urgente', tel, mensagem, order_id, status_log, resultado['body'])
+
+
+def _disparar_wa_automatico(order_id: int, tipo: str):
+    """
+    Helper público chamado internamente ao mudar status da OS.
+    Não redireciona — só envia e registra log.
+    tipo: 'concluido' | 'orcamento' | 'urgente'
+    """
+    try:
+        from database import get_db as _get_db
+        db = _get_db()
+        cfg = _get_config(db)
+        if not cfg or not cfg.get('disparos_ativos'):
+            return
+
+        order = db.fetch_one("""
+            SELECT so.*, c.name as customer_name, c.phone as customer_phone,
+                   e.serial_number as placa
+            FROM service_orders so
+            LEFT JOIN customers c ON c.id = so.customer_id
+            LEFT JOIN equipment e ON e.id = so.equipment_id
+            WHERE so.id = %s
+        """, (order_id,))
+        if not order:
+            return
+
+        telefone = (order.get('customer_phone') or '').strip()
+        if not telefone:
+            return
+
+        template = _get_template_mensagem(db, tipo)
+        mensagem = template.format(
+            nome=order.get('customer_name', 'Cliente'),
+            os_numero=order.get('order_number', ''),
+            placa=order.get('placa') or 'veículo',
+            total=f"{float(order.get('total_geral') or 0):.2f}".replace('.', ','),
+        )
+        resultado = _enviar_mensagem(cfg, telefone, mensagem)
+        status_log = 'enviado' if resultado['ok'] else 'erro'
+        _registrar_log(db, tipo, telefone, mensagem, order_id, status_log, resultado['body'])
+        if resultado['ok']:
+            try:
+                db.execute_query("UPDATE service_orders SET phone_notificado=NOW() WHERE id=%s", (order_id,))
+            except Exception:
+                pass
+    except Exception as e:
+        print(f'[WA AUTO] Erro ao disparar {tipo} para OS {order_id}: {e}')
+
+
 @whatsapp_bp.route('/whatsapp/status-instancia')
 def whatsapp_status():
     """Verifica status da instância (suporta UZapi, Evolution, WPPConnect)."""

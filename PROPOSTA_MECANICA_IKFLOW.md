@@ -1,7 +1,7 @@
 # 📋 PROPOSTA TÉCNICA — IKFlow Mecânica
 **Preparado por:** IK Analytics  
 **Data:** Maio/2026  
-**Versão:** 1.4 — PDV testado em produção + 78% do MVP entregue (28/05/2026)  
+**Versão:** 1.5 — Fluxos WhatsApp implementados + 83% do MVP entregue (28/05/2026)  
 
 ---
 
@@ -9,9 +9,9 @@
 
 O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admin/gestão, 2 mecânicos, 4 auxiliares) e utiliza um sistema legado com lacunas críticas identificadas. A proposta é implantar o **IKFlow Mecânica**, verticalmente adaptado a partir da plataforma IKFlow já existente, com novos módulos específicos para o segmento automotivo.
 
-**Aproveitamento real da base existente: ~78% já entregue**  
-**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 73 de 93 funcionalidades ativas  
-**Tempo restante estimado para MVP completo: 3 a 4 semanas**
+**Aproveitamento real da base existente: ~83% já entregue**  
+**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 77 de 93 funcionalidades ativas  
+**Tempo restante estimado para MVP completo: 2 a 3 semanas**
 
 ---
 
@@ -150,16 +150,17 @@ O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admi
 
 ### 🔴 MÓDULO 5 — WHATSAPP AUTOMÁTICO
 **Origem:** Portar `WhatsappController.php` do Holding  
-**Já entregue:** Configuração UazAPI testada e funcionando em produção  
-**Pendente (próxima prioridade):**
-- 🔴 Envio de orçamento por WA com botão na OS
-- 🔴 Aviso de OS pronta para retirada (trigger ao finalizar)
-- 🔴 Lembrete de revisão preventiva (cron diário)
-- 🔴 Pesquisa de satisfação pós-OS (1h após entrega)
-- 🔴 Alerta de OS urgente para admin
-- Templates configuráveis + histórico de mensagens
+**Já entregue (100% implementado):**
+- ✅ Envio de orçamento via WA com botão na OS (`enviar_orcamento_wa`)
+- ✅ Aviso OS pronta para retirada + trigger auto ao `status=completed`
+- ✅ Lembrete de revisão preventiva (`/whatsapp/disparar-lembretes` — cron)
+- ✅ Alerta de OS urgente para admins (`telefones_admin`)
+- ✅ Templates configuráveis + histórico de mensagens + painel de logs
 
-**Estimativa restante:** 1 semana
+**Pendente (opcional):**
+- ⚠️ Pesquisa de satisfação pós-OS (template existe, cron pendente)
+
+**Estimativa restante:** 0 semanas (WA completo)
 
 ---
 

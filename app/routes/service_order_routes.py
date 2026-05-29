@@ -10,6 +10,10 @@ from datetime import datetime
 
 from database import get_db
 from services.notification_service import NotificationService
+try:
+    from routes.whatsapp_routes import _disparar_wa_automatico as _wa
+except Exception:
+    _wa = None
 
 # Criar o blueprint
 service_order_bp = Blueprint('service_order', __name__)
@@ -249,6 +253,12 @@ def service_order_add():
         order_id = db.insert(query, params)
 
         if order_id:
+            # Disparo automático WA: alerta admin se OS urgente
+            if order_type in ('urgent', 'urgente') and _wa:
+                try:
+                    _wa(order_id, 'urgente')
+                except Exception as _e:
+                    print(f'[WA] Erro trigger urgente: {_e}')
             # Salvar itens de peças
             try:
                 itens = json.loads(pecas_json)
@@ -457,6 +467,12 @@ def service_order_edit(order_id):
                     message=f'Ordem de serviço {order["order_number"]} concluída.',
                     priority='medium'
                 )
+                # Disparo automático WA: OS pronta para retirada
+                if _wa:
+                    try:
+                        _wa(order_id, 'concluido')
+                    except Exception as _e:
+                        print(f'[WA] Erro trigger concluido: {_e}')
             
             # Criar alerta se um técnico foi atribuído
             if is_technician_assigned:

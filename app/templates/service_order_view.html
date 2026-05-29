@@ -114,26 +114,36 @@
     <div class="dropdown">
       <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
         <i class="fab fa-whatsapp me-1"></i> WhatsApp
+        {% if order.phone_notificado %}<span class="badge bg-success ms-1" title="Última notificação: {{ order.phone_notificado }}">✓</span>{% endif %}
       </button>
       <ul class="dropdown-menu">
         <li>
-          <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='orcamento') }}">
-            <button type="submit" class="dropdown-item"><i class="fas fa-file-invoice me-2"></i>Enviar Orçamento</button>
+          <form method="post" action="{{ url_for('whatsapp.enviar_orcamento_wa', order_id=order.id) }}">
+            <button type="submit" class="dropdown-item">
+              <i class="fas fa-file-invoice me-2 text-warning"></i>
+              Enviar Orçamento
+              {% if order.status_orcamento == 'enviado' %}<span class="badge bg-success ms-1">enviado</span>{% endif %}
+            </button>
           </form>
         </li>
+        <li>
+          <form method="post" action="{{ url_for('whatsapp.notificar_os_pronta', order_id=order.id) }}">
+            <button type="submit" class="dropdown-item" {% if order.status != 'completed' %}title="Disponível quando OS for concluída"{% endif %}>
+              <i class="fas fa-car me-2 text-success"></i>
+              Veículo Pronto — Retirada
+              {% if order.status == 'completed' %}<span class="badge bg-success ms-1">OS concluída</span>{% endif %}
+            </button>
+          </form>
+        </li>
+        <li><hr class="dropdown-divider"></li>
         <li>
           <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='aprovado') }}">
-            <button type="submit" class="dropdown-item"><i class="fas fa-check me-2"></i>Aviso de Aprovação</button>
-          </form>
-        </li>
-        <li>
-          <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='concluido') }}">
-            <button type="submit" class="dropdown-item"><i class="fas fa-car me-2"></i>Veículo Pronto!</button>
+            <button type="submit" class="dropdown-item"><i class="fas fa-check me-2 text-primary"></i>Aviso de Aprovação</button>
           </form>
         </li>
         <li>
           <form method="post" action="{{ url_for('whatsapp.whatsapp_enviar_os', order_id=order.id, tipo='cobranca') }}">
-            <button type="submit" class="dropdown-item"><i class="fas fa-dollar-sign me-2"></i>Cobrança</button>
+            <button type="submit" class="dropdown-item"><i class="fas fa-dollar-sign me-2 text-danger"></i>Cobrança</button>
           </form>
         </li>
       </ul>

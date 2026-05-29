@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 3 — PDV testado e funcionando em produção + Histórico de Vendas ativo)  
+**Última atualização:** 28/05/2026 (revisão 4 — Fluxos WhatsApp implementados: orçamento, OS pronta, lembrete revisão, alerta urgente)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -134,12 +134,12 @@
 
 | # | Funcionalidade | Status | Observação |
 |---|---|---|---|
-| 9.1 | WhatsApp Business | ✅ | `whatsapp_routes.py` — **UazAPI testado** (`token:` header, `/send/text`) |
-| 9.2 | **Envio de orçamento para aprovação (WA)** | ❌ | Botão na OS → envia link/PDF por WA para cliente aprovar |
-| 9.3 | **Aviso OS pronta para retirada (WA)** | ❌ | Trigger automático ao finalizar OS |
-| 9.4 | **Lembrete de revisão preventiva (WA)** | ❌ | Disparo automático por KM/data (`disparos_ativos`) |
-| 9.5 | **Pesquisa de satisfação pós-OS (WA)** | ❌ | Mensagem automática 1h após entrega |
-| 9.6 | **Alerta de OS urgente para admin (WA)** | ❌ | Notifica `telefones_admin` ao abrir OS urgente |
+| 9.1 | WhatsApp Business | ✅ | `whatsapp_routes.py` — UazAPI testado |
+| 9.2 | **Envio de orçamento para aprovação (WA)** | ✅ | Rota `enviar_orcamento_wa` + atualiza `status_orcamento='enviado'` |
+| 9.3 | **Aviso OS pronta para retirada (WA)** | ✅ | Rota `notificar_os_pronta` + trigger auto ao `status=completed` |
+| 9.4 | **Lembrete de revisão preventiva (WA)** | ✅ | Rota `/whatsapp/disparar-lembretes` — cron diário por `next_maintenance_date` |
+| 9.5 | **Pesquisa de satisfação pós-OS (WA)** | ⚠️ | Template `satisfacao` existe — disparo por cron pendente |
+| 9.6 | **Alerta de OS urgente para admin (WA)** | ✅ | Trigger auto ao criar OS com `type=urgent` → notifica `telefones_admin` |
 | 9.7 | E-mail | ⚠️ | `email_service.py` existe, não integrado ao menu |
 
 ---
@@ -185,10 +185,10 @@
 | Balcão / PDV | 11 | 10 | 1 | 0 |
 | Financeiro | 7 | 6 | 0 | 1 |
 | Fiscal / NF | 5 | 4 | 1 | 0 |
-| Comunicação | 8 | 1 | 1 | 6 |
+| Comunicação | 8 | 5 | 1 | 2 |
 | PWA / Mobile | 6 | 3 | 2 | 2 (push/offline) |
 | Administrativo | 9 | 8 | 0 | 1 |
-| **TOTAL** | **93** | **73 (78%)** | **6 (6%)** | **14 (15%)** |
+| **TOTAL** | **93** | **77 (83%)** | **4 (4%)** | **12 (13%)** |
 
 ---
 
