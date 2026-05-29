@@ -18,6 +18,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/purchase_order_fixes.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/desktop.css') }}?v=2">
     
+    <!-- PWA iOS -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v=2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IKFlow">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/icon-180.png') }}">
+    <meta name="theme-color" content="#0b2447">
+    
     <!-- CSRF token -->
     <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
     
@@ -383,6 +391,44 @@
                     console.log('[PWA] Novo SW ativado, recarregando...');
                     window.location.reload();
                 });
+            }
+        })();
+        
+        // ══ iOS PWA ESPECÍFICO ══
+        (function() {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.navigator.standalone === true;
+            
+            if (isIOS && isStandalone) {
+                console.log('[iOS PWA] Modo standalone detectado');
+                
+                // iOS tem cache agressivo em PWAs - forçar no-cache em todos os fetch
+                const originalFetch = window.fetch;
+                const iosVersion = 'v2_' + new Date().toISOString().split('T')[0];
+                
+                window.fetch = function(url, options = {}) {
+                    if (typeof url === 'string') {
+                        options.cache = 'no-store';
+                        // Adicionar versão do dia à URL
+                        if (url.startsWith('/') && !url.includes('_iosv=')) {
+                            const separator = url.includes('?') ? '&' : '?';
+                            url = url + separator + '_iosv=' + iosVersion;
+                        }
+                    }
+                    return originalFetch(url, options);
+                };
+                
+                // Verificar atualização a cada abertura
+                const savedVersion = localStorage.getItem('ikflow_ios_version');
+                if (savedVersion !== iosVersion) {
+                    console.log('[iOS PWA] Nova versão, salvando...');
+                    localStorage.setItem('ikflow_ios_version', iosVersion);
+                    // Recarregar uma vez para aplicar nova versão
+                    if (sessionStorage.getItem('ios_reloaded') !== 'yes') {
+                        sessionStorage.setItem('ios_reloaded', 'yes');
+                        window.location.reload();
+                    }
+                }
             }
         })();
     </script>

@@ -13,11 +13,14 @@
     <!-- Purchase Order Fixes CSS (v2) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/purchase_order_fixes.css') }}?v=2">
     <!-- PWA -->
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v=2">
     <meta name="theme-color" content="#0b2447">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">    <meta name="apple-mobile-web-app-title" content="IKFlow Mecânica">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IKFlow Mecânica">
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="{{ url_for('static', filename='img/icon-512.png') }}">
     <!-- iOS icons (múltiplos tamanhos para todos os iPhones/iPads) -->
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/icon-180.png') }}">
     <link rel="apple-touch-icon" sizes="152x152" href="{{ url_for('static', filename='img/icon-152.png') }}">
@@ -1303,6 +1306,59 @@
       }
     })();
     </script>
+    
+    <!-- ══ iOS PWA UPDATE FORCE ══ -->
+    <script>
+    (function() {
+      // Detectar iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isStandalone = window.navigator.standalone === true;
+      
+      if (isIOS && isStandalone) {
+        console.log('[iOS PWA] Detected iOS standalone mode');
+        
+        // Forçar recarregar se houve atualização no server
+        const lastLoad = sessionStorage.getItem('ios_last_load');
+        const now = Date.now();
+        
+        if (lastLoad) {
+          // Se passou mais de 1 hora, verificar atualização
+          const hoursSinceLastLoad = (now - parseInt(lastLoad)) / (1000 * 60 * 60);
+          
+          if (hoursSinceLastLoad > 1) {
+            // Verificar se há nova versão no servidor
+            fetch('/static/manifest.json?v=' + now, { cache: 'no-store' })
+              .then(r => r.json())
+              .then(manifest => {
+                const localVersion = localStorage.getItem('ikflow_version');
+                if (localVersion && localVersion !== manifest.version) {
+                  console.log('[iOS PWA] New version detected, reloading...');
+                  localStorage.setItem('ikflow_version', manifest.version);
+                  window.location.reload(true); // force reload from server
+                } else {
+                  localStorage.setItem('ikflow_version', manifest.version);
+                }
+              })
+              .catch(() => {});
+          }
+        }
+        
+        sessionStorage.setItem('ios_last_load', now);
+        
+        // Prevenir cache em todas as requisições fetch
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+          if (typeof url === 'string' && url.startsWith('/')) {
+            options.cache = 'no-cache';
+            const separator = url.includes('?') ? '&' : '?';
+            url = url + separator + '_t=' + now;
+          }
+          return originalFetch(url, options);
+        };
+      }
+    })();
+    </script>
+    
     <!-- PWA Service Worker + Web Push -->
     <script>
     if ('serviceWorker' in navigator) {
@@ -1310,6 +1366,9 @@
         try {
           const reg = await navigator.serviceWorker.register('/static/js/service-worker.js', { scope: '/' });
           console.log('[PWA] SW registrado:', reg.scope);
+          
+          // Forçar atualização imediata do SW
+          reg.update();
 
           // Solicitar permissão e subscrever push (se VAPID disponível)
           if ('PushManager' in window) {
