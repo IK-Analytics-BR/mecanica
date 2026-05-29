@@ -1,0 +1,745 @@
+{#
+  BASE MOBILE - Experiência App Nativo
+  Header fixo, bottom navigation, cards verticais, touch-friendly
+#}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport otimizado para PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b2447">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IKFlow">
+    <meta name="format-detection" content="telephone=no">
+    
+    <title>{% block title %}IKFlow{% endblock %}</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/icon-180.png') }}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{{ url_for('static', filename='img/icon-152.png') }}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{{ url_for('static', filename='img/icon-120.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/icon-192.png') }}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Mobile CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    
+    <!-- CSRF token -->
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
+    
+    <style>
+        /* ═══════════════════════════════════════════════
+           CSS MOBILE - App Nativo
+        ═══════════════════════════════════════════════ */
+        
+        :root {
+            --ik-teal: #08a5b2;
+            --ik-teal-dark: #067d87;
+            --ik-orange: #ff9f1a;
+            --ik-navy: #0b2447;
+            --ik-navy-light: #1a365d;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --header-height: 56px;
+            --bottom-nav-height: 72px;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            font-size: 15px !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body {
+            padding-top: calc(var(--header-height) + var(--safe-top));
+            padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+        }
+
+        /* Header Mobile Fixo */
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: calc(var(--header-height) + var(--safe-top));
+            padding-top: var(--safe-top);
+            background: linear-gradient(135deg, var(--ik-navy) 0%, var(--ik-teal) 100%);
+            color: #fff;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            padding-right: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+        }
+
+        .app-header .header-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .app-header .header-btn:active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .app-header .header-title {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 17px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 10px;
+        }
+
+        .app-header .header-logo {
+            height: 28px;
+            object-fit: contain;
+        }
+
+        /* Busca Rápida */
+        .search-bar {
+            position: fixed;
+            top: calc(var(--header-height) + var(--safe-top));
+            left: 0;
+            right: 0;
+            background: #fff;
+            padding: 8px 12px;
+            z-index: 1049;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .search-bar input {
+            width: 100%;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 25px;
+            padding: 10px 16px 10px 42px;
+            font-size: 15px;
+            background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.868-3.834zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat 16px center;
+            outline: none;
+        }
+
+        .search-bar input:focus {
+            border-color: var(--ik-teal);
+            box-shadow: 0 0 0 3px rgba(8,165,178,0.15);
+        }
+
+        body.has-search {
+            padding-top: calc(var(--header-height) + 58px + var(--safe-top));
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(var(--bottom-nav-height) + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            z-index: 1050;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+
+        .bottom-nav .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 2px;
+            text-decoration: none;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 600;
+            gap: 3px;
+            border: none;
+            background: none;
+            transition: color 0.2s;
+        }
+
+        .bottom-nav .nav-item i {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+
+        .bottom-nav .nav-item.active,
+        .bottom-nav .nav-item:active {
+            color: var(--ik-navy);
+        }
+
+        .bottom-nav .nav-item.nav-primary {
+            color: #fff;
+            background: linear-gradient(135deg, var(--ik-navy), var(--ik-teal));
+            border-radius: 16px;
+            margin: 6px 8px;
+            box-shadow: 0 4px 12px rgba(8,165,178,0.4);
+        }
+
+        .bottom-nav .nav-item.nav-primary i {
+            font-size: 24px;
+        }
+
+        /* Cards Mobile */
+        .mobile-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: none;
+        }
+
+        .mobile-card .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--ik-navy);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Lista de Itens */
+        .mobile-list-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .mobile-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-list-item .item-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .mobile-list-item .item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mobile-list-item .item-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mobile-list-item .item-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .mobile-list-item .item-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        /* Botões Touch-friendly */
+        .btn-mobile {
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-mobile.btn-primary {
+            background: linear-gradient(135deg, var(--ik-navy), var(--ik-teal));
+            color: #fff;
+        }
+
+        .btn-mobile:active {
+            transform: scale(0.98);
+        }
+
+        /* Formulários Mobile */
+        .form-mobile .form-control,
+        .form-mobile .form-select {
+            font-size: 16px !important;
+            padding: 14px 16px !important;
+            border-radius: 12px !important;
+            border: 2px solid #e2e8f0 !important;
+            height: auto !important;
+        }
+
+        .form-mobile .form-control:focus,
+        .form-mobile .form-select:focus {
+            border-color: var(--ik-teal) !important;
+            box-shadow: 0 0 0 4px rgba(8,165,178,0.15) !important;
+        }
+
+        .form-mobile .form-label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        /* Tabelas Mobile (cards) */
+        .table-mobile .table-row {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .table-mobile .row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .table-mobile .row-title {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .table-mobile .row-subtitle {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* FAB Button */
+        .fab-button {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 20px);
+            right: 16px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--ik-orange), var(--ik-teal));
+            color: #fff;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(255,159,26,0.4);
+            z-index: 1040;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Drawer Menu */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1060;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .drawer-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-menu {
+            position: fixed;
+            top: 0;
+            left: -85%;
+            width: 85%;
+            max-width: 320px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--ik-navy), var(--ik-navy-light));
+            z-index: 1061;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            padding-bottom: var(--safe-bottom);
+        }
+
+        .drawer-menu.open {
+            left: 0;
+        }
+
+        .drawer-header {
+            padding: 24px 20px;
+            background: rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .drawer-header img {
+            height: 36px;
+            max-width: 180px;
+        }
+
+        .drawer-menu .menu-item {
+            display: block;
+            padding: 16px 20px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .drawer-menu .menu-item i {
+            width: 28px;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .drawer-menu .menu-item:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .drawer-menu .menu-section {
+            padding: 12px 20px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ik-teal);
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        /* Status Colors */
+        .status-open { background: #dbeafe; color: #1e40af; }
+        .status-progress { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-urgent { background: #fee2e2; color: #991b1b; }
+
+        /* Landscape Mode - Ajustes */
+        @media (orientation: landscape) and (max-height: 500px) {
+            :root {
+                --header-height: 48px;
+                --bottom-nav-height: 60px;
+            }
+            
+            .app-header {
+                padding-top: 0;
+            }
+            
+            body {
+                padding-top: var(--header-height);
+            }
+
+            .bottom-nav .nav-item {
+                flex-direction: row;
+                gap: 6px;
+                font-size: 13px;
+            }
+
+            .bottom-nav .nav-item i {
+                font-size: 18px;
+                margin-bottom: 0;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Loading Spinner */
+        .mobile-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: var(--ik-teal);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Pull to refresh indicator */
+        .ptr-indicator {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .ptr-indicator i {
+            margin-right: 8px;
+            transition: transform 0.3s;
+        }
+
+        .ptr-indicator.pulling i {
+            transform: rotate(180deg);
+        }
+    </style>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    {% if session.get('username') %}
+    <header class="app-header">
+        <button class="header-btn" id="menuToggle" aria-label="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="header-title">{% block header_title %}IKFlow{% endblock %}</div>
+        <button class="header-btn" id="userToggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user-circle"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" style="margin-top:8px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);">
+            <li><span class="dropdown-item-text fw-bold">{{ session.get('username') }}</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('users.user_profile') }}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+        </ul>
+    </header>
+    {% endif %}
+
+    <!-- Drawer Overlay -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <!-- Drawer Menu -->
+    <nav class="drawer-menu" id="drawerMenu">
+        <div class="drawer-header">
+            <img src="{{ url_for('static', filename='img/logo_menu.png') }}" alt="IKFlow">
+        </div>
+        
+        <a href="{{ url_for('bem_vindo') }}" class="menu-item">
+            <i class="fas fa-home"></i> Início
+        </a>
+        
+        <div class="menu-section">Atendimento</div>
+        <a href="{{ url_for('service_order.service_order_list') }}" class="menu-item">
+            <i class="fas fa-clipboard-list"></i> Ordens de Serviço
+        </a>
+        <a href="{{ url_for('service_order.service_order_add') }}" class="menu-item">
+            <i class="fas fa-plus-circle"></i> Nova OS
+        </a>
+        <a href="{{ url_for('agenda.agenda_index') }}" class="menu-item">
+            <i class="fas fa-calendar-alt"></i> Agenda
+        </a>
+        
+        <div class="menu-section">Operações</div>
+        <a href="{{ url_for('cliente.clientes') }}" class="menu-item">
+            <i class="fas fa-users"></i> Clientes
+        </a>
+        <a href="{{ url_for('inventory.inventory_list') }}" class="menu-item">
+            <i class="fas fa-boxes"></i> Estoque
+        </a>
+        <a href="{{ url_for('pdv_prof.pdv_tela') }}" class="menu-item">
+            <i class="fas fa-cash-register"></i> Venda Rápida
+        </a>
+        
+        <div class="menu-section">Financeiro</div>
+        <a href="{{ url_for('accounts_receivable.accounts_receivable_list') }}" class="menu-item">
+            <i class="fas fa-hand-holding-usd"></i> Contas a Receber
+        </a>
+        <a href="{{ url_for('cash_register.cash_register_current') }}" class="menu-item">
+            <i class="fas fa-cash-register"></i> Meu Caixa
+        </a>
+        
+        <div class="menu-section">Sistema</div>
+        <a href="{{ url_for('users.user_profile') }}" class="menu-item">
+            <i class="fas fa-cog"></i> Configurações
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="px-3 pt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show rounded-4" role="alert" style="font-size:14px;padding:12px 16px;">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding:10px;"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FAB Button (opcional) -->
+    {% block fab_button %}{% endblock %}
+
+    <!-- Bottom Navigation -->
+    {% if session.get('username') %}
+    <nav class="bottom-nav">
+        <a href="{{ url_for('service_order.service_order_list') }}" class="nav-item {% if request.endpoint and 'service_order' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-clipboard-list"></i>
+            <span>OS</span>
+        </a>
+        <a href="{{ url_for('cliente.clientes') }}" class="nav-item {% if request.endpoint and 'cliente' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-users"></i>
+            <span>Clientes</span>
+        </a>
+        <a href="{{ url_for('service_order.service_order_add') }}" class="nav-item nav-primary">
+            <i class="fas fa-plus"></i>
+            <span>Nova</span>
+        </a>
+        <a href="{{ url_for('inventory.inventory_list') }}" class="nav-item {% if request.endpoint and 'inventory' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-boxes"></i>
+            <span>Estoque</span>
+        </a>
+        <button class="nav-item" id="menuMore">
+            <i class="fas fa-th-large"></i>
+            <span>Menu</span>
+        </button>
+    </nav>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Mobile Scripts -->
+    <script>
+        // Drawer Menu
+        const drawerMenu = document.getElementById('drawerMenu');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const menuToggle = document.getElementById('menuToggle');
+        const menuMore = document.getElementById('menuMore');
+
+        function openDrawer() {
+            drawerMenu.classList.add('open');
+            drawerOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+            drawerMenu.classList.remove('open');
+            drawerOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        if (menuToggle) menuToggle.addEventListener('click', openDrawer);
+        if (menuMore) menuMore.addEventListener('click', openDrawer);
+        if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+
+        // Fechar drawer ao clicar em link
+        document.querySelectorAll('.drawer-menu .menu-item').forEach(item => {
+            item.addEventListener('click', closeDrawer);
+        });
+
+        // Detectar PWA standalone
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                            window.navigator.standalone ||
+                            document.referrer.includes('android-app://');
+        
+        if (isStandalone) {
+            document.body.classList.add('pwa-standalone');
+        }
+
+        // Prevenir zoom em double-tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        // Pull to refresh (simulado)
+        let touchStartY = 0;
+        let touchEndY = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(e) {
+            touchEndY = e.changedTouches[0].clientY;
+            if (touchEndY > touchStartY + 100 && window.scrollY === 0) {
+                // Pull down detectado
+                // location.reload();
+            }
+        }, { passive: true });
+
+        // CSRF
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        if (csrfToken) {
+            const _origFetch = window.fetch;
+            window.fetch = function(url, opts = {}) {
+                opts.headers = opts.headers || {};
+                if (!(opts.headers instanceof Headers)) {
+                    opts.headers['X-CSRFToken'] = csrfToken;
+                }
+                return _origFetch(url, opts);
+            };
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+    {% block extra_js %}{% endblock %}
+
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/js/service-worker.js')
+                    .then(reg => console.log('[PWA] SW registrado'))
+                    .catch(err => console.log('[PWA] SW erro:', err));
+            });
+        }
+    </script>
+</body>
+</html>

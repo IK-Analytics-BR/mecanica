@@ -497,10 +497,100 @@
                 box-shadow: 0 4px 12px rgba(8,165,178,.4);
             }
         }
+
+        /* ═══════════════════════════════════════════════
+           CONTROLE PWA STANDALONE
+        ═══════════════════════════════════════════════ */
+
+        /* Em modo PWA standalone: esconder elementos desktop */
+        body.pwa-standalone .navbar {
+            display: none !important;
+        }
+
+        body.pwa-standalone #sidebar {
+            display: none !important;
+        }
+
+        /* Mostrar header mobile em PWA */
+        body.pwa-standalone #mobileHeader {
+            display: flex !important;
+        }
+
+        body.pwa-standalone #bottomNav {
+            display: flex !important;
+        }
+
+        body.pwa-standalone #content {
+            margin-left: 0 !important;
+            padding-top: calc(56px + env(safe-area-inset-top)) !important;
+            padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+            width: 100% !important;
+        }
+
+        /* Em modo desktop normal: esconder elementos mobile */
+        @media (min-width: 769px) {
+            body:not(.pwa-standalone) #mobileHeader {
+                display: none !important;
+            }
+            
+            body:not(.pwa-standalone) #bottomNav {
+                display: none !important;
+            }
+            
+            body:not(.pwa-standalone) #globalSearchBar {
+                display: none !important;
+            }
+        }
+
+        /* Landscape mode no PWA */
+        @media (orientation: landscape) and (max-height: 500px) {
+            body.pwa-standalone #mobileHeader {
+                height: 48px;
+                padding-top: 0;
+            }
+            
+            body.pwa-standalone #bottomNav {
+                height: 60px;
+            }
+            
+            body.pwa-standalone #content {
+                padding-top: 48px !important;
+                padding-bottom: 60px !important;
+            }
+        }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
+    <!-- ══ DETECÇÃO PWA ══ -->
+    <script>
+        // Detectar modo PWA standalone vs navegador
+        (function() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                 window.navigator.standalone ||
+                                 document.referrer.includes('android-app://');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isTablet = /iPad|Android(?!.*Mobile)|Tablet/i.test(navigator.userAgent);
+            
+            // Aplicar classes ao body
+            if (isStandalone) {
+                document.body.classList.add('pwa-standalone');
+            }
+            if (isMobile) {
+                document.body.classList.add('device-mobile');
+            }
+            if (isTablet) {
+                document.body.classList.add('device-tablet');
+            }
+            
+            // Salvar no sessionStorage para uso server-side
+            sessionStorage.setItem('isStandalone', isStandalone);
+            sessionStorage.setItem('isMobile', isMobile);
+            
+            console.log('[PWA] Standalone:', isStandalone, 'Mobile:', isMobile, 'Tablet:', isTablet);
+        })();
+    </script>
+
     <!-- ══ HEADER MOBILE ══ -->
     {% if session.get('username') %}
     <div id="mobileHeader">
