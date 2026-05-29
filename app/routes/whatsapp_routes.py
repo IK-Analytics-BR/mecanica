@@ -12,10 +12,21 @@ import json
 import os
 import requests
 from datetime import datetime
+from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database import get_db
 
 whatsapp_bp = Blueprint('whatsapp', __name__)
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            flash('Por favor, faça login para acessar esta página.', 'danger')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # ─────────────────────────────────────────────────────────────
 # Helpers internos
