@@ -4,7 +4,7 @@
   "description": "Sistema de gestão para oficinas mecânicas — OS, orçamentos, financeiro e equipe",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#0b2447",
   "theme_color": "#0b2447",
   "lang": "pt-BR",

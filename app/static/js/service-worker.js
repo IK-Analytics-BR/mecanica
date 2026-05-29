@@ -6,6 +6,7 @@ const CACHE_NAME = 'ikflow-mecanica-v1';
 const SHELL_ASSETS = [
   '/',
   '/static/css/style.css',
+  '/static/css/mobile.css',
   '/static/js/pdv.js',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
