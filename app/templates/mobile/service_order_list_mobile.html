@@ -1,0 +1,125 @@
+{#
+  LISTA DE OS - VERSÃO MOBILE
+  Experiência app nativo com cards e lista otimizada
+#}
+{% extends "layouts/base_mobile.html" %}
+
+{% block title %}Ordens de Serviço{% endblock %}
+{% block header_title %}Ordens de Serviço{% endblock %}
+
+{% block content %}
+<!-- Barra de Busca -->
+<div class="search-bar px-3 pt-3">
+    <form method="GET" action="{{ url_for('service_order.service_order_list') }}">
+        <input type="search" name="q" value="{{ request.args.get('q', '') }}" 
+               placeholder="Buscar OS, cliente ou veículo..." 
+               class="form-control">
+    </form>
+</div>
+
+<!-- Filtros Rápidos -->
+<div class="px-3 py-2" style="background:#fff;border-bottom:1px solid #e2e8f0;">
+    <div class="d-flex gap-2 overflow-auto" style="white-space:nowrap;">
+        <a href="?status=open" class="badge {% if request.args.get('status') == 'open' %}bg-primary{% else %}bg-light text-dark{% endif %}" style="padding:8px 12px;text-decoration:none;">
+            Abertas
+        </a>
+        <a href="?status=in_progress" class="badge {% if request.args.get('status') == 'in_progress' %}bg-warning{% else %}bg-light text-dark{% endif %}" style="padding:8px 12px;text-decoration:none;">
+            Em Andamento
+        </a>
+        <a href="?status=completed" class="badge {% if request.args.get('status') == 'completed' %}bg-success{% else %}bg-light text-dark{% endif %}" style="padding:8px 12px;text-decoration:none;">
+            Concluídas
+        </a>
+        <a href="{{ url_for('service_order.service_order_list') }}" class="badge bg-light text-dark" style="padding:8px 12px;text-decoration:none;">
+            Todas
+        </a>
+    </div>
+</div>
+
+<!-- Lista de OS em Cards -->
+<div class="p-3">
+    {% if orders %}
+        {% for order in orders %}
+        <a href="{{ url_for('service_order.service_order_view', id=order.id) }}" class="text-decoration-none">
+            <div class="mobile-card {% if order.priority == 'urgente' %}border-start border-4 border-danger{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="fw-bold text-dark">OS #{{ order.order_number }}</span>
+                        <span class="badge 
+                            {% if order.status == 'open' %}badge-open
+                            {% elif order.status == 'in_progress' %}badge-progress
+                            {% elif order.status == 'completed' %}badge-completed
+                            {% else %}bg-light text-dark{% endif %}
+                            ms-2">
+                            {% if order.status == 'open' %}Aberta
+                            {% elif order.status == 'in_progress' %}Em Andamento
+                            {% elif order.status == 'completed' %}Concluída
+                            {% elif order.status == 'cancelled' %}Cancelada
+                            {% else %}{{ order.status }}{% endif %}
+                        </span>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted"></i>
+                </div>
+                
+                <div class="mb-2">
+                    <div class="fw-semibold">{{ order.customer_name }}</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-car me-1"></i>{{ order.equipment_name or 'Sem veículo' }}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center text-muted small">
+                    <span><i class="fas fa-user me-1"></i>{{ order.technician_name or 'Sem técnico' }}</span>
+                    <span><i class="fas fa-calendar me-1"></i>{{ order.opened_at[:10] if order.opened_at else '-' }}</span>
+                </div>
+                
+                {% if order.total_value %}
+                <div class="mt-2 pt-2 border-top">
+                    <span class="fw-bold text-success">R$ {{ "%.2f"|format(order.total_value) }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+        
+        <!-- Paginação simplificada -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            {% if pagination.has_prev %}
+            <a href="?page={{ pagination.prev_num }}{% if request.args.get('q') %}&q={{ request.args.get('q') }}{% endif %}" 
+               class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-chevron-left"></i> Anterior
+            </a>
+            {% else %}
+            <span></span>
+            {% endif %}
+            
+            <span class="text-muted small">Página {{ pagination.page }} de {{ pagination.pages }}</span>
+            
+            {% if pagination.has_next %}
+            <a href="?page={{ pagination.next_num }}{% if request.args.get('q') %}&q={{ request.args.get('q') }}{% endif %}" 
+               class="btn btn-sm btn-outline-primary">
+                Próxima <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span></span>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+            <p class="text-muted">Nenhuma ordem de serviço encontrada</p>
+            <a href="{{ url_for('service_order.service_order_add') }}" class="btn btn-touch btn-touch-primary">
+                <i class="fas fa-plus"></i> Criar Nova OS
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block fab_button %}
+<a href="{{ url_for('service_order.service_order_add') }}" class="fab-button animate-pulse">
+    <i class="fas fa-plus"></i>
+</a>
+{% endblock %}

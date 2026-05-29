@@ -1,0 +1,299 @@
+{#
+  FORMULÁRIO DE OS - VERSÃO MOBILE
+  Formulário otimizado para mobile com steps
+#}
+{% extends "layouts/base_mobile.html" %}
+
+{% block title %}{{ 'Editar' if order else 'Nova' }} OS{% endblock %}
+{% block header_title %}{{ 'Editar' if order else 'Nova' }} Ordem de Serviço{% endblock %}
+
+{% block content %}
+<!-- Steps Indicator -->
+<div class="px-3 pt-3">
+    <div class="mobile-card p-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="step-item text-center flex-1">
+                <div class="step-circle {% if step == 1 %}bg-primary text-white{% else %}bg-light{% endif %} rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width:32px;height:32px;font-weight:600;">1</div>
+                <div class="step-label small mt-1 {% if step == 1 %}text-primary fw-bold{% else %}text-muted{% endif %}">Dados</div>
+            </div>
+            <div class="step-line flex-1 mx-2" style="height:2px;background:#e2e8f0;"></div>
+            <div class="step-item text-center flex-1">
+                <div class="step-circle {% if step == 2 %}bg-primary text-white{% else %}bg-light{% endif %} rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width:32px;height:32px;font-weight:600;">2</div>
+                <div class="step-label small mt-1 {% if step == 2 %}text-primary fw-bold{% else %}text-muted{% endif %}">Serviços</div>
+            </div>
+            <div class="step-line flex-1 mx-2" style="height:2px;background:#e2e8f0;"></div>
+            <div class="step-item text-center flex-1">
+                <div class="step-circle {% if step == 3 %}bg-primary text-white{% else %}bg-light{% endif %} rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width:32px;height:32px;font-weight:600;">3</div>
+                <div class="step-label small mt-1 {% if step == 3 %}text-primary fw-bold{% else %}text-muted{% endif %}">Peças</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulário -->
+<form method="POST" action="{{ request.path }}" class="p-3 form-mobile" id="osForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <!-- Step 1: Dados Básicos -->
+    <div id="step1" {% if step != 1 %}style="display:none;"{% endif %}>
+        <div class="mobile-card">
+            <div class="card-title"><i class="fas fa-user"></i> Cliente</div>
+            
+            <div class="mb-3">
+                <label class="form-label">Selecionar Cliente</label>
+                <select name="customer_id" class="form-select" required>
+                    <option value="">Selecione um cliente...</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}" 
+                            {% if order and order.customer_id == customer.id %}selected{% endif %}>
+                        {{ customer.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Veículo/Equipamento</label>
+                <select name="equipment_id" class="form-select">
+                    <option value="">Selecione um veículo...</option>
+                    {% for equipment in equipments %}
+                    <option value="{{ equipment.id }}"
+                            {% if order and order.equipment_id == equipment.id %}selected{% endif %}>
+                        {{ equipment.name }} - {{ equipment.plate or equipment.serial_number }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="mobile-card">
+            <div class="card-title"><i class="fas fa-wrench"></i> Serviço</div>
+            
+            <div class="mb-3">
+                <label class="form-label">Tipo de Serviço</label>
+                <select name="service_type" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option value="manutencao" {% if order and order.service_type == 'manutencao' %}selected{% endif %}>Manutenção</option>
+                    <option value="reparo" {% if order and order.service_type == 'reparo' %}selected{% endif %}>Reparo</option>
+                    <option value="revisao" {% if order and order.service_type == 'revisao' %}selected{% endif %}>Revisão</option>
+                    <option value="garantia" {% if order and order.service_type == 'garantia' %}selected{% endif %}>Garantia</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Técnico Responsável</label>
+                <select name="technician_id" class="form-select">
+                    <option value="">Selecione um técnico...</option>
+                    {% for technician in technicians %}
+                    <option value="{{ technician.id }}"
+                            {% if order and order.technician_id == technician.id %}selected{% endif %}>
+                        {{ technician.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Prioridade</label>
+                <div class="d-flex gap-2">
+                    <label class="flex-1">
+                        <input type="radio" name="priority" value="normal" 
+                               {% if not order or order.priority == 'normal' %}checked{% endif %} class="d-none">
+                        <span class="btn w-100 btn-outline-secondary {% if not order or order.priority == 'normal' %}active{% endif %}">Normal</span>
+                    </label>
+                    <label class="flex-1">
+                        <input type="radio" name="priority" value="urgente"
+                               {% if order and order.priority == 'urgente' %}checked{% endif %} class="d-none">
+                        <span class="btn w-100 btn-outline-danger {% if order and order.priority == 'urgente' %}active{% endif %}">Urgente</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mobile-card">
+            <div class="card-title"><i class="fas fa-file-alt"></i> Descrição</div>
+            <textarea name="description" class="form-control" rows="4" 
+                      placeholder="Descreva o problema ou serviço a ser realizado...">{{ order.description if order else '' }}</textarea>
+        </div>
+        
+        <button type="button" class="btn btn-touch btn-touch-primary w-100" onclick="goToStep(2)">
+            Próximo <i class="fas fa-chevron-right ms-2"></i>
+        </button>
+    </div>
+    
+    <!-- Step 2: Serviços -->
+    <div id="step2" {% if step != 2 %}style="display:none;"{% endif %}>
+        <div class="mobile-card">
+            <div class="card-title"><i class="fas fa-tasks"></i> Serviços</div>
+            
+            <div id="servicesList">
+                <!-- Lista de serviços será populada via JS -->
+            </div>
+            
+            <button type="button" class="btn btn-touch btn-touch-secondary w-100" onclick="addService()">
+                <i class="fas fa-plus"></i> Adicionar Serviço
+            </button>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-touch btn-touch-secondary flex-1" onclick="goToStep(1)">
+                <i class="fas fa-chevron-left"></i> Voltar
+            </button>
+            <button type="button" class="btn btn-touch btn-touch-primary flex-1" onclick="goToStep(3)">
+                Próximo <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Step 3: Peças e Finalização -->
+    <div id="step3" {% if step != 3 %}style="display:none;"{% endif %}>
+        <div class="mobile-card">
+            <div class="card-title"><i class="fas fa-boxes"></i> Peças</div>
+            
+            <div id="partsList">
+                <!-- Lista de peças será populada via JS -->
+            </div>
+            
+            <button type="button" class="btn btn-touch btn-touch-secondary w-100" onclick="addPart()">
+                <i class="fas fa-plus"></i> Adicionar Peça
+            </button>
+        </div>
+        
+        <div class="mobile-card">
+            <div class="card-title"><i class="fas fa-calculator"></i> Resumo</div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Serviços:</span>
+                <span id="servicesTotal">R$ 0,00</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Peças:</span>
+                <span id="partsTotal">R$ 0,00</span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold fs-5">
+                <span>Total:</span>
+                <span id="grandTotal" class="text-success">R$ 0,00</span>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-touch btn-touch-secondary flex-1" onclick="goToStep(2)">
+                <i class="fas fa-chevron-left"></i> Voltar
+            </button>
+            <button type="submit" class="btn btn-touch btn-touch-primary flex-1">
+                <i class="fas fa-save"></i> Salvar OS
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentStep = {{ step | default(1) }};
+let services = {{ services | default([]) | tojson }};
+let parts = {{ parts | default([]) | tojson }};
+
+function goToStep(step) {
+    // Validar campos do step atual antes de prosseguir
+    if (step > currentStep && !validateStep(currentStep)) {
+        return;
+    }
+    
+    // Esconder step atual
+    document.getElementById('step' + currentStep).style.display = 'none';
+    
+    // Mostrar novo step
+    document.getElementById('step' + step).style.display = 'block';
+    
+    // Atualizar indicadores
+    updateStepIndicators(step);
+    
+    currentStep = step;
+    
+    // Scroll para topo
+    window.scrollTo(0, 0);
+}
+
+function updateStepIndicators(step) {
+    document.querySelectorAll('.step-circle').forEach((el, idx) => {
+        const stepNum = idx + 1;
+        if (stepNum === step) {
+            el.classList.add('bg-primary', 'text-white');
+            el.classList.remove('bg-light');
+        } else if (stepNum < step) {
+            el.classList.add('bg-success', 'text-white');
+            el.classList.remove('bg-light', 'bg-primary');
+            el.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            el.classList.add('bg-light');
+            el.classList.remove('bg-primary', 'bg-success', 'text-white');
+            el.innerHTML = stepNum;
+        }
+    });
+}
+
+function validateStep(step) {
+    // Implementar validação específica por step
+    return true;
+}
+
+function addService() {
+    // Implementar adição de serviço
+    const serviceHtml = `
+        <div class="service-item mb-3 p-3 bg-light rounded">
+            <div class="mb-2">
+                <label class="form-label small">Serviço</label>
+                <select name="service_id[]" class="form-select form-select-sm" required>
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="flex-1">
+                    <label class="form-label small">Quantidade</label>
+                    <input type="number" name="service_qty[]" class="form-control form-control-sm" value="1" min="1">
+                </div>
+                <div class="flex-1">
+                    <label class="form-label small">Valor</label>
+                    <input type="number" name="service_price[]" class="form-control form-control-sm" step="0.01" min="0">
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-link text-danger mt-2" onclick="this.closest('.service-item').remove()">
+                <i class="fas fa-trash"></i> Remover
+            </button>
+        </div>
+    `;
+    document.getElementById('servicesList').insertAdjacentHTML('beforeend', serviceHtml);
+}
+
+function addPart() {
+    // Implementar adição de peça
+    const partHtml = `
+        <div class="part-item mb-3 p-3 bg-light rounded">
+            <div class="mb-2">
+                <label class="form-label small">Peça</label>
+                <select name="part_id[]" class="form-select form-select-sm" required>
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="flex-1">
+                    <label class="form-label small">Quantidade</label>
+                    <input type="number" name="part_qty[]" class="form-control form-control-sm" value="1" min="1">
+                </div>
+                <div class="flex-1">
+                    <label class="form-label small">Valor</label>
+                    <input type="number" name="part_price[]" class="form-control form-control-sm" step="0.01" min="0">
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-link text-danger mt-2" onclick="this.closest('.part-item').remove()">
+                <i class="fas fa-trash"></i> Remover
+            </button>
+        </div>
+    `;
+    document.getElementById('partsList').insertAdjacentHTML('beforeend', partHtml);
+}
+
+// Inicializar
+updateStepIndicators(currentStep);
+</script>
+{% endblock %}
