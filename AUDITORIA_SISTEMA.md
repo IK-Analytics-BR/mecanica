@@ -2,7 +2,7 @@
 **Data:** 28/05/2026 | **Auditor:** Cascade AI  
 **Versão auditada:** v2.0 — 10 Semanas concluídas (100% MVP)  
 **Ambiente:** `mecanicas.ikflow.cloud` — Flask/Python + MySQL  
-**Última atualização:** 29/05/2026 — Semanas 1-10 concluídas, servidor de produção validado
+**Última atualização:** 29/05/2026 — Produção estabilizada: CSRF corrigido, imports corrigidos, queries DB adaptadas ao schema real
 
 ---
 
@@ -15,7 +15,7 @@
 | **Risco operacional** | ✅ Baixo — módulos industriais ocultos via `APP_MODE`, menu limpo |
 | **Risco de dados** | ✅ Baixo — `company_id` adicionado, multi-tenant ativo via `migration_multitenant.sql` |
 | **Risco de segurança** | ✅ Baixo — `utils/auth.py` centralizado, CSRF global, rate limiting WA, audit_log |
-| **Status produção** | ✅ **ONLINE** — `mecanicas.ikflow.cloud` — zero warnings de import no boot |
+| **Status produção** | ✅ **ONLINE** — `mecanicas.ikflow.cloud` — zero erros de boot; login funcional; dashboards e relatórios operacionais |
 
 ---
 
@@ -31,13 +31,14 @@
 ### C2 — Autenticação inconsistente ✅ RESOLVIDO
 - **Solução aplicada:** `app/utils/auth.py` criado com `login_required`, `admin_required`, `get_current_user`.
 - Todos os módulos novos (semanas 5-10) importam de `utils.auth`.
-- Módulos legados com redefinição local foram corrigidos via patch no servidor (produto, ncm, nfce, importar_clientes, permissoes).
+- Módulos legados corrigidos: `produto`, `ncm`, `nfce`, `importar_clientes`, `permissoes`, `nfe_emissao` — imports adicionados e indentação corrigida.
 
 ---
 
 ### C3 — Sem proteção CSRF ✅ RESOLVIDO
 - **Solução aplicada:** `Flask-WTF CSRFProtect` instalado e ativado globalmente.
 - Meta tag CSRF no `base.html` + interceptor `fetch`/jQuery automático.
+- **Token CSRF adicionado ao formulário de login** (`app/templates/login.html`) — erro "CSRF token missing" eliminado.
 - Todos os formulários novos incluem `{{ csrf_token() }}`.
 
 ---
@@ -180,7 +181,7 @@ Existem **6 variantes** do formulário de produto:
 
 | Fluxo | Problema | Severidade |
 |---|---|---|
-| OS → Faturamento NF-e | `nfe_emissao` import corrigido — funcional | ✅ Resolvido |
+| OS → Faturamento NF-e | `nfe_emissao` — indentação do import corrigida; circular import `wsgi` ainda pendente | ⚠️ Parcial |
 | OS → NFS-e | `nfse_routes.py` ABRASF 2.03 ativo e testado | ✅ Resolvido |
 | PDV → Comissão vendedor | `comissao_routes.py` implementado — Semana 5 | ✅ Resolvido |
 | Veículo → KM → Preventivo | `km_historico` + `calcular_proximo_preventivo` — Semana 6 | ✅ Resolvido |
@@ -286,7 +287,7 @@ last_hour_update       -- última atualização de horas (industrial)
 
 ## 10. PLANO DE AÇÃO PRIORIZADO
 
-### ✅ SEMANAS 1-10 — CONCLUÍDAS
+### ✅ SEMANAS 1-10 + ESTABILIZAÇÃO PRODUÇÃO — CONCLUÍDAS
 
 | Semana | Entregas | Status |
 |---|---|---|
@@ -306,6 +307,9 @@ last_hour_update       -- última atualização de horas (industrial)
 - PIX → webhook de baixa automática C/R
 - Ícones PWA finais (arte da marca)
 - MP_ACCESS_TOKEN + WA_TOKEN reais no `.env` de produção
+- Corrigir circular import `wsgi` em `nfe_emissao_routes`, `importar_nfe_upload`, `condicao_pagamento_routes`
+- Instalar `paho-mqtt` no venv de produção (ou remover `integration_routes` se não usado)
+- Popup pós-OS "Emitir NF-e?" (item 1.18 do checklist)
 
 ---
 

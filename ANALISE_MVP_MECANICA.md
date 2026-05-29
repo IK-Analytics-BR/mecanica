@@ -1,5 +1,5 @@
 # 📋 Análise Completa MVP — IKFlow Mecânica
-**Atualizado em:** 29/05/2026 (revisão 10 — 10 Semanas concluídas: Boleto MP, ETL legado, Push Notifications, Portal Cliente, servidor producção validado | **100/100 = 100%**)  
+**Atualizado em:** 29/05/2026 (revisão 11 — Produção estável: CSRF login corrigido, imports 6 módulos, dashboard/relatórios adaptados ao schema real | **Produção operacional**)  
 **Fontes consolidadas:**
 - `PROPOSTA_MECANICA_IKFLOW.md` — proposta técnica completa
 - Fluxo de negócio descrito pelo cliente em sessão

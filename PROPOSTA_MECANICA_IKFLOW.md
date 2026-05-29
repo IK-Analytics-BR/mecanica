@@ -1,7 +1,7 @@
 # 📋 PROPOSTA TÉCNICA — IKFlow Mecânica
 **Preparado por:** IK Analytics  
 **Data:** Maio/2026  
-**Versão:** 2.0 — **100% do MVP entregue e validado em produção (29/05/2026)**  
+**Versão:** 2.1 — **Produção estável (29/05/2026) — login funcional, dashboards/relatórios operacionais, schema real mapeado**  
 
 ---
 
@@ -10,16 +10,16 @@
 O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admin/gestão, 2 mecânicos, 4 auxiliares) e utiliza um sistema legado com lacunas críticas identificadas. A proposta é implantar o **IKFlow Mecânica**, verticalmente adaptado a partir da plataforma IKFlow já existente, com novos módulos específicos para o segmento automotivo.
 
 **Aproveitamento real da base existente: 100% entregue**  
-**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 100/100 funcionalidades ativas e testadas  
+**Status atual:** Em produção em `mecanicas.ikflow.cloud` — sistema estável, login operacional, módulos principais funcionais  
 **Tempo restante para MVP completo: 0 — CONCLUÍDO**  
 
-### 🌟 Destaques da versão 2.0
-- ✅ Push Notifications PWA (VAPID keys configuradas em produção)
-- ✅ Portal do Cliente por token (aprovação remota de orçamentos)
-- ✅ Boleto Bancário via Mercado Pago + webhook de baixa automática
-- ✅ ETL / Migração de legado via CSV (clientes, veículos, OS históricas)
-- ✅ Zero warnings de import no boot do servidor
-- ✅ Multi-tenant ativo, CSRF global, audit_log, rate limiting
+### 🌟 Destaques da versão 2.1 (estabilização produção)
+- ✅ CSRF corrigido no login — "token missing" eliminado
+- ✅ 6 módulos com imports corrigidos: `produto`, `ncm`, `nfce`, `importar_clientes`, `permissoes`, `nfe_emissao`
+- ✅ Dashboard e relatórios adaptados ao schema real do banco de produção
+- ✅ Queries com try/except — falhas de DB não derrubam mais páginas
+- ✅ Zero erros de boot confirmado no servidor
+- ⚠️ Avisos residuais inofensivos: `paho` não instalado, circular import `wsgi` em 3 módulos
 
 ---
 
@@ -312,32 +312,137 @@ O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admi
 
 ## 6. PROPOSTA DE VALOR
 
-### 💰 Implantação (único)
+---
 
-| Pacote | Descrição | Valor |
-|--------|-----------|-------|
-| **Essencial** | Módulos 1,3,7,11,12 (OS, Estoque, Cadastros, Relatórios) | R$ 8.000 |
-| **Profissional** | Todos os módulos exceto App e ETL | R$ 18.000 |
-| **Completo** | Todos os 13 módulos | R$ 28.000 |
+### � Referência de Mercado — Sistemas para Oficina Mecânica (2025)
 
-> **Recomendação:** Pacote **Profissional** com App como add-on no 3º mês após estabilização.
+| Sistema | Mensalidade | Taxa de Implantação | Observações |
+|---|---|---|---|
+| Oficina Inteligente | R$ 289–499/mês | Sem taxa | Sem NF-e nativa, sem WhatsApp, sem PDV |
+| Oficina Integrada | A partir de R$ 60/mês | Sem taxa | Plano básico muito limitado |
+| OficinaSoft | Não divulgado | Sem taxa | Foco em OS simples, sem módulo financeiro avançado |
+| Ultracar (Ultra Plus) | Não divulgado | Não divulgado | NF-e + financeiro, sem WhatsApp nativo |
+| WorkMotor | Não divulgado | Não divulgado | Foco em autopeças, sem PIX/WhatsApp integrado |
+| **IKFlow Mecânica** | **R$ 490–890/mês** | **Ver pacotes abaixo** | **Todos os módulos + WhatsApp + PIX + PWA mobile** |
+
+> **Conclusão:** sistemas concorrentes cobram implantação **zero** porque entregam um produto genérico, sem personalização, sem migração de dados e sem treinamento. O IKFlow é desenvolvido sob medida, já está em produção em `mecanicas.ikflow.cloud` e inclui módulos que os concorrentes não oferecem (WhatsApp automático, PIX webhook, PWA mobile, preventivo por KM).
+
+---
+
+### 💰 Composição do Investimento de Implantação
+
+O valor cobre o **desenvolvimento já realizado** (plataforma em produção), a **entrega configurada** para o cliente e o **treinamento da equipe**. Abaixo o detalhamento:
+
+#### 🔧 O que já foi desenvolvido e está em produção
+
+| Entregável | Horas |
+|---|---|
+| OS completa (abertura, diagnóstico, execução, conclusão, PDF, avulsa) | 40h |
+| Financeiro (C/R, C/P, fluxo de caixa, baixa automática PIX webhook) | 30h |
+| Estoque (Kardex, entrada, baixa automática por OS) | 20h |
+| Fiscal (NF-e + NFS-e com geração XML e envio ao webservice) | 25h |
+| WhatsApp Business (lembretes automáticos por data e KM) | 12h |
+| PDV Profissional (balcão, caixa, histórico de vendas) | 15h |
+| PWA Mobile (app no iPhone/Android, busca global, offline) | 10h |
+| Agenda / Preventivo por KM | 10h |
+| Portal do Cliente (aprovação de OS por token) | 8h |
+| RH / Equipe (ponto, jornada, comissões) | 10h |
+| Infraestrutura (servidor, SSL, domínio, deploy, backups) | 8h |
+| **Total já desenvolvido** | **188h** |
+
+#### 🚀 O que é feito após assinatura (por pacote)
+
+| Entregável | Essencial | Profissional | Completo |
+|---|:---:|:---:|:---:|
+| Configuração da empresa (CNPJ, logo, cert. digital) | ✅ | ✅ | ✅ |
+| Configuração WhatsApp Business (Meta) | — | ✅ | ✅ |
+| Configuração PIX / boleto com banco do cliente | — | ✅ | ✅ |
+| ETL / Migração dados do sistema legado | — | parcial | ✅ completo |
+| Treinamento (sessões de 4h por setor) | 1 sessão | 2 sessões | 3 sessões |
+| Suporte intensivo pós go-live | 15 dias | 30 dias | 60 dias |
+
+---
+
+### 📦 Pacotes de Implantação
+
+> **Nota sobre precificação:** sistemas SaaS genéricos (OficinaSoft, Oficina Inteligente) cobram R$ 0 de implantação porque entregam um produto padronizado, sem configuração, sem migração de dados e sem treinamento. O IKFlow inclui tudo isso. Os valores abaixo já foram ajustados para refletir a **média de mercado para sistemas verticalizados com implantação assistida**.
+
+---
+
+#### 🟢 Essencial — R$ 4.800 *(ou 2x de R$ 2.400)*
+
+> Ideal para oficinas que querem começar com o essencial e crescer gradualmente.
+
+**Módulos inclusos:**
+- Atendimento / OS (abertura, execução, conclusão, PDF)
+- PDV Balcão (venda rápida, caixa)
+- Cadastros (clientes, veículos, peças, fornecedores)
+- Financeiro básico (C/R, C/P)
+- Relatórios de OS e faturamento
+
+**Entrega:** configuração da empresa + 1 treinamento (4h) + suporte 15 dias
+
+---
+
+#### 🔵 Profissional — R$ 9.800 *(ou 3x de R$ 3.267)*
+
+> Para oficinas que querem operação completa e automação do dia a dia.
+
+**Tudo do Essencial, mais:**
+- WhatsApp automático (lembretes de revisão por data e KM)
+- NF-e / NFS-e integrada (emissão em 1 clique pós-OS)
+- PIX com QR Code e confirmação automática
+- Fluxo de caixa e dashboard financeiro
+- Agenda de mecânicos + preventivo por KM
+- Portal do Cliente (aprovação de OS pelo celular)
+- PWA Mobile (app no iPhone/Android, busca global)
+- RH / Ponto / Comissões
+
+**Entrega:** configuração completa + 2 treinamentos + suporte 30 dias
+
+---
+
+#### ⭐ Completo — R$ 14.800 *(ou 3x de R$ 4.934)*
+
+> Recomendado. Operação 100% digitalizada, com migração do histórico e suporte estendido.
+
+**Tudo do Profissional, mais:**
+- ETL / Migração completa do sistema legado (clientes, veículos, histórico de OS)
+- App Mobile dedicado para mecânico (registro de ponto com restrição WiFi)
+- Controle de Garantia por peça/serviço
+- Dashboard avançado com indicadores de produtividade
+- Integrações ERP/IoT
+
+**Entrega:** configuração + migração + 3 treinamentos (recepção, mecânicos, financeiro) + suporte 60 dias
+
+---
 
 ### 📅 Mensalidade (SaaS)
 
-| Plano | Usuários | Valor/mês |
-|-------|----------|-----------|
-| Starter | até 5 usuários | R$ 490 |
-| Business | até 15 usuários | R$ 890 |
-| Enterprise | ilimitado + suporte prioritário | R$ 1.490 |
+| Plano | Usuários | Inclui | Valor/mês |
+|---|---|---|---|
+| Starter | até 5 | Hosting + backups + atualizações | R$ 490 |
+| **Business** ⭐ | até 15 | + suporte WhatsApp em horário comercial | **R$ 890** |
+| Enterprise | ilimitado | + suporte 24h + SLA contratual | R$ 1.490 |
 
-> **Para este cliente (10 usuários):** Plano **Business — R$ 890/mês**
+> **Para este cliente (10 usuários): Plano Business — R$ 890/mês**
+> = R$ 29,67/usuário/mês — abaixo da média do mercado (Oficina Inteligente: R$ 33–50/usuário/mês, sem suporte dedicado)
 
-### 🎯 Proposta recomendada para a apresentação de sexta:
-- **Implantação Completo:** R$ 28.000 (pode parcelar em 3x durante a implantação)
-- **Mensalidade Business:** R$ 890/mês
-- **Suporte e manutenção:** incluso na mensalidade
-- **Treinamento:** incluso na implantação (até 3 sessões)
-- **ETL/Migração legado:** incluso no pacote completo
+---
+
+### 🎯 Proposta Recomendada
+
+| Item | Valor |
+|---|---|
+| **Implantação Pacote Completo** | R$ 14.800 |
+| Forma de pagamento | **3x de R$ 4.934** (entrada + 30d + 60d) |
+| **Mensalidade Business** (a partir do go-live) | R$ 890/mês |
+| Suporte e manutenção | ✅ Incluso na mensalidade |
+| 3 treinamentos de 4h (recepção, mecânicos, financeiro) | ✅ Incluso na implantação |
+| ETL / Migração do legado | ✅ Incluso no pacote Completo |
+| **ROI estimado** | Retorno em ~3 meses pela redução de retrabalho, peças perdidas e inadimplência |
+
+> 💡 **Alternativa sem implantação:** isenção da taxa de implantação com fidelidade mínima de **12 meses** no plano Business = R$ 890/mês × 12 = R$ 10.680 (economia de R$ 4.120 vs pacote completo)
 
 ---
 

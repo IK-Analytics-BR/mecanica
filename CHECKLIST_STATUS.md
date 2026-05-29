@@ -1,8 +1,8 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 29/05/2026 (revisão 12 — **PRODUÇÃO VALIDADA**: servidor sem warnings, banco migrado, VAPID configurado, portal 200, push 200, ETL 200 | 100/100 = 100%)  
+**Última atualização:** 29/05/2026 (revisão 13 — **PRODUÇÃO ESTÁVEL**: login funcional, CSRF corrigido, imports corrigidos em 6 módulos, dashboard/relatórios operacionais, zero erros de boot | schema real mapeado)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
-> 🚀 **Deploy validado em** `mecanicas.ikflow.cloud` — 29/05/2026 — zero erros de import, todas as tabelas criadas, VAPID keys ativas
+> 🚀 **Deploy estável em** `mecanicas.ikflow.cloud` — 29/05/2026 — login operacional, dashboard/relatórios funcionais, zero erros de boot. Avisos residuais: `paho` não instalado (integration_routes), circular import wsgi (nfe_emissao/condicao_pagamento) — não bloqueiam operação principal.
 
 ---
 
@@ -74,7 +74,7 @@
 | 4.6 | Motivos de Pausa | ✅ | `/industria/producao-pausas/motivos` |
 | 4.7 | Jornada de Trabalho / Ponto | ✅ | `jornada_trabalho_routes.py` |
 | 4.8 | Controle de Ponto (WiFi/app) | ❌ | Não implementado |
-| 4.9 | Comissões | ❌ | Não implementado |
+| 4.9 | Comissões | ✅ | `comissao_routes.py` — % configurável + painel |
 | 4.10 | **Agenda por mecânico (calendário)** | ✅ | `/agenda` — FullCalendar, arrastar OS, filtro técnico, painel OS sem técnico |
 | 4.11 | **Agendamento de OS** | ✅ | `POST /agenda/agendar/<id>` — data/hora/técnico |
 | 4.12 | **Preventivo automático** | ✅ | Ao concluir OS → atualiza `next_maintenance` do veículo |
@@ -179,8 +179,8 @@
 | 11.3 | Segmentos | ✅ | `segment_routes.py` |
 | 11.4 | Moedas | ✅ | `currency_routes.py` — import corrigido |
 | 11.5 | Alertas / Notificações internas | ✅ | `alert_routes.py` |
-| 11.6 | Dashboard | ✅ | `dashboard_routes.py` |
-| 11.7 | Relatórios gerenciais | ✅ | `reports_routes.py` — `python-dateutil` adicionado |
+| 11.6 | Dashboard | ✅ | `dashboard_routes.py` — reescrito com queries seguras; adaptado ao schema real de produção |
+| 11.7 | Relatórios gerenciais | ✅ | `reports_routes.py` — queries corrigidas (`minutos_servico` removido, GROUP BY corrigido) |
 | 11.8 | Transportadoras | ✅ | Import `app.database` corrigido para `database` |
 | 11.9 | ETL / Migração do legado | ✅ | `etl_routes.py` — CSV clientes, veículos, OS históricas + log |
 
@@ -207,25 +207,25 @@
 
 ## PRÓXIMAS PRIORIDADES SUGERIDAS
 
-### ✅ Concluídas nesta sessão
-1. ✅ Fluxos WhatsApp testados em produção (`ok:true`) + cron 08h configurado
-2. ✅ PDV testado em produção + Histórico de Vendas ativo
-3. ✅ Agenda de Mecânicos — FullCalendar, arrastar OS, filtro por técnico
-4. ✅ Agendamento de OS com data/hora/técnico
-5. ✅ Preventivo automático ao concluir OS → `next_maintenance` atualizado
-6. ✅ Integrações: botão Agenda no perfil do técnico, OS sem técnico no painel
+### ✅ Concluídas nesta sessão (29/05/2026 — estabilização produção)
+1. ✅ CSRF token adicionado ao formulário de login — erro "CSRF token missing" eliminado
+2. ✅ Imports `login_required`/`wraps` corrigidos em: `produto`, `ncm`, `nfce`, `importar_clientes`, `permissoes`, `nfe_emissao`
+3. ✅ `license_plate` removido de `dashboard_routes.py` (coluna inexistente no banco)
+4. ✅ `dashboard_routes.py` reescrito — queries com try/except, tabelas industriais removidas
+5. ✅ `reports_routes.py` — `minutos_servico` removido, GROUP BY corrigido, JOIN `supplies` removido
+6. ✅ Login funcional, dashboard, maintenance_report, performance_report, relatorios/mecanicos, relatorios/servicos todos operacionais
 
 ### 🔴 Alta — Próximas prioridades
-1. **Executar migration no servidor** — `migration_agenda.sql` (adiciona colunas `agendado_para`, `hora_inicio`, `hora_fim`)
-2. **Comissionamento** — mecânico + captação de marketing
-3. **Pesquisa de satisfação pós-OS (WA)** — cron 1h após `status=completed`
+1. **Corrigir circular import `wsgi`** — afeta `nfe_emissao_routes`, `importar_nfe_upload`, `condicao_pagamento_routes`
+2. **Instalar `paho-mqtt`** no venv de produção — ou remover `integration_routes` se não usado
+3. **Popup pós-OS "Emitir NF-e?"** (item 1.18)
+4. **Baixa automática de estoque** ao concluir OS
 
 ### 🟠 Média
-4. **Controle de Garantia** (prazo por peça/serviço)
-5. **Ícones PWA finais** (substituir placeholder por arte da marca)
+5. **PIX webhook** de baixa automática C/R
+6. **Ícones PWA finais** (substituir placeholder por arte da marca)
 
 ### 🔵 Baixa — Pós-MVP
-6. **Portal do Cliente**
-7. **Push Notifications** (Web Push API)
-8. **Boleto Bancário** (BB + Mercado Pago)
-9. **ETL / Migração do legado**
+7. Agendamento preventivo automático por KM
+8. Controle de ponto via WiFi
+9. Sincronização offline real (PWA)

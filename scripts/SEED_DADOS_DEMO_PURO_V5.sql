@@ -66,7 +66,7 @@ ON DUPLICATE KEY UPDATE name = VALUES(name);
 -- ============================================================
 -- 4. CLIENTES (15)
 -- ============================================================
-INSERT INTO customers (name, email, phone, cpf_cnpj, address, city, state, zip, active, created_at) VALUES
+INSERT INTO customers (name, email, phone, cpf, address, city, state, zip, active, created_at) VALUES
 ('João Silva', 'joao.silva@demo.com', '11999990001', '123.456.789-01', 'Rua das Flores, 100', 'São Paulo', 'SP', '01001-000', 1, NOW()),
 ('Maria Santos', 'maria.santos@demo.com', '11999990002', '123.456.789-02', 'Av. Brasil, 200', 'São Paulo', 'SP', '02002-000', 1, NOW()),
 ('Pedro Costa', 'pedro.costa@demo.com', '11999990003', '123.456.789-03', 'Rua Boa Vista, 300', 'São Paulo', 'SP', '03003-000', 1, NOW()),
