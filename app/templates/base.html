@@ -802,7 +802,6 @@
                     <ul class="collapse list-unstyled" id="comunicacaoSubmenu">
                         {% if blueprint_exists('whatsapp') %}
                         <li><a href="{{ url_for('whatsapp.whatsapp_painel') }}"><i class="fab fa-whatsapp text-success"></i> WhatsApp Business</a></li>
-                        <li><a href="{{ url_for('whatsapp.whatsapp_config') }}"><i class="fas fa-cog"></i> Configurar WhatsApp</a></li>
                         {% endif %}
                         {% if blueprint_exists('whatsapp') %}
                         <li><a href="{{ url_for('whatsapp.disparar_lembretes_revisao') }}"><i class="fas fa-bell text-warning"></i> Disparar Lembretes</a></li>
