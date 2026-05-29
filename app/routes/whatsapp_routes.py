@@ -447,15 +447,15 @@ def disparar_lembretes_revisao():
 
     try:
         veiculos = db.fetch_all("""
-            SELECT e.id, e.serial_number as placa, e.next_maintenance_date,
+            SELECT e.id, e.serial_number as placa, e.next_maintenance,
                    c.name as customer_name, c.phone as customer_phone
             FROM equipment e
             LEFT JOIN customers c ON c.id = e.customer_id
             WHERE e.active = 1
-              AND e.next_maintenance_date IS NOT NULL
-              AND e.next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL %s DAY)
-              AND e.next_maintenance_date >= CURDATE()
-            ORDER BY e.next_maintenance_date ASC
+              AND e.next_maintenance IS NOT NULL
+              AND e.next_maintenance <= DATE_ADD(CURDATE(), INTERVAL %s DAY)
+              AND e.next_maintenance >= CURDATE()
+            ORDER BY e.next_maintenance ASC
         """, (dias,))
     except Exception as e:
         return jsonify({'ok': False, 'msg': f'Erro na consulta: {e}'})
