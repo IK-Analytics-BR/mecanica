@@ -302,9 +302,6 @@
                         {% if blueprint_exists('clientes_potenciais') %}
                         <li><a href="{{ url_for('clientes_potenciais.lista') }}"><i class="fas fa-user-plus"></i> Clientes em Potencial</a></li>
                         {% endif %}
-                        {% if blueprint_exists('portal') %}
-                        <li><a href="{{ url_for('portal.portal_acesso') }}"><i class="fas fa-globe text-info"></i> Portal do Cliente</a></li>
-                        {% endif %}
                         {% if blueprint_exists('rota_vendas') %}
                         <li><a href="{{ url_for('rota_vendas.rotas_vendas_list') }}"><i class="fas fa-route"></i> Rota de Captação</a></li>
                         {% endif %}
