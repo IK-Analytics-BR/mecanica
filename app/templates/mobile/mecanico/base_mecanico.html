@@ -1,0 +1,504 @@
+{#
+  BASE MECÂNICO - PWA para uso na oficina
+  Focado em: Agenda, OS atribuídas, diagnóstico, horas, comissão
+#}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b2447">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="IKFlow Mecânico">
+    <title>{% block title %}IKFlow Mecânico{% endblock %}</title>
+    
+    <link rel="manifest" href="{{ url_for('static', filename='manifest-mecanico.json') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/icon-180.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/icon-192.png') }}">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
+    
+    <style>
+        :root {
+            --ik-teal: #08a5b2;
+            --ik-teal-dark: #067d87;
+            --ik-orange: #ff9f1a;
+            --ik-navy: #0b2447;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * { -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            overscroll-behavior: none;
+        }
+
+        body {
+            padding-top: calc(56px + var(--safe-top));
+            padding-bottom: calc(80px + var(--safe-bottom));
+        }
+
+        /* Header */
+        .mec-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: calc(56px + var(--safe-top));
+            padding-top: var(--safe-top);
+            background: linear-gradient(135deg, var(--ik-navy), var(--ik-teal));
+            color: #fff;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            padding-right: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+        }
+
+        .mec-header .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .mec-header .title {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 17px;
+        }
+
+        /* Status Bar do Mecânico */
+        .status-bar {
+            background: linear-gradient(135deg, var(--ik-navy), #1a365d);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-bar .status-item {
+            text-align: center;
+        }
+
+        .status-bar .status-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--ik-teal);
+        }
+
+        .status-bar .status-label {
+            font-size: 11px;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        /* Cards de OS */
+        .os-card {
+            background: #fff;
+            border-radius: 16px;
+            margin: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--ik-teal);
+            transition: transform 0.2s;
+        }
+
+        .os-card:active {
+            transform: scale(0.98);
+        }
+
+        .os-card.urgente { border-left-color: #ef4444; }
+        .os-card.andamento { border-left-color: var(--ik-orange); }
+        .os-card.concluida { border-left-color: #10b981; }
+
+        .os-card .os-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .os-card .os-numero {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--ik-navy);
+        }
+
+        .os-card .os-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .os-card .os-cliente {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .os-card .os-veiculo {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .os-card .os-servico {
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .os-card .os-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .os-card .os-tempo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .os-card .os-acoes {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-acao {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .btn-acao.iniciar { background: #dbeafe; color: #1e40af; }
+        .btn-acao.pausar { background: #fef3c7; color: #92400e; }
+        .btn-acao.finalizar { background: #d1fae5; color: #065f46; }
+
+        /* Timer flutuante */
+        .timer-float {
+            position: fixed;
+            top: calc(56px + var(--safe-top) + 8px);
+            right: 12px;
+            background: var(--ik-orange);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 1040;
+            box-shadow: 0 4px 12px rgba(255,159,26,0.4);
+            display: none;
+        }
+
+        .timer-float.active {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Bottom Nav Mecânico */
+        .mec-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(80px + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            z-index: 1050;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+
+        .mec-nav .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            text-decoration: none;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 600;
+            gap: 4px;
+            border: none;
+            background: none;
+        }
+
+        .mec-nav .nav-item i {
+            font-size: 22px;
+        }
+
+        .mec-nav .nav-item.active {
+            color: var(--ik-teal);
+        }
+
+        .mec-nav .nav-item .badge {
+            position: absolute;
+            top: 8px;
+            right: calc(50% - 20px);
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        /* Seção de Diagnóstico */
+        .diagnostico-section {
+            background: #fff;
+            border-radius: 16px;
+            margin: 12px;
+            padding: 16px;
+        }
+
+        .diagnostico-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--ik-navy);
+            margin-bottom: 16px;
+        }
+
+        .btn-checklist {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .btn-checklist:active {
+            background: #f1f5f9;
+        }
+
+        .btn-checklist.checked {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .btn-checklist i {
+            font-size: 20px;
+            color: #94a3b8;
+        }
+
+        .btn-checklist.checked i {
+            color: #10b981;
+        }
+
+        /* Relógio de ponto */
+        .ponto-card {
+            background: linear-gradient(135deg, var(--ik-navy), var(--ik-teal));
+            color: #fff;
+            border-radius: 16px;
+            margin: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .ponto-card .relogio {
+            font-size: 48px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin: 16px 0;
+        }
+
+        .ponto-card .btn-ponto {
+            background: #fff;
+            color: var(--ik-navy);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        /* Comissões */
+        .comissao-card {
+            background: #fff;
+            border-radius: 16px;
+            margin: 12px;
+            padding: 16px;
+        }
+
+        .comissao-card .valor {
+            font-size: 32px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .comissao-card .periodo {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* Animações */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Modais */
+        .modal-mobile .modal-content {
+            border-radius: 20px 20px 0 0;
+            border: none;
+        }
+
+        .modal-mobile .modal-body {
+            padding: 20px;
+        }
+    </style>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- Timer Flutuante -->
+    <div class="timer-float" id="timerFloat">
+        <i class="fas fa-clock"></i> <span id="timerDisplay">00:00:00</span>
+    </div>
+
+    <!-- Header -->
+    <header class="mec-header">
+        <button class="btn-icon" onclick="history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="title">{% block header_title %}Mecânico{% endblock %}</span>
+        <button class="btn-icon" data-bs-toggle="dropdown">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+        </ul>
+    </header>
+
+    <!-- Conteúdo -->
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show mx-3 mt-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="mec-nav">
+        <a href="{{ url_for('mecanico.minha_agenda') }}" class="nav-item {% if request.endpoint == 'mecanico.minha_agenda' %}active{% endif %}">
+            <i class="fas fa-calendar-day"></i>
+            <span>Agenda</span>
+        </a>
+        <a href="{{ url_for('mecanico.minhas_os') }}" class="nav-item {% if request.endpoint == 'mecanico.minhas_os' %}active{% endif %}">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Minhas OS</span>
+            {% if os_pendentes_count %}<span class="badge">{{ os_pendentes_count }}</span>{% endif %}
+        </a>
+        <a href="{{ url_for('mecanico.ponto') }}" class="nav-item {% if request.endpoint == 'mecanico.ponto' %}active{% endif %}">
+            <i class="fas fa-clock"></i>
+            <span>Ponto</span>
+        </a>
+        <a href="{{ url_for('mecanico.comissoes') }}" class="nav-item {% if request.endpoint == 'mecanico.comissoes' %}active{% endif %}">
+            <i class="fas fa-dollar-sign"></i>
+            <span>Comissão</span>
+        </a>
+    </nav>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Timer global
+        let timerInterval;
+        let startTime;
+        let isRunning = false;
+
+        function startTimer() {
+            if (isRunning) return;
+            startTime = Date.now();
+            isRunning = true;
+            document.getElementById('timerFloat').classList.add('active');
+            
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const hours = Math.floor(elapsed / 3600000);
+                const minutes = Math.floor((elapsed % 3600000) / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('timerDisplay').textContent = 
+                    `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            document.getElementById('timerFloat').classList.remove('active');
+        }
+
+        // CSRF
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        if (csrfToken) {
+            const _origFetch = window.fetch;
+            window.fetch = function(url, opts = {}) {
+                opts.headers = opts.headers || {};
+                if (!(opts.headers instanceof Headers)) {
+                    opts.headers['X-CSRFToken'] = csrfToken;
+                }
+                return _origFetch(url, opts);
+            };
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

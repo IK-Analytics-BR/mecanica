@@ -1,0 +1,118 @@
+{#
+  PONTO - Registro de jornada do mecânico
+#}
+{% extends "mobile/mecanico/base_mecanico.html" %}
+
+{% block title %}Meu Ponto{% endblock %}
+{% block header_title %}Registro de Ponto{% endblock %}
+
+{% block content %}
+<!-- Relógio -->
+<div class="ponto-card">
+    <div class="text-muted mb-2">{{ data_atual }}</div>
+    <div class="relogio" id="relogio">00:00:00</div>
+    <div id="statusPonto" class="mb-3">
+        {% if ponto_aberto %}
+            <span class="badge bg-warning">Ponto Aberto desde {{ ponto_aberto }}</span>
+        {% else %}
+            <span class="badge bg-secondary">Ponto Fechado</span>
+        {% endif %}
+    </div>
+    <button class="btn-ponto" id="btnPonto" onclick="togglePonto()">
+        {% if ponto_aberto %}
+            <i class="fas fa-stop me-2"></i>Registrar Saída
+        {% else %}
+            <i class="fas fa-play me-2"></i>Registrar Entrada
+        {% endif %}
+    </button>
+</div>
+
+<!-- Resumo do Dia -->
+<div class="comissao-card">
+    <h5 class="mb-3"><i class="fas fa-chart-bar me-2"></i>Resumo de Hoje</h5>
+    <div class="row text-center">
+        <div class="col-4">
+            <div class="display-6 fw-bold text-primary">{{ resumo.entrada or '--:--' }}</div>
+            <small class="text-muted">Entrada</small>
+        </div>
+        <div class="col-4">
+            <div class="display-6 fw-bold text-danger">{{ resumo.saida or '--:--' }}</div>
+            <small class="text-muted">Saída</small>
+        </div>
+        <div class="col-4">
+            <div class="display-6 fw-bold text-success">{{ resumo.total or '00:00' }}</div>
+            <small class="text-muted">Total</small>
+        </div>
+    </div>
+</div>
+
+<!-- Histórico -->
+<div class="comissao-card">
+    <h5 class="mb-3"><i class="fas fa-history me-2"></i>Histórico dos Últimos 7 Dias</h5>
+    
+    {% for dia in historico %}
+    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+        <div>
+            <div class="fw-semibold">{{ dia.data }}</div>
+            <div class="small text-muted">
+                {{ dia.entrada or '--:--' }} - {{ dia.saida or '--:--' }}
+            </div>
+        </div>
+        <div class="text-end">
+            <div class="fw-bold {{ 'text-success' if dia.horas >= '08:00' else 'text-warning' }}">
+                {{ dia.horas or '00:00' }}
+            </div>
+            <div class="small text-muted">{{ dia.status }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- OS com Tempo Registrado -->
+<div class="comissao-card">
+    <h5 class="mb-3"><i class="fas fa-clipboard-list me-2"></i>Tempo em OS Hoje</h5>
+    
+    {% for os in os_tempo %}
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <div>
+            <div class="fw-semibold">OS #{{ os.order_number }}</div>
+            <div class="small text-muted">{{ os.customer_name }}</div>
+        </div>
+        <span class="badge bg-info">{{ os.tempo }}</span>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-3">Nenhuma OS com tempo registrado hoje</p>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Atualizar relógio
+function atualizarRelogio() {
+    const agora = new Date();
+    document.getElementById('relogio').textContent = 
+        agora.toLocaleTimeString('pt-BR', { hour12: false });
+}
+setInterval(atualizarRelogio, 1000);
+atualizarRelogio();
+
+function togglePonto() {
+    const btn = document.getElementById('btnPonto');
+    const estaAberto = btn.textContent.includes('Saída');
+    
+    fetch('/mecanico/ponto/registrar', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Erro ao registrar ponto');
+        }
+    });
+}
+</script>
+{% endblock %}

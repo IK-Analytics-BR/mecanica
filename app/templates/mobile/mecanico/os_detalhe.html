@@ -1,0 +1,168 @@
+{#
+  DETALHE DA OS - Para mecânico registrar diagnóstico
+#}
+{% extends "mobile/mecanico/base_mecanico.html" %}
+
+{% block title %}OS #{{ os.order_number }}{% endblock %}
+{% block header_title %}OS #{{ os.order_number }}{% endblock %}
+
+{% block content %}
+<!-- Info da OS -->
+<div class="os-card {{ os.status_class }}">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="badge" style="background:{{ os.status_color }}20;color:{{ os.status_color }};">
+            {{ os.status_text }}
+        </span>
+        <span class="text-muted small">{{ os.opened_at[:10] }}</span>
+    </div>
+    <h5 class="mb-1">{{ os.customer_name }}</h5>
+    <p class="text-muted mb-2"><i class="fas fa-car me-1"></i>{{ os.equipment_name or 'Sem veículo' }}</p>
+    <p class="small">{{ os.description or 'Sem descrição' }}</p>
+</div>
+
+<!-- Checklist de Diagnóstico -->
+<div class="diagnostico-section">
+    <h3><i class="fas fa-clipboard-check me-2"></i>Checklist de Diagnóstico</h3>
+    
+    <form id="diagnosticoForm" method="POST" action="{{ url_for('mecanico.salvar_diagnostico', os_id=os.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        {% for item in checklist %}
+        <label class="btn-checklist {{ 'checked' if item.checked }}" style="display:flex;width:100%;cursor:pointer;">
+            <input type="checkbox" name="checklist_{{ item.id }}" value="1" 
+                   {{ 'checked' if item.checked }} style="display:none;">
+            <span>{{ item.nome }}</span>
+            <i class="fas {{ 'fa-check-circle' if item.checked else 'fa-circle' }}"></i>
+        </label>
+        {% endfor %}
+    </form>
+</div>
+
+<!-- Laudo Técnico -->
+<div class="diagnostico-section">
+    <h3><i class="fas fa-stethoscope me-2"></i>Laudo Técnico</h3>
+    <textarea name="diagnostico" form="diagnosticoForm" class="form-control" rows="4" 
+              placeholder="Descreva o diagnóstico técnico, problemas encontrados, soluções aplicadas...">{{ os.diagnostico or '' }}</textarea>
+</div>
+
+<!-- Peças Utilizadas -->
+<div class="diagnostico-section">
+    <h3><i class="fas fa-boxes me-2"></i>Peças Utilizadas</h3>
+    <div id="pecasList">
+        {% for peca in pecas %}
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-2">
+            <div>
+                <div class="fw-semibold">{{ peca.name }}</div>
+                <div class="small text-muted">{{ peca.quantity }}x R$ {{ "%.2f"|format(peca.unit_price) }}</div>
+            </div>
+            <div class="fw-bold">R$ {{ "%.2f"|format(peca.total) }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="btn btn-outline-primary w-100" onclick="adicionarPeca()">
+        <i class="fas fa-plus"></i> Adicionar Peça
+    </button>
+</div>
+
+<!-- Serviços Realizados -->
+<div class="diagnostico-section">
+    <h3><i class="fas fa-wrench me-2"></i>Serviços Realizados</h3>
+    <div id="servicosList">
+        {% for servico in servicos %}
+        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-2">
+            <div>
+                <div class="fw-semibold">{{ servico.name }}</div>
+                <div class="small text-muted">{{ servico.quantity }}x R$ {{ "%.2f"|format(servico.unit_price) }}</div>
+            </div>
+            <div class="fw-bold">R$ {{ "%.2f"|format(servico.total) }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="btn btn-outline-primary w-100" onclick="adicionarServico()">
+        <i class="fas fa-plus"></i> Adicionar Serviço
+    </button>
+</div>
+
+<!-- Tempo Trabalhado -->
+<div class="diagnostico-section">
+    <h3><i class="fas fa-clock me-2"></i>Tempo Trabalhado</h3>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <div class="display-6 fw-bold text-primary" id="tempoTotal">
+                {{ os.horas_trabalhadas or '00:00' }}
+            </div>
+            <div class="text-muted small">Horas registradas</div>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="registrarPonto()">
+            <i class="fas fa-play"></i> Iniciar
+        </button>
+    </div>
+</div>
+
+<!-- Botões de Ação -->
+<div class="p-3">
+    <button type="submit" form="diagnosticoForm" class="btn btn-success w-100 py-3 mb-2">
+        <i class="fas fa-save me-2"></i>Salvar Diagnóstico
+    </button>
+    
+    {% if os.status != 'completed' %}
+    <button type="button" class="btn btn-primary w-100 py-3 mb-2" onclick="finalizarOS()">
+        <i class="fas fa-check-circle me-2"></i>Finalizar OS
+    </button>
+    {% endif %}
+    
+    <a href="{{ url_for('mecanico.minha_agenda') }}" class="btn btn-outline-secondary w-100 py-3">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toggle checklist visual
+document.querySelectorAll('.btn-checklist').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const checkbox = this.querySelector('input[type="checkbox"]');
+        const icon = this.querySelector('i');
+        checkbox.checked = !checkbox.checked;
+        this.classList.toggle('checked', checkbox.checked);
+        icon.className = checkbox.checked ? 'fas fa-check-circle' : 'fas fa-circle';
+    });
+});
+
+function adicionarPeca() {
+    // Abrir modal ou redirecionar para adicionar peça
+    alert('Funcionalidade: Adicionar peça do estoque');
+}
+
+function adicionarServico() {
+    alert('Funcionalidade: Adicionar serviço da tabela');
+}
+
+function registrarPonto() {
+    fetch('/mecanico/ponto/registrar', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                startTimer();
+                alert('Ponto registrado!');
+            }
+        });
+}
+
+function finalizarOS() {
+    if (!confirm('Deseja finalizar esta OS?\n\nIsso irá:\n- Registrar a hora de término\n- Calcular comissão\n- Liberar para faturamento')) return;
+    
+    fetch(`/mecanico/os/{{ os.id }}/finalizar`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert('OS finalizada com sucesso!');
+                location.href = '{{ url_for('mecanico.minha_agenda') }}';
+            } else {
+                alert(data.error || 'Erro ao finalizar');
+            }
+        });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{
+  "name": "IKFlow - Mecânico",
+  "short_name": "IKFlow Mec",
+  "description": "App do mecânico para gestão de OS, ponto e comissões na oficina",
+  "start_url": "/mecanico",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b2447",
+  "theme_color": "#08a5b2",
+  "lang": "pt-BR",
+  "scope": "/mecanico",
+  "icons": [
+    {
+      "src": "/static/img/icon-76.png",
+      "sizes": "76x76",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/icon-120.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Minha Agenda",
+      "short_name": "Agenda",
+      "url": "/mecanico/agenda",
+      "icons": [{ "src": "/static/img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Registrar Ponto",
+      "short_name": "Ponto",
+      "url": "/mecanico/ponto",
+      "icons": [{ "src": "/static/img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Minhas Comissões",
+      "short_name": "Comissão",
+      "url": "/mecanico/comissoes",
+      "icons": [{ "src": "/static/img/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false
+}

@@ -159,6 +159,9 @@ nfse_bp2    = _try_import('routes.nfse_routes',     'nfse_bp')
 comissao_bp = _try_import('routes.comissao_routes', 'comissao_bp')
 garantia_bp = _try_import('routes.garantia_routes', 'garantia_bp')
 
+# Módulo Mecânico (App mobile para oficina)
+mecanico_bp = _try_import('routes.mecanico_routes', 'mecanico_bp')
+
 # Módulos Semana 9: Push Notifications + Portal do Cliente
 push_bp   = _try_import('routes.push_routes',   'push_bp')
 portal_bp = _try_import('routes.portal_routes', 'portal_bp')
@@ -314,6 +317,7 @@ for _bp in (
     nfse_bp2,
     comissao_bp,
     garantia_bp,
+    mecanico_bp,
     push_bp,
     portal_bp,
     boleto_bp,

@@ -1,0 +1,131 @@
+{#
+  COMISSÕES - Visualização de comissões do mecânico
+#}
+{% extends "mobile/mecanico/base_mecanico.html" %}
+
+{% block title %}Minhas Comissões{% endblock %}
+{% block header_title %}Minhas Comissões{% endblock %}
+
+{% block content %}
+<!-- Resumo do Período -->
+<div class="p-3">
+    <div class="mobile-card" style="background:linear-gradient(135deg,var(--ik-navy),var(--ik-teal));color:#fff;">
+        <div class="text-center">
+            <div class="text-white-50 mb-2">Total do Período</div>
+            <div class="display-4 fw-bold mb-2">R$ {{ "%.2f"|format(total_periodo) }}</div>
+            <div class="small">{{ periodo.inicio }} a {{ periodo.fim }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="px-3 pb-2">
+    <div class="d-flex gap-2">
+        <select class="form-select" onchange="filtrarPeriodo(this.value)">
+            <option value="mes">Este Mês</option>
+            <option value="semana">Esta Semana</option>
+            <option value="dia">Hoje</option>
+            <option value="mes_passado">Mês Passado</option>
+        </select>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+<div class="px-3 pb-3">
+    <div class="row g-2">
+        <div class="col-6">
+            <div class="mobile-card text-center p-3">
+                <div class="text-muted small mb-1">OS Concluídas</div>
+                <div class="h3 fw-bold text-primary mb-0">{{ resumo.os_concluidas }}</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card text-center p-3">
+                <div class="text-muted small mb-1">Horas Trabalhadas</div>
+                <div class="h3 fw-bold text-info mb-0">{{ resumo.horas_trabalhadas }}</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card text-center p-3">
+                <div class="text-muted small mb-1">Serviços</div>
+                <div class="h3 fw-bold text-success mb-0">R$ {{ "%.2f"|format(resumo.comissao_servicos) }}</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card text-center p-3">
+                <div class="text-muted small mb-1">Peças</div>
+                <div class="h3 fw-bold text-warning mb-0">R$ {{ "%.2f"|format(resumo.comissao_pecas) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de OS com Comissão -->
+<div class="px-3">
+    <h5 class="mb-3"><i class="fas fa-list-alt me-2"></i>OS com Comissão</h5>
+    
+    {% for os in ordens %}
+    <div class="mobile-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="fw-bold">OS #{{ os.order_number }}</span>
+                <div class="small text-muted">{{ os.data }}</div>
+            </div>
+            <span class="badge bg-success">R$ {{ "%.2f"|format(os.comissao_total) }}</span>
+        </div>
+        
+        <div class="mb-2">
+            <div class="fw-semibold small">{{ os.customer_name }}</div>
+            <div class="small text-muted">{{ os.equipment_name }}</div>
+        </div>
+        
+        <div class="d-flex justify-content-between text-muted small border-top pt-2">
+            <span>Serviços: R$ {{ "%.2f"|format(os.comissao_servicos) }}</span>
+            <span>Peças: R$ {{ "%.2f"|format(os.comissao_pecas) }}</span>
+        </div>
+        
+        {% if os.servicos %}
+        <div class="mt-2 pt-2 border-top">
+            {% for serv in os.servicos %}
+            <div class="d-flex justify-content-between small">
+                <span class="text-muted">{{ serv.nome }}</span>
+                <span>+R$ {{ "%.2f"|format(serv.comissao) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-dollar-sign fa-3x mb-3"></i>
+        <p>Nenhuma comissão no período</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Gráfico Simples -->
+{% if grafico_dados %}
+<div class="px-3 pb-3">
+    <div class="mobile-card">
+        <h6 class="mb-3">Comissão por Dia</h6>
+        <div class="d-flex align-items-end justify-content-between" style="height:120px;gap:4px;">
+            {% for dia in grafico_dados %}
+            <div class="flex-fill text-center">
+                <div style="height:{{ dia.altura }}%;background:linear-gradient(to top,var(--ik-teal),var(--ik-navy));border-radius:4px 4px 0 0;min-height:4px;"></div>
+                <div class="small text-muted mt-1" style="font-size:10px;">{{ dia.dia }}</div>
+                <div class="small fw-bold" style="font-size:10px;">R$ {{ dia.valor }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filtrarPeriodo(periodo) {
+    location.href = '?periodo=' + periodo;
+}
+</script>
+{% endblock %}

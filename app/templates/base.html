@@ -507,8 +507,11 @@
             display: none !important;
         }
 
-        body.pwa-standalone #sidebar {
-            display: none !important;
+        /* Sidebar desktop escondida, mas drawer funciona via media query */
+        @media (min-width: 769px) {
+            body.pwa-standalone #sidebar {
+                display: none !important;
+            }
         }
 
         /* Mostrar header mobile em PWA */
