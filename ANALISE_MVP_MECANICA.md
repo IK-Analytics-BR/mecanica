@@ -1,5 +1,5 @@
 # 📋 Análise Completa MVP — IKFlow Mecânica
-**Atualizado em:** 28/05/2026 (revisão 7 — Fluxos WhatsApp implementados: orçamento, OS pronta, lembrete revisão, alerta urgente | 77/93 = 83%)  
+**Atualizado em:** 28/05/2026 (revisão 8 — Fluxos WA testados em produção: `ok:true` | cron configurado | 78/93 = 84%)  
 **Fontes consolidadas:**
 - `PROPOSTA_MECANICA_IKFLOW.md` — proposta técnica completa
 - Fluxo de negócio descrito pelo cliente em sessão

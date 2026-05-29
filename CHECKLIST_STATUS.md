@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 4 — Fluxos WhatsApp implementados: orçamento, OS pronta, lembrete revisão, alerta urgente)  
+**Última atualização:** 28/05/2026 (revisão 5 — Fluxos WA testados em produção: `ok:true` confirmado | 78/93 = 84%)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -137,7 +137,7 @@
 | 9.1 | WhatsApp Business | ✅ | `whatsapp_routes.py` — UazAPI testado |
 | 9.2 | **Envio de orçamento para aprovação (WA)** | ✅ | Rota `enviar_orcamento_wa` + atualiza `status_orcamento='enviado'` |
 | 9.3 | **Aviso OS pronta para retirada (WA)** | ✅ | Rota `notificar_os_pronta` + trigger auto ao `status=completed` |
-| 9.4 | **Lembrete de revisão preventiva (WA)** | ✅ | Rota `/whatsapp/disparar-lembretes` — cron diário por `next_maintenance_date` |
+| 9.4 | **Lembrete de revisão preventiva (WA)** | ✅ | Rota `/whatsapp/disparar-lembretes` — cron diário | **testado em produção** `ok:true` |
 | 9.5 | **Pesquisa de satisfação pós-OS (WA)** | ⚠️ | Template `satisfacao` existe — disparo por cron pendente |
 | 9.6 | **Alerta de OS urgente para admin (WA)** | ✅ | Trigger auto ao criar OS com `type=urgent` → notifica `telefones_admin` |
 | 9.7 | E-mail | ⚠️ | `email_service.py` existe, não integrado ao menu |
@@ -185,44 +185,34 @@
 | Balcão / PDV | 11 | 10 | 1 | 0 |
 | Financeiro | 7 | 6 | 0 | 1 |
 | Fiscal / NF | 5 | 4 | 1 | 0 |
-| Comunicação | 8 | 5 | 1 | 2 |
+| Comunicação | 8 | 6 | 1 | 1 |
 | PWA / Mobile | 6 | 3 | 2 | 2 (push/offline) |
 | Administrativo | 9 | 8 | 0 | 1 |
-| **TOTAL** | **93** | **77 (83%)** | **4 (4%)** | **12 (13%)** |
+| **TOTAL** | **93** | **78 (84%)** | **4 (4%)** | **11 (12%)** |
 
 ---
 
 ## PRÓXIMAS PRIORIDADES SUGERIDAS
 
-### 🔴 Alta — Fluxos WhatsApp (alto impacto no cliente)
-1. **Envio de orçamento para aprovação via WA**
-   - Botão "Enviar orçamento" na OS → monta mensagem com valor, peças e link PDF
-   - Atualiza `status_orcamento` para `enviado` após confirmação de envio
-   - Rota: `POST /service_orders/<id>/enviar-orcamento-wa`
-2. **Aviso de OS pronta para retirada**
-   - Trigger automático ao mudar status OS para `concluida`
-   - Mensagem: "Seu veículo [placa] está pronto! Valor: R$ XX. Venha retirar."
-   - Rota: `POST /service_orders/<id>/notificar-pronta`
-3. **Lembrete de revisão preventiva**
-   - Job diário: busca veículos com revisão vencendo em `dias_lembrete` dias
-   - Usa `disparos_ativos` da config WA para habilitar/desabilitar
-   - Rota: `GET /whatsapp/disparar-lembretes` (chamada por cron)
-4. **Pesquisa de satisfação pós-OS**
-   - Enviada automaticamente 1h após status `concluida`
-   - Mensagem curta: "Como foi o atendimento? Responda: 1-Ótimo 2-Bom 3-Regular"
-5. **Alerta de OS urgente para admin**
-   - Ao criar OS com prioridade `urgente` → notifica todos os `telefones_admin`
+### ✅ Concluídas nesta sessão
+1. ✅ Fluxos WhatsApp: orçamento, OS pronta, lembrete revisão, alerta urgente — **testados em produção** (`ok:true`)
+2. ✅ PDV testado em produção — venda finalizada com sucesso
+3. ✅ Histórico de Vendas ativo
+4. ✅ `python-dateutil` instalado + imports `app.database` corrigidos
+5. ✅ Cron `/etc/cron.d/ikflow-lembretes` configurado no servidor (08h diário)
 
-### 🟠 Média — Desbloqueiam módulos quebrados
-6. **Instalar `python-dateutil`** → habilita Fluxo de Caixa + Relatórios
-7. **Corrigir imports `app.database`** em NF-e, NFC-e, NCM, Transportadoras, Moedas → 5 módulos em 1 fix
-8. **Teste real do PDV** — venda completa com caixa aberto
+### 🔴 Alta — Próximas prioridades
+1. **Agenda por mecânico** — calendário diário/semanal por profissional
+2. **Agendamento preventivo automático** — ao concluir OS, calcula próxima revisão
+3. **Pesquisa de satisfação pós-OS (WA)** — cron 1h após `status=completed`
 
-### � Baixa — Pós-MVP
-9. **Agenda por mecânico** (calendário diário)
-10. **Controle de Garantia** (prazo por peça/serviço)
-11. **Comissões** (mecânico + captação)
-12. **Portal do Cliente**
-13. **Push Notifications** (Web Push API)
-14. **Boleto Bancário**
-15. **ETL / Migração do legado**
+### 🟠 Média
+4. **Comissionamento** (mecânico + captação de marketing)
+5. **Controle de Garantia** (prazo por peça/serviço)
+6. **Ícones PWA finais** (substituir placeholder por arte da marca)
+
+### 🔵 Baixa — Pós-MVP
+7. **Portal do Cliente**
+8. **Push Notifications** (Web Push API)
+9. **Boleto Bancário** (BB + Mercado Pago)
+10. **ETL / Migração do legado**
