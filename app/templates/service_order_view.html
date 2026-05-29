@@ -402,4 +402,47 @@
 })();
 </script>
 {% endif %}
+
+{# ── POPUP NF-e / NFS-e pós-conclusão ── #}
+{% if request.args.get('emitir_nfe') == '1' and order.status == 'completed' %}
+<div class="modal fade" id="modalEmitirNFe" tabindex="-1" aria-labelledby="modalEmitirNFeLabel" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header" style="background:linear-gradient(135deg,#0b2447,#08a5b2);color:#fff;">
+        <h5 class="modal-title" id="modalEmitirNFeLabel">
+          <i class="fas fa-file-invoice me-2"></i> OS Concluída — Emitir Nota Fiscal?
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <p class="fs-5 fw-bold mb-1">OS {{ order.order_number }} concluída com sucesso!</p>
+        <p class="text-muted mb-4">Deseja emitir a nota fiscal agora?</p>
+        <div class="d-flex flex-column gap-2 px-2">
+          {% if blueprint_exists('nfse') %}
+          <a href="{{ url_for('nfse.nfse_emitir', order_id=order.id) }}"
+             class="btn btn-primary btn-lg">
+            <i class="fas fa-file-contract me-2"></i> Emitir NFS-e (Nota de Serviço)
+          </a>
+          {% endif %}
+          {% if blueprint_exists('nfe_emissao') %}
+          <a href="{{ url_for('nfe_emissao.emitir_manual') }}?os_id={{ order.id }}"
+             class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-file-invoice me-2"></i> Emitir NF-e (Produto/Peças)
+          </a>
+          {% endif %}
+          <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i> Emitir depois
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var modal = new bootstrap.Modal(document.getElementById('modalEmitirNFe'));
+  modal.show();
+});
+</script>
+{% endif %}
 {% endblock %}

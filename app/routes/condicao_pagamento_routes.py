@@ -2,7 +2,10 @@
 Rotas para CRUD de Condições de Pagamento
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from app.database import get_db
+try:
+    from database import get_db
+except ImportError:
+    from app.database import get_db
 
 condicao_pagamento_bp = Blueprint('condicoes_pagamento', __name__, url_prefix='/condicoes-pagamento')
 

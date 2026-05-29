@@ -7,10 +7,10 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 
 try:
-    from app.database import get_db
-    from app.utils.auth import login_required
-except ImportError:
     from database import get_db
+    from utils.auth import login_required
+except ImportError:
+    from app.database import get_db
     from functools import wraps
     
     def login_required(f):

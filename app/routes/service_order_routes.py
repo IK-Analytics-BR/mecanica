@@ -511,7 +511,10 @@ def service_order_edit(order_id):
                     priority='medium'
                 )
             
-            return redirect(url_for('service_order.service_order_view', order_id=order_id))
+            just_completed = (status == 'completed' and order['status'] != 'completed')
+            return redirect(url_for('service_order.service_order_view',
+                                   order_id=order_id,
+                                   emitir_nfe=1 if just_completed else 0))
         else:
             flash('Erro ao atualizar ordem de serviço.', 'danger')
     
@@ -813,7 +816,7 @@ def service_order_finalizar(order_id):
     _lancar_contas_receber(db, order)
 
     flash(f'OS {order["order_number"]} concluída! Financeiro atualizado.', 'success')
-    return redirect(url_for('service_order.service_order_view', order_id=order_id))
+    return redirect(url_for('service_order.service_order_view', order_id=order_id, emitir_nfe=1))
 
 
 # ─────────────────────────────────────────────────────────────

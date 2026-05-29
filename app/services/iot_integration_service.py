@@ -9,8 +9,15 @@ temperatura, vibração e outros parâmetros de monitoramento.
 import json
 import requests
 import logging
-import paho.mqtt.client as mqtt
 from datetime import datetime
+
+try:
+    import paho.mqtt.client as mqtt
+    _MQTT_AVAILABLE = True
+except ImportError:
+    mqtt = None
+    _MQTT_AVAILABLE = False
+    logging.getLogger(__name__).warning("[IoT] paho-mqtt não instalado — integração MQTT desativada")
 from database import get_db
 from utils.config_manager import ConfigManager
 from services.wear_service import WearService
@@ -53,6 +60,8 @@ class IoTIntegrationService:
         """Conecta ao broker MQTT."""
         if not self.is_enabled() or self.integration_type != 'mqtt':
             return {'success': False, 'message': 'Integração MQTT não está configurada.'}
+        if not _MQTT_AVAILABLE:
+            return {'success': False, 'message': 'paho-mqtt não instalado no servidor.'}
         
         try:
             # Criar cliente MQTT
