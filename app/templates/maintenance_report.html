@@ -1,19 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Relatório de Manutenções - Sistema de Gestão de Suprimentos{% endblock %}
+{% block title %}Relatório de OS — IKFlow Mecânica{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
-    <div class="alert alert-info">
-        <strong>Nota:</strong> Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
-    </div>
 
-    <h1 class="mt-4">Relatório de Manutenções</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.cmms_dashboard') }}">Dashboard CMMS</a></li>
-        <li class="breadcrumb-item active">Relatório de Manutenções</li>
-    </ol>
+    <div class="d-flex align-items-center justify-content-between mb-3 mt-2">
+        <div>
+            <h4 class="mb-0 fw-bold"><i class="fas fa-clipboard-list me-2 text-primary"></i>Relatório de Manutenções</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.cmms_dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.cmms_dashboard') }}">Dashboard CMMS</a></li>
+                    <li class="breadcrumb-item active">Relatório de Manutenções</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
     
     <!-- Filtros -->
     <div class="card mb-4">
@@ -133,36 +136,38 @@
     </div>
     
     <!-- Tabela de Ordens de Serviço -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-table me-1"></i>
-            Ordens de Serviço
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header bg-white fw-bold">
+            <i class="fas fa-table me-1 text-primary"></i> Ordens de Serviço
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {% if orders %}
             <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
+                <table class="table table-hover align-middle mb-0" id="dataTable">
+                    <thead class="table-light">
                         <tr>
-                            <th>Número</th>
+                            <th>OS</th>
                             <th>Cliente</th>
-                            <th>Equipamento</th>
+                            <th>Veículo</th>
                             <th>Tipo</th>
-                            <th>Data Abertura</th>
-                            <th>Data Conclusão</th>
+                            <th>Abertura</th>
+                            <th>Conclusão</th>
                             <th>Técnico</th>
                             <th>Status</th>
-                            <th>Tempo Parada</th>
-                            <th>Custo Peças</th>
-                            <th>Custo MO</th>
-                            <th>Custo Total</th>
-                            <th>Detalhes</th>
+                            <th class="text-end">Custo Peças</th>
+                            <th class="text-end">Custo MO</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for order in orders %}
                         <tr>
-                            <td>{{ order.order_number }}</td>
+                            <td class="fw-semibold text-primary">
+                                <a href="/service_orders/view/{{ order.id }}" class="text-decoration-none">
+                                    OS{{ '%04d' % order.id }}
+                                </a>
+                            </td>
                             <td>{{ order.customer_name }}</td>
                             <td>{{ order.equipment_name }}</td>
                             <td>
@@ -172,193 +177,149 @@
                                 <span class="badge bg-danger">Corretiva</span>
                                 {% elif order.type == 'predictive' %}
                                 <span class="badge bg-info">Preditiva</span>
+                                {% else %}
+                                <span class="badge bg-secondary">—</span>
                                 {% endif %}
                             </td>
-                            <td>{{ order.open_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if order.open_date %}
+                                    {% if order.open_date is string %}{{ order.open_date[:10] }}
+                                    {% else %}{{ order.open_date.strftime('%d/%m/%Y') }}{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
                             <td>
                                 {% if order.completion_date %}
-                                {{ order.completion_date.strftime('%d/%m/%Y') }}
-                                {% else %}
-                                <span class="text-muted">-</span>
-                                {% endif %}
+                                    {% if order.completion_date is string %}{{ order.completion_date[:10] }}
+                                    {% else %}{{ order.completion_date.strftime('%d/%m/%Y') }}{% endif %}
+                                {% else %}<span class="text-muted">—</span>{% endif %}
                             </td>
-                            <td>{{ order.technician_name or 'Não atribuído' }}</td>
+                            <td>{{ order.technician_name or '—' }}</td>
                             <td>
                                 {% if order.status == 'open' %}
                                 <span class="badge bg-primary">Aberta</span>
                                 {% elif order.status == 'in_progress' %}
-                                <span class="badge bg-warning">Em Andamento</span>
+                                <span class="badge bg-warning text-dark">Em Andamento</span>
                                 {% elif order.status == 'completed' %}
                                 <span class="badge bg-success">Concluída</span>
                                 {% elif order.status == 'canceled' %}
                                 <span class="badge bg-danger">Cancelada</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ order.status }}</span>
                                 {% endif %}
                             </td>
-                            <td>{{ order.downtime_minutes or 0 }} min</td>
-                            <td>R$ {{ "%.2f"|format(order.items_cost) }}</td>
-                            <td>R$ {{ "%.2f"|format(order.labor_cost) }}</td>
-                            <td>R$ {{ "%.2f"|format(order.total_cost) }}</td>
-                            <td>
-                                <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailsModal{{ order.id }}">
+                            <td class="text-end">R$ {{ "%.2f"|format(order.items_cost|float) }}</td>
+                            <td class="text-end">R$ {{ "%.2f"|format(order.labor_cost|float) }}</td>
+                            <td class="text-end fw-bold text-success">R$ {{ "%.2f"|format(order.total_cost|float) }}</td>
+                            <td class="text-center">
+                                <button class="btn btn-outline-primary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modal-os-{{ order.id }}">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </td>
                         </tr>
-                        
-                        <!-- Modal de Detalhes -->
-                        <div class="modal fade" id="detailsModal{{ order.id }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ order.id }}" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="detailsModalLabel{{ order.id }}">Detalhes da OS: {{ order.order_number }}</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h6>Informações Gerais</h6>
-                                                <table class="table table-bordered">
-                                                    <tr>
-                                                        <th>Cliente:</th>
-                                                        <td>{{ order.customer_name }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th>Equipamento:</th>
-                                                        <td>{{ order.equipment_name }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th>Componente:</th>
-                                                        <td>{{ order.supply_name or 'N/A' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th>Plano de Manutenção:</th>
-                                                        <td>{{ order.maintenance_plan_task or 'N/A' }}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th>Observações:</th>
-                                                        <td>{{ order.observations or 'Nenhuma observação' }}</td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6>Peças Utilizadas</h6>
-                                                {% if order.order_items %}
-                                                <table class="table table-bordered table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Peça</th>
-                                                            <th>Qtd</th>
-                                                            <th>Custo Unit.</th>
-                                                            <th>Subtotal</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for item in order.order_items %}
-                                                        <tr>
-                                                            <td>{{ item.supply_name }}</td>
-                                                            <td>{{ item.quantity }}</td>
-                                                            <td>R$ {{ "%.2f"|format(item.unit_cost) }}</td>
-                                                            <td>R$ {{ "%.2f"|format(item.quantity * item.unit_cost) }}</td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                    <tfoot>
-                                                        <tr>
-                                                            <th colspan="3" class="text-end">Total:</th>
-                                                            <th>R$ {{ "%.2f"|format(order.items_cost) }}</th>
-                                                        </tr>
-                                                    </tfoot>
-                                                </table>
-                                                {% else %}
-                                                <p class="text-muted">Nenhuma peça utilizada.</p>
-                                                {% endif %}
-                                                
-                                                <h6 class="mt-3">Horas Trabalhadas</h6>
-                                                {% if order.labor %}
-                                                <table class="table table-bordered table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Técnico</th>
-                                                            <th>Horas</th>
-                                                            <th>Taxa/Hora</th>
-                                                            <th>Subtotal</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for l in order.labor %}
-                                                        <tr>
-                                                            <td>{{ l.technician_name }}</td>
-                                                            <td>{{ l.hours_worked }}</td>
-                                                            <td>R$ {{ "%.2f"|format(l.hourly_rate) }}</td>
-                                                            <td>R$ {{ "%.2f"|format(l.hours_worked * l.hourly_rate) }}</td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                    <tfoot>
-                                                        <tr>
-                                                            <th colspan="3" class="text-end">Total:</th>
-                                                            <th>R$ {{ "%.2f"|format(order.labor_cost) }}</th>
-                                                        </tr>
-                                                    </tfoot>
-                                                </table>
-                                                {% else %}
-                                                <p class="text-muted">Nenhuma hora trabalhada registrada.</p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                        <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}" class="btn btn-primary">
-                                            <i class="fas fa-eye me-1"></i> Ver OS Completa
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         {% endfor %}
                     </tbody>
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td colspan="8" class="text-end">Totais:</td>
+                            <td class="text-end">—</td>
+                            <td class="text-end">—</td>
+                            <td class="text-end text-success">R$ {{ "%.2f"|format(total_cost|float) }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
             {% else %}
-            <div class="alert alert-info">
-                Nenhuma ordem de serviço encontrada para os filtros selecionados.
+            <div class="p-4 text-center text-muted">
+                <i class="fas fa-search fa-2x mb-2 d-block opacity-50"></i>
+                Nenhuma OS encontrada para os filtros selecionados.
             </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Modais de detalhes — FORA da tabela -->
+{% for order in orders %}
+<div class="modal fade" id="modal-os-{{ order.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-clipboard-check me-2"></i>OS{{ '%04d' % order.id }} — {{ order.customer_name }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-2">Informações Gerais</h6>
+                        <table class="table table-sm table-bordered">
+                            <tr><th class="bg-light w-40">Veículo</th><td>{{ order.equipment_name }}</td></tr>
+                            <tr><th class="bg-light">Técnico</th><td>{{ order.technician_name or '—' }}</td></tr>
+                            <tr><th class="bg-light">Status</th><td>{{ order.status }}</td></tr>
+                            <tr><th class="bg-light">Observações</th><td>{{ order.observations or '—' }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-2">Peças Utilizadas</h6>
+                        {% if order.order_items %}
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light"><tr><th>Peça</th><th>Qtd</th><th class="text-end">Subtotal</th></tr></thead>
+                            <tbody>
+                                {% for item in order.order_items %}
+                                <tr>
+                                    <td>{{ item.supply_name or item.descricao or '—' }}</td>
+                                    <td>{{ item.quantidade or item.quantity or 0 }}</td>
+                                    <td class="text-end">R$ {{ "%.2f"|format((item.subtotal or item.valor_total or 0)|float) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr><td colspan="2" class="text-end fw-bold">Total Peças:</td><td class="text-end fw-bold">R$ {{ "%.2f"|format(order.items_cost|float) }}</td></tr>
+                            </tfoot>
+                        </table>
+                        {% else %}
+                        <p class="text-muted small">Nenhuma peça registrada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <a href="/service_orders/view/{{ order.id }}" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt me-1"></i> Ver OS Completa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-    $(document).ready(function() {
+$(document).ready(function() {
+    if ($.fn.DataTable) {
         $('#dataTable').DataTable({
             order: [[4, 'desc']],
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print'
-            ]
-        });
-        
-        // Filtrar equipamentos por cliente
-        $('#customer_id').change(function() {
-            var customerId = $(this).val();
-            
-            // Esconder todos os equipamentos
-            $('.equipment-option').hide();
-            
-            if (customerId) {
-                // Mostrar apenas os equipamentos do cliente selecionado
-                $('.equipment-option[data-customer="' + customerId + '"]').show();
-            } else {
-                // Se nenhum cliente selecionado, mostrar todos
-                $('.equipment-option').show();
+            pageLength: 25,
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
             }
-            
-            // Limpar a seleção atual
-            $('#equipment_id').val('');
         });
+    }
+
+    $('#customer_id').on('change', function() {
+        var cid = $(this).val();
+        $('.equipment-option').each(function() {
+            $(this).toggle(!cid || $(this).data('customer') == cid);
+        });
+        $('#equipment_id').val('');
     });
+});
 </script>
 {% endblock %}
