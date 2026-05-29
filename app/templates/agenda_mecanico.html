@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% block title %}Agenda de Mecânicos — IKFlow Mecânica{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+<style>
+  #calendar { background:#fff; border-radius:8px; padding:16px; }
+  .fc-event { cursor:pointer; font-size:0.78rem; }
+  .card-tecnico { cursor:pointer; transition:.15s; border-left:4px solid transparent; }
+  .card-tecnico:hover, .card-tecnico.ativo { border-left-color:#3b82f6; background:#f0f9ff; }
+  .badge-os { font-size:.7rem; }
+  #painel-sem-tecnico .item-os { cursor:grab; background:#fef3c7; border:1px solid #f59e0b;
+    border-radius:6px; padding:6px 10px; margin-bottom:6px; font-size:.82rem; }
+  .legenda-cor { width:14px; height:14px; border-radius:3px; display:inline-block; margin-right:4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <h1 class="mt-4"><i class="fas fa-calendar-alt me-2 text-primary"></i>Agenda de Mecânicos</h1>
+  <ol class="breadcrumb mb-4">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active">Agenda</li>
+  </ol>
+
+  <div class="row g-3">
+
+    <!-- ── Coluna lateral ───────────────────────────────────── -->
+    <div class="col-lg-3">
+
+      <!-- Filtro de Técnico -->
+      <div class="card mb-3">
+        <div class="card-header fw-semibold"><i class="fas fa-users-cog me-1"></i> Mecânicos</div>
+        <div class="card-body p-2">
+          <div class="card-tecnico p-2 mb-1 rounded {% if not tecnico_id %}ativo{% endif %}"
+               onclick="filtrarTecnico(null, this)">
+            <i class="fas fa-layer-group me-1 text-secondary"></i> <strong>Todos</strong>
+          </div>
+          {% for t in tecnicos %}
+          <div class="card-tecnico p-2 mb-1 rounded {% if tecnico_id == t.id %}ativo{% endif %}"
+               onclick="filtrarTecnico({{ t.id }}, this)" id="card-tec-{{ t.id }}">
+            <i class="fas fa-user-cog me-1 text-primary"></i>
+            <strong>{{ t.name }}</strong>
+            {% if t.specialty %}<br><small class="text-muted">{{ t.specialty }}</small>{% endif %}
+            <span class="badge bg-secondary badge-os float-end" id="badge-{{ t.id }}">0</span>
+          </div>
+          {% endfor %}
+          {% if not tecnicos %}
+          <p class="text-muted small px-2">Nenhum técnico ativo cadastrado.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- OS sem técnico -->
+      <div class="card mb-3">
+        <div class="card-header fw-semibold text-warning">
+          <i class="fas fa-exclamation-triangle me-1"></i> OS Sem Técnico
+          <span class="badge bg-warning text-dark ms-1" id="badge-sem-tec">0</span>
+        </div>
+        <div class="card-body p-2" id="painel-sem-tecnico">
+          <p class="text-muted small">Carregando...</p>
+        </div>
+      </div>
+
+      <!-- Legenda -->
+      <div class="card">
+        <div class="card-header fw-semibold"><i class="fas fa-info-circle me-1"></i> Legenda</div>
+        <div class="card-body p-2 small">
+          <div><span class="legenda-cor" style="background:#3b82f6"></span> Aberta</div>
+          <div><span class="legenda-cor" style="background:#f59e0b"></span> Em Andamento</div>
+          <div><span class="legenda-cor" style="background:#10b981"></span> Concluída</div>
+          <div><span class="legenda-cor" style="background:#8b5cf6"></span> Agendada</div>
+          <div><span class="legenda-cor" style="background:#ef4444"></span> Cancelada</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Calendário ────────────────────────────────────────── -->
+    <div class="col-lg-9">
+      <div class="card">
+        <div class="card-body p-2">
+          <div id="calendar"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- row -->
+</div>
+
+<!-- Modal: Detalhe do Evento -->
+<div class="modal fade" id="modalEvento" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEventoTitulo">OS</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalEventoBody"></div>
+      <div class="modal-footer">
+        <a href="#" id="modalEventoLink" class="btn btn-primary btn-sm" target="_blank">
+          <i class="fas fa-external-link-alt me-1"></i> Abrir OS
+        </a>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Agendar / Reagendar -->
+<div class="modal fade" id="modalAgendar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-calendar-plus me-1"></i> Agendar OS</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="agendarOsId">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Data</label>
+          <input type="date" class="form-control" id="agendarData">
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-semibold">Hora início</label>
+            <input type="time" class="form-control" id="agendarHoraInicio" value="08:00">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold">Hora fim</label>
+            <input type="time" class="form-control" id="agendarHoraFim" value="09:00">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Técnico</label>
+          <select class="form-select" id="agendarTecnico">
+            <option value="">— Manter atual —</option>
+            {% for t in tecnicos %}
+            <option value="{{ t.id }}">{{ t.name }}{% if t.specialty %} ({{ t.specialty }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="confirmarAgendamento()">
+          <i class="fas fa-save me-1"></i> Salvar Agendamento
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/pt-br.global.min.js"></script>
+<script>
+let calendario = null;
+let tecnicoAtivo = {{ tecnico_id or 'null' }};
+
+document.addEventListener('DOMContentLoaded', function () {
+  const el = document.getElementById('calendar');
+  calendario = new FullCalendar.Calendar(el, {
+    locale: 'pt-br',
+    initialView: 'timeGridWeek',
+    headerToolbar: {
+      left:   'prev,next today',
+      center: 'title',
+      right:  'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+    },
+    slotMinTime: '07:00:00',
+    slotMaxTime: '20:00:00',
+    allDaySlot: false,
+    nowIndicator: true,
+    editable: true,
+    droppable: true,
+    events: function (info, successCallback, failureCallback) {
+      let url = '/agenda/api/eventos?start=' + info.startStr + '&end=' + info.endStr;
+      if (tecnicoAtivo) url += '&tecnico_id=' + tecnicoAtivo;
+      fetch(url)
+        .then(r => r.json())
+        .then(events => { successCallback(events); atualizarBadges(events); })
+        .catch(failureCallback);
+    },
+    eventClick: function (info) {
+      const p = info.event.extendedProps;
+      document.getElementById('modalEventoTitulo').textContent = info.event.title;
+      document.getElementById('modalEventoBody').innerHTML = `
+        <table class="table table-sm table-borderless">
+          <tr><th>Status</th><td><span class="badge" style="background:${info.event.backgroundColor}">${p.status_label}</span></td></tr>
+          <tr><th>Técnico</th><td>${p.technician || '<em class="text-muted">Não atribuído</em>'}</td></tr>
+          <tr><th>Veículo</th><td>${p.placa || '—'}</td></tr>
+          <tr><th>Total</th><td>R$ ${p.total.toFixed(2).replace('.', ',')}</td></tr>
+          <tr><th>Início</th><td>${info.event.startStr.replace('T', ' ').substring(0, 16)}</td></tr>
+        </table>
+        <button class="btn btn-outline-primary btn-sm w-100 mt-1"
+                onclick="abrirModalAgendar(${p.os_id}, '${info.event.startStr.substring(0,10)}')">
+          <i class="fas fa-calendar-edit me-1"></i> Reagendar
+        </button>`;
+      document.getElementById('modalEventoLink').href = '/service_orders/view/' + p.os_id;
+      new bootstrap.Modal(document.getElementById('modalEvento')).show();
+    },
+    eventDrop: function (info) {
+      const os_id = info.event.extendedProps.os_id;
+      const nova_data = info.event.startStr.substring(0, 10);
+      const hora_ini  = info.event.startStr.substring(11, 16) || '08:00';
+      const hora_fim  = info.event.endStr   ? info.event.endStr.substring(11, 16) : '09:00';
+      salvarAgendamento(os_id, nova_data, hora_ini, hora_fim, null);
+    },
+    dateClick: function (info) {
+      document.getElementById('agendarData').value = info.dateStr.substring(0, 10);
+      document.getElementById('agendarOsId').value = '';
+      new bootstrap.Modal(document.getElementById('modalAgendar')).show();
+    }
+  });
+  calendario.render();
+  carregarOsSemTecnico();
+});
+
+function filtrarTecnico(id, el) {
+  document.querySelectorAll('.card-tecnico').forEach(c => c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  tecnicoAtivo = id;
+  calendario.refetchEvents();
+}
+
+function atualizarBadges(events) {
+  const contagem = {};
+  events.forEach(e => {
+    const tec = e.extendedProps && e.extendedProps.technician;
+    if (tec) contagem[tec] = (contagem[tec] || 0) + 1;
+  });
+  document.querySelectorAll('[id^="badge-"]').forEach(b => {
+    const id = b.id.replace('badge-', '');
+    if (!isNaN(id)) b.textContent = 0;
+  });
+  fetch('/agenda/carga-semanal')
+    .then(r => r.json())
+    .then(data => {
+      (data.tecnicos || []).forEach(t => {
+        const b = document.getElementById('badge-' + t.id);
+        if (b) b.textContent = t.os_abertas || 0;
+      });
+    }).catch(() => {});
+}
+
+function carregarOsSemTecnico() {
+  fetch('/agenda/api/os-sem-tecnico')
+    .then(r => r.json())
+    .then(lista => {
+      const painel = document.getElementById('painel-sem-tecnico');
+      document.getElementById('badge-sem-tec').textContent = lista.length;
+      if (!lista.length) {
+        painel.innerHTML = '<p class="text-muted small px-1">Todas as OS têm técnico atribuído. ✅</p>';
+        return;
+      }
+      painel.innerHTML = lista.map(o => `
+        <div class="item-os" onclick="abrirModalAgendar(${o.id}, '${(o.agendado_para||o.open_date||'').substring(0,10)}')">
+          <strong>${o.order_number}</strong><br>
+          <small>${o.customer_name} — ${o.placa || o.equipment_name}</small>
+        </div>`).join('');
+    }).catch(() => {
+      document.getElementById('painel-sem-tecnico').innerHTML = '<p class="text-muted small">Erro ao carregar.</p>';
+    });
+}
+
+function abrirModalAgendar(osId, data) {
+  document.getElementById('agendarOsId').value = osId || '';
+  document.getElementById('agendarData').value = data || '';
+  const modal = bootstrap.Modal.getInstance(document.getElementById('modalEvento'));
+  if (modal) modal.hide();
+  new bootstrap.Modal(document.getElementById('modalAgendar')).show();
+}
+
+function confirmarAgendamento() {
+  const osId      = document.getElementById('agendarOsId').value;
+  const data      = document.getElementById('agendarData').value;
+  const horaIni   = document.getElementById('agendarHoraInicio').value;
+  const horaFim   = document.getElementById('agendarHoraFim').value;
+  const tecnicoId = document.getElementById('agendarTecnico').value;
+
+  if (!osId) { alert('Selecione uma OS para agendar.'); return; }
+  if (!data)  { alert('Informe a data.'); return; }
+
+  salvarAgendamento(osId, data, horaIni, horaFim, tecnicoId || null);
+}
+
+function salvarAgendamento(osId, data, horaIni, horaFim, tecnicoId) {
+  fetch('/agenda/agendar/' + osId, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data, hora_inicio: horaIni, hora_fim: horaFim, tecnico_id: tecnicoId })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.ok) {
+      bootstrap.Modal.getInstance(document.getElementById('modalAgendar'))?.hide();
+      calendario.refetchEvents();
+      carregarOsSemTecnico();
+    } else {
+      alert('Erro: ' + (res.erro || 'desconhecido'));
+    }
+  }).catch(e => alert('Erro de conexão: ' + e));
+}
+</script>
+{% endblock %}

@@ -21,6 +21,11 @@
                         <a href="{{ url_for('technician.technician_edit', technician_id=technician.id) }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-edit"></i> Editar
                         </a>
+                        {% if blueprint_exists('agenda') %}
+                        <a href="{{ url_for('agenda.agenda_tecnico', tecnico_id=technician.id) }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-calendar-alt"></i> Ver Agenda
+                        </a>
+                        {% endif %}
                         <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
                             <i class="fas fa-trash"></i> Excluir
                         </button>

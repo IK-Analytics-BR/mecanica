@@ -239,8 +239,12 @@
                         {% endif %}
 
                         <li class="menu-header">Agenda</li>
+                        {% if blueprint_exists('agenda') %}
+                        <li><a href="{{ url_for('agenda.agenda_index') }}"><i class="fas fa-calendar-alt text-primary"></i> Agenda de Mecânicos</a></li>
+                        <li><a href="{{ url_for('agenda.agenda_index') }}"><i class="fas fa-bell text-warning"></i> Lembretes de Revisão</a></li>
+                        {% else %}
                         <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='agenda') }}"><i class="fas fa-calendar-alt text-primary"></i> Agenda de Serviços <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='agenda') }}"><i class="fas fa-bell"></i> Lembretes de Revisão <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
+                        {% endif %}
 
                         <li class="menu-header">Garantia</li>
                         <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='garantia') }}"><i class="fas fa-shield-alt text-success"></i> Controle de Garantia <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>

@@ -77,6 +77,9 @@ api_bp = _try_import('routes.api_routes', 'api_bp')
 # Módulo de Técnicos
 technician_bp = _try_import('routes.technician_routes', 'technician_bp')
 
+# Agenda de Mecânicos
+agenda_bp = _try_import('routes.agenda_routes', 'agenda_bp')
+
 # Módulo de Produtos - Categorias, Marcas, Grupos e Subgrupos
 product_category_bp = _try_import('routes.product_category_routes', 'product_category_bp')
 product_brand_bp = _try_import('routes.product_brand_routes', 'product_brand_bp')
@@ -237,6 +240,7 @@ for _bp in (
     permissoes_bp,
     api_bp,
     technician_bp,
+    agenda_bp,
     product_category_bp,
     product_brand_bp,
     product_group_bp,

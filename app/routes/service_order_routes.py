@@ -15,6 +15,11 @@ try:
 except Exception:
     _wa = None
 
+try:
+    from routes.agenda_routes import calcular_proximo_preventivo as _preventivo
+except Exception:
+    _preventivo = None
+
 # Criar o blueprint
 service_order_bp = Blueprint('service_order', __name__)
 
@@ -473,6 +478,12 @@ def service_order_edit(order_id):
                         _wa(order_id, 'concluido')
                     except Exception as _e:
                         print(f'[WA] Erro trigger concluido: {_e}')
+                # Preventivo automático: atualiza next_maintenance do veículo
+                if _preventivo:
+                    try:
+                        _preventivo(order_id)
+                    except Exception as _e:
+                        print(f'[AGENDA] Erro trigger preventivo: {_e}')
             
             # Criar alerta se um técnico foi atribuído
             if is_technician_assigned:
