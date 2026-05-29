@@ -533,6 +533,107 @@ def disparar_lembretes_revisao():
     })
 
 
+@whatsapp_bp.route('/whatsapp/cron/lembretes')
+def disparar_lembretes_cron():
+    """
+    Rota pública para crontab — requer token secreto via ?token=...
+    Exemplo crontab:
+      0 9 * * * curl -s "https://mecanicas.ikflow.cloud/whatsapp/cron/lembretes?token=IKFlow2026Cron"
+    """
+    token_esperado = os.environ.get('CRON_SECRET', 'IKFlow2026Cron')
+    token_recebido = request.args.get('token', '')
+    if token_recebido != token_esperado:
+        return jsonify({'ok': False, 'msg': 'Token inválido'}), 403
+
+    db = get_db()
+    cfg = _get_config(db)
+    if not cfg or not cfg.get('disparos_ativos'):
+        return jsonify({'ok': False, 'msg': 'Disparos desativados.'})
+
+    dias = int(cfg.get('dias_lembrete') or 7)
+    enviados, erros = 0, 0
+
+    # Lembretes por DATA
+    try:
+        veiculos = db.fetch_all("""
+            SELECT e.id, e.serial_number as placa, e.next_maintenance,
+                   c.name as customer_name, c.phone as customer_phone
+            FROM equipment e
+            LEFT JOIN customers c ON c.id = e.customer_id
+            WHERE e.active = 1
+              AND e.next_maintenance IS NOT NULL
+              AND e.next_maintenance <= DATE_ADD(CURDATE(), INTERVAL %s DAY)
+              AND e.next_maintenance >= CURDATE()
+        """, (dias,))
+    except Exception as e:
+        return jsonify({'ok': False, 'msg': f'Erro DB: {e}'})
+
+    for v in veiculos:
+        telefone = (v.get('customer_phone') or '').strip()
+        if not telefone:
+            continue
+        template = _get_template_mensagem(db, 'lembrete_revisao')
+        mensagem = template.format(
+            nome=v.get('customer_name', 'Cliente'),
+            placa=v.get('placa') or 'veículo',
+            os_numero='', total='',
+        )
+        resultado = _enviar_mensagem(cfg, telefone, mensagem)
+        _registrar_log(db, 'lembrete_revisao', telefone, mensagem, None,
+                       'enviado' if resultado['ok'] else 'erro', resultado['body'])
+        if resultado['ok']:
+            enviados += 1
+        else:
+            erros += 1
+
+    # Lembretes por KM
+    try:
+        veiculos_km = db.fetch_all("""
+            SELECT e.serial_number as placa,
+                   e.accumulated_hours as km_atual,
+                   e.adjusted_life_hours as km_proxima_revisao,
+                   c.name as customer_name, c.phone as customer_phone
+            FROM equipment e
+            LEFT JOIN customers c ON c.id = e.customer_id
+            WHERE e.active = 1
+              AND e.accumulated_hours IS NOT NULL
+              AND e.adjusted_life_hours > 0
+              AND e.accumulated_hours >= (e.adjusted_life_hours - 1000)
+              AND e.accumulated_hours < e.adjusted_life_hours
+        """)
+    except Exception:
+        veiculos_km = []
+
+    for v in veiculos_km:
+        telefone = (v.get('customer_phone') or '').strip()
+        if not telefone:
+            continue
+        km_atual   = int(v.get('km_atual') or 0)
+        km_revisao = int(v.get('km_proxima_revisao') or 0)
+        faltam     = km_revisao - km_atual
+        mensagem = (
+            f"Olá {v.get('customer_name','Cliente')}, o veículo {v.get('placa','') or 'seu veículo'} "
+            f"está a apenas {faltam:,} km da próxima revisão "
+            f"(prevista para {km_revisao:,} km). Agende agora!"
+        )
+        resultado = _enviar_mensagem(cfg, telefone, mensagem)
+        _registrar_log(db, 'lembrete_revisao_km', telefone, mensagem, None,
+                       'enviado' if resultado['ok'] else 'erro', resultado['body'])
+        if resultado['ok']:
+            enviados += 1
+        else:
+            erros += 1
+
+    print(f'[CRON] Lembretes: enviados={enviados} erros={erros}')
+    return jsonify({
+        'ok': True,
+        'enviados': enviados,
+        'erros': erros,
+        'total_data': len(veiculos),
+        'total_km': len(veiculos_km),
+    })
+
+
 @whatsapp_bp.route('/whatsapp/alerta-urgente/<int:order_id>', methods=['POST'])
 @login_required
 def alerta_os_urgente(order_id):
