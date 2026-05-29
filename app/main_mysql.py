@@ -1171,6 +1171,100 @@ def serve_docs(filename):
     # Para outros tipos de arquivo, servir normalmente
     return send_from_directory(docs_dir, filename)
 
+@app.route('/busca-global')
+@login_required
+def busca_global():
+    """Busca global para o header mobile PWA."""
+    q = request.args.get('q', '').strip()
+    if len(q) < 2:
+        return jsonify({'results': []})
+
+    db = get_db()
+    results = []
+    like = f'%{q}%'
+
+    try:
+        # OS / Ordens de serviço
+        rows = db.fetch_all("""
+            SELECT so.id, so.order_number, c.name as customer_name,
+                   e.serial_number as placa, so.status
+            FROM service_orders so
+            LEFT JOIN customers c ON c.id = so.customer_id
+            LEFT JOIN equipment e ON e.id = so.equipment_id
+            WHERE so.order_number LIKE %s OR c.name LIKE %s OR e.serial_number LIKE %s
+            LIMIT 5
+        """, (like, like, like))
+        for r in rows:
+            results.append({
+                'title': f'OS {r["order_number"]}',
+                'subtitle': f'{r.get("customer_name","") or ""} — {r.get("placa","") or ""}',
+                'url': f'/service_orders/{r["id"]}',
+                'icon': 'fa-clipboard-list',
+                'color': '#0b2447',
+            })
+    except Exception:
+        pass
+
+    try:
+        # Clientes
+        rows = db.fetch_all("""
+            SELECT id, name, phone, cpf_cnpj FROM customers
+            WHERE name LIKE %s OR cpf_cnpj LIKE %s OR phone LIKE %s
+            LIMIT 4
+        """, (like, like, like))
+        for r in rows:
+            results.append({
+                'title': r['name'],
+                'subtitle': r.get('phone') or r.get('cpf_cnpj') or 'Cliente',
+                'url': f'/clientes/{r["id"]}',
+                'icon': 'fa-user',
+                'color': '#8b7bff',
+            })
+    except Exception:
+        pass
+
+    try:
+        # Veículos / Equipamentos
+        rows = db.fetch_all("""
+            SELECT e.id, e.serial_number as placa, e.name as modelo,
+                   c.name as customer_name
+            FROM equipment e
+            LEFT JOIN customers c ON c.id = e.customer_id
+            WHERE e.serial_number LIKE %s OR e.name LIKE %s
+            LIMIT 4
+        """, (like, like))
+        for r in rows:
+            results.append({
+                'title': r.get('placa') or r.get('modelo') or 'Veículo',
+                'subtitle': r.get('customer_name') or 'Veículo',
+                'url': f'/veiculos/{r["id"]}/historico',
+                'icon': 'fa-car',
+                'color': '#08a5b2',
+            })
+    except Exception:
+        pass
+
+    try:
+        # Peças / Produtos
+        rows = db.fetch_all("""
+            SELECT id, name, sku FROM products
+            WHERE name LIKE %s OR sku LIKE %s
+            LIMIT 3
+        """, (like, like))
+        for r in rows:
+            results.append({
+                'title': r['name'],
+                'subtitle': f'SKU: {r.get("sku","") or "—"}',
+                'url': f'/produtos/{r["id"]}',
+                'icon': 'fa-wrench',
+                'color': '#ff9f1a',
+            })
+    except Exception:
+        pass
+
+    return jsonify({'results': results[:12]})
+
+
 # =====================================================
 # TEARDOWN: Fechar conexões ao fim de cada request
 # =====================================================

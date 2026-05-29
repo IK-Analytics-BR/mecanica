@@ -198,10 +198,342 @@
         .dropdown-toggle[aria-expanded="true"]::after {
             transform: translateY(-50%) rotate(90deg);
         }
+
+        /* ══════════════════════════════════════════
+           PWA MOBILE — Layout Executivo
+        ══════════════════════════════════════════ */
+
+        /* Overlay do drawer mobile */
+        #sidebarOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 1040;
+            backdrop-filter: blur(2px);
+        }
+        #sidebarOverlay.show { display: block; }
+
+        /* Header mobile */
+        #mobileHeader {
+            display: none;
+        }
+
+        /* Bottom nav mobile */
+        #bottomNav {
+            display: none;
+        }
+
+        /* Busca global mobile */
+        #globalSearchBar {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            /* Esconder sidebar desktop e navbar desktop */
+            #sidebar { display: none !important; }
+            .navbar { display: none !important; }
+
+            /* Mostrar header mobile */
+            #mobileHeader {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1050;
+                background: linear-gradient(135deg, #0b2447, #08a5b2);
+                color: #fff;
+                align-items: center;
+                padding: 0 12px;
+                height: 56px;
+                padding-top: env(safe-area-inset-top);
+                box-shadow: 0 2px 12px rgba(0,0,0,.3);
+                gap: 10px;
+            }
+            #mobileHeader .mh-logo {
+                height: 28px;
+                flex: 1;
+                object-fit: contain;
+                object-position: left;
+            }
+            #mobileHeader .mh-btn {
+                background: rgba(255,255,255,.15);
+                border: none;
+                color: #fff;
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                flex-shrink: 0;
+                cursor: pointer;
+            }
+            #mobileHeader .mh-btn:active { background: rgba(255,255,255,.3); }
+
+            /* Barra de busca global */
+            #globalSearchBar {
+                display: block;
+                position: fixed;
+                top: calc(56px + env(safe-area-inset-top));
+                left: 0;
+                right: 0;
+                z-index: 1049;
+                background: #fff;
+                padding: 8px 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,.1);
+                border-bottom: 1px solid #e9ecef;
+            }
+            #globalSearchBar input {
+                width: 100%;
+                border: 1.5px solid #e2e8f0;
+                border-radius: 24px;
+                padding: 8px 16px 8px 40px;
+                font-size: 15px;
+                background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.868-3.834zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat 14px center;
+                outline: none;
+                color: #1e293b;
+            }
+            #globalSearchBar input:focus {
+                border-color: #08a5b2;
+                box-shadow: 0 0 0 3px rgba(8,165,178,.15);
+            }
+
+            /* Sidebar como drawer deslizante */
+            #sidebar {
+                display: flex !important;
+                flex-direction: column;
+                position: fixed !important;
+                top: 0;
+                left: -280px;
+                width: 280px !important;
+                min-width: 280px !important;
+                max-width: 280px !important;
+                height: 100vh;
+                z-index: 1055;
+                transition: left .3s cubic-bezier(.4,0,.2,1);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            #sidebar.drawer-open {
+                left: 0 !important;
+            }
+
+            /* Content: compensar header + busca + bottom nav */
+            #content {
+                margin-left: 0 !important;
+                padding-top: calc(56px + 52px + env(safe-area-inset-top)) !important;
+                padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+                width: 100% !important;
+            }
+
+            /* Tabelas: scroll horizontal com altura fixa */
+            .table-responsive, [class*="table-responsive"] {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                border-radius: 8px;
+            }
+            table {
+                font-size: 13px !important;
+            }
+            table th, table td {
+                white-space: nowrap;
+                padding: 8px 10px !important;
+            }
+            /* Colunas de ação sempre visíveis */
+            table td:last-child, table th:last-child {
+                position: sticky;
+                right: 0;
+                background: #fff;
+                box-shadow: -2px 0 6px rgba(0,0,0,.06);
+            }
+
+            /* Cards */
+            .card {
+                border-radius: 12px !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,.08) !important;
+                margin-bottom: 14px !important;
+                border: none !important;
+            }
+            .card-header {
+                border-radius: 12px 12px 0 0 !important;
+                padding: 12px 16px !important;
+                font-weight: 700;
+                font-size: 14px;
+            }
+
+            /* Formulários */
+            .form-control, .form-select {
+                font-size: 16px !important;
+                padding: 10px 14px !important;
+                border-radius: 10px !important;
+                border: 1.5px solid #e2e8f0 !important;
+            }
+            .form-control:focus, .form-select:focus {
+                border-color: #08a5b2 !important;
+                box-shadow: 0 0 0 3px rgba(8,165,178,.15) !important;
+            }
+            .form-label {
+                font-weight: 600;
+                font-size: 13px;
+                color: #475569;
+                margin-bottom: 4px;
+            }
+            .btn {
+                font-size: 15px !important;
+                padding: 10px 18px !important;
+                border-radius: 10px !important;
+                font-weight: 600;
+            }
+            .btn-sm {
+                font-size: 13px !important;
+                padding: 6px 12px !important;
+            }
+
+            /* Action bar: botões empilham */
+            .action-bar, .d-flex.gap-2, .d-flex.flex-wrap {
+                flex-wrap: wrap !important;
+            }
+            .action-bar .btn { width: 100%; }
+
+            /* Container sem padding lateral excessivo */
+            .container, .container-fluid {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+
+            /* KPI row: 2 por linha */
+            .row .col-md-3, .row .col-lg-3 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+            .row .col-md-4, .row .col-lg-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+
+            /* Headings menores */
+            h1 { font-size: 1.3rem !important; }
+            h2 { font-size: 1.15rem !important; }
+            h3 { font-size: 1rem !important; }
+
+            /* Modais: bottom sheet */
+            .modal-dialog {
+                margin: 0 !important;
+                max-width: 100% !important;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+            .modal-content {
+                border-radius: 20px 20px 0 0 !important;
+                border: none !important;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+
+            /* Alertas compactos */
+            .alert {
+                font-size: 13px;
+                padding: 10px 14px;
+                border-radius: 10px;
+            }
+
+            /* DataTables mobile */
+            .dataTables_wrapper .dataTables_filter input {
+                font-size: 15px;
+                border-radius: 8px;
+            }
+            .dataTables_wrapper .dataTables_length select {
+                font-size: 15px;
+            }
+
+            /* Gráficos: canvas responsivo */
+            canvas { max-width: 100% !important; }
+
+            /* Bottom nav */
+            #bottomNav {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1050;
+                background: #fff;
+                border-top: 1px solid #e2e8f0;
+                padding-bottom: env(safe-area-inset-bottom);
+                box-shadow: 0 -4px 20px rgba(0,0,0,.1);
+            }
+            .bn-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 8px 4px;
+                text-decoration: none;
+                color: #94a3b8;
+                font-size: 10px;
+                font-weight: 600;
+                gap: 3px;
+                cursor: pointer;
+                border: none;
+                background: none;
+                transition: color .2s;
+            }
+            .bn-item i { font-size: 20px; }
+            .bn-item.active, .bn-item:active {
+                color: #0b2447;
+            }
+            .bn-item.bn-primary {
+                color: #fff;
+                background: linear-gradient(135deg, #0b2447, #08a5b2);
+                border-radius: 16px;
+                margin: 6px;
+                padding: 10px;
+                box-shadow: 0 4px 12px rgba(8,165,178,.4);
+            }
+        }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
+    <!-- ══ HEADER MOBILE ══ -->
+    {% if session.get('username') %}
+    <div id="mobileHeader">
+        <button class="mh-btn" id="drawerToggle" aria-label="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <img src="{{ url_for('static', filename='img/logo_menu.png') }}" alt="IKFlow" class="mh-logo">
+        <a href="{{ url_for('bem_vindo') }}" class="mh-btn" title="Início">
+            <i class="fas fa-home"></i>
+        </a>
+        <button class="mh-btn" id="userMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" style="margin-top:48px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);">
+            <li><span class="dropdown-item-text fw-bold">{{ session.get('username') }}</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('users.user_profile') }}"><i class="fas fa-user me-2"></i>Meu Perfil</a></li>
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="fas fa-key me-2"></i>Alterar Senha</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+        </ul>
+    </div>
+
+    <!-- ══ BUSCA GLOBAL MOBILE ══ -->
+    <div id="globalSearchBar">
+        <input type="search" id="globalSearchInput" placeholder="Buscar OS, cliente, veículo, peça..." autocomplete="off" autocorrect="off">
+        <div id="globalSearchResults" style="display:none;position:absolute;left:12px;right:12px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);max-height:280px;overflow-y:auto;z-index:9999;margin-top:4px;"></div>
+    </div>
+
+    <!-- ══ OVERLAY DRAWER ══ -->
+    <div id="sidebarOverlay"></div>
+    {% endif %}
+
     <div class="wrapper">
         <!-- Sidebar -->
         {% if session.get('username') %}
@@ -587,7 +919,7 @@
         {% endif %}
 
         <!-- Page Content -->
-        <div id="content" class="{% if not session.get('username') %}w-100{% endif %}">
+        <div id="content" class="{% if not session.get('username') %}w-100{% endif %}" style="overflow-x:hidden;">
             <!-- Navbar -->
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <div class="container-fluid">
@@ -689,6 +1021,35 @@
         </div>
     </div>
 
+    <!-- ══ BOTTOM NAV MOBILE ══ -->
+    {% if session.get('username') %}
+    <nav id="bottomNav">
+        {% if blueprint_exists('service_order') %}
+        <a class="bn-item" href="{{ url_for('service_order.service_order_list') }}">
+            <i class="fas fa-clipboard-list"></i><span>OS</span>
+        </a>
+        {% endif %}
+        {% if blueprint_exists('cliente') %}
+        <a class="bn-item" href="{{ url_for('cliente.clientes') }}">
+            <i class="fas fa-users"></i><span>Clientes</span>
+        </a>
+        {% endif %}
+        {% if blueprint_exists('service_order') %}
+        <a class="bn-item bn-primary" href="{{ url_for('service_order.service_order_create') }}">
+            <i class="fas fa-plus"></i><span>Nova OS</span>
+        </a>
+        {% endif %}
+        {% if blueprint_exists('inventory') %}
+        <a class="bn-item" href="{{ url_for('inventory.inventory_list') }}">
+            <i class="fas fa-boxes"></i><span>Estoque</span>
+        </a>
+        {% endif %}
+        <button class="bn-item" id="drawerToggleBottom">
+            <i class="fas fa-th-large"></i><span>Menu</span>
+        </button>
+    </nav>
+    {% endif %}
+
     <!-- jQuery (deve ser carregado antes do Bootstrap) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS Bundle with Popper -->
@@ -748,6 +1109,84 @@
                 $('#sidebar').toggleClass('active');
             });
         });
+    </script>
+
+    <script>
+    /* ══ PWA MOBILE — Drawer + Busca Global ══ */
+    (function() {
+        const isMobile = () => window.innerWidth <= 768;
+
+        // Drawer toggle
+        function openDrawer() {
+            document.getElementById('sidebar').classList.add('drawer-open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer() {
+            document.getElementById('sidebar').classList.remove('drawer-open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        const drawerBtn = document.getElementById('drawerToggle');
+        const drawerBtnBottom = document.getElementById('drawerToggleBottom');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (drawerBtn) drawerBtn.addEventListener('click', openDrawer);
+        if (drawerBtnBottom) drawerBtnBottom.addEventListener('click', openDrawer);
+        if (overlay) overlay.addEventListener('click', closeDrawer);
+
+        // Fechar drawer ao clicar em link do menu mobile
+        document.querySelectorAll('#sidebar a[href]').forEach(link => {
+            link.addEventListener('click', function() {
+                if (isMobile() && !this.dataset.bsToggle) closeDrawer();
+            });
+        });
+
+        // Marcar item ativo no bottom nav
+        const path = window.location.pathname;
+        document.querySelectorAll('#bottomNav .bn-item').forEach(item => {
+            const href = item.getAttribute('href');
+            if (href && path.startsWith(href) && href !== '/') {
+                item.classList.add('active');
+            }
+        });
+
+        // Busca global
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchResults = document.getElementById('globalSearchResults');
+        let searchTimer;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimer);
+                const q = this.value.trim();
+                if (q.length < 2) { searchResults.style.display = 'none'; return; }
+                searchTimer = setTimeout(() => {
+                    fetch('/busca-global?q=' + encodeURIComponent(q))
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.results || !data.results.length) {
+                                searchResults.innerHTML = '<div style="padding:14px;color:#94a3b8;text-align:center;"><i class="fas fa-search me-2"></i>Nenhum resultado</div>';
+                            } else {
+                                searchResults.innerHTML = data.results.map(r =>
+                                    `<a href="${r.url}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;text-decoration:none;color:#1e293b;border-bottom:1px solid #f1f5f9;">
+                                        <span style="width:32px;height:32px;border-radius:50%;background:${r.color||'#e2e8f0'};display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex-shrink:0;"><i class="fas ${r.icon||'fa-circle'}"></i></span>
+                                        <span><div style="font-weight:600;font-size:14px;">${r.title}</div><div style="font-size:12px;color:#94a3b8;">${r.subtitle||''}</div></span>
+                                    </a>`
+                                ).join('');
+                            }
+                            searchResults.style.display = 'block';
+                        })
+                        .catch(() => { searchResults.style.display = 'none'; });
+                }, 350);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target)) searchResults.style.display = 'none';
+            });
+        }
+    })();
     </script>
     
     <!-- Bloco para JavaScript adicional das páginas -->
