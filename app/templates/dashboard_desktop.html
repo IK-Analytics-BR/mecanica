@@ -1,0 +1,705 @@
+{#
+  DASHBOARD DESKTOP - Tela inicial premium
+  KPIs, gráficos, afazeres e resumo executivo
+#}
+{% extends 'layouts/base_desktop.html' %}
+
+{% block title %}Dashboard - IKFlow Mecânica{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --ik-teal: #08a5b2;
+        --ik-teal-dark: #067d87;
+        --ik-orange: #ff9f1a;
+        --ik-navy: #0b2447;
+    }
+
+    /* Header do Dashboard */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--ik-navy) 0%, var(--ik-teal) 100%);
+        color: #fff;
+        padding: 30px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 40px rgba(11, 36, 71, 0.3);
+    }
+
+    .dashboard-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-header p {
+        opacity: 0.9;
+        font-size: 16px;
+        margin-bottom: 0;
+    }
+
+    /* Cards de KPI */
+    .kpi-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    .kpi-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+
+    .kpi-icon.blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; }
+    .kpi-icon.green { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+    .kpi-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .kpi-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+    .kpi-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; }
+    .kpi-icon.teal { background: linear-gradient(135deg, #14b8a6, #0d9488); color: #fff; }
+
+    .kpi-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--ik-navy);
+        margin-bottom: 4px;
+    }
+
+    .kpi-label {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .kpi-trend {
+        font-size: 13px;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .kpi-trend.up { color: #10b981; }
+    .kpi-trend.down { color: #ef4444; }
+
+    /* Seções */
+    .section-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ik-navy);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-body {
+        padding: 20px 24px;
+    }
+
+    /* OS List */
+    .os-item {
+        display: flex;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .os-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .os-status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+
+    .os-status.open { background: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.2); }
+    .os-status.progress { background: #f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,0.2); }
+    .os-status.urgent { background: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,0.2); }
+
+    .os-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .os-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .os-meta {
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .os-value {
+        text-align: right;
+        margin-left: 16px;
+    }
+
+    .os-value .price {
+        font-weight: 700;
+        color: var(--ik-navy);
+        font-size: 16px;
+    }
+
+    /* Tarefas */
+    .task-item {
+        display: flex;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .task-item:last-child {
+        border-bottom: none;
+    }
+
+    .task-checkbox {
+        width: 22px;
+        height: 22px;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        margin-right: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .task-checkbox:hover {
+        border-color: var(--ik-teal);
+    }
+
+    .task-checkbox.checked {
+        background: var(--ik-teal);
+        border-color: var(--ik-teal);
+    }
+
+    .task-checkbox.checked i {
+        color: #fff;
+        font-size: 12px;
+    }
+
+    .task-content {
+        flex: 1;
+    }
+
+    .task-text {
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    .task-text.completed {
+        text-decoration: line-through;
+        color: #94a3b8;
+    }
+
+    .task-meta {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .task-priority {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 12px;
+    }
+
+    .task-priority.high { background: #fee2e2; color: #991b1b; }
+    .task-priority.medium { background: #fef3c7; color: #92400e; }
+    .task-priority.low { background: #e0f2fe; color: #075985; }
+
+    /* Gráfico Placeholder */
+    .chart-container {
+        height: 200px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        padding: 20px 0;
+        gap: 12px;
+    }
+
+    .chart-bar {
+        flex: 1;
+        background: linear-gradient(to top, var(--ik-teal), var(--ik-navy));
+        border-radius: 8px 8px 0 0;
+        min-height: 30px;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+    .chart-bar:hover {
+        opacity: 0.8;
+    }
+
+    .chart-bar .label {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        color: #64748b;
+        white-space: nowrap;
+    }
+
+    .chart-bar .value {
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ik-navy);
+    }
+
+    /* Alertas */
+    .alert-card {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        background: #fef3c7;
+        border-radius: 12px;
+        border-left: 4px solid #f59e0b;
+        margin-bottom: 12px;
+    }
+
+    .alert-card.danger {
+        background: #fee2e2;
+        border-left-color: #ef4444;
+    }
+
+    .alert-card.success {
+        background: #d1fae5;
+        border-left-color: #10b981;
+    }
+
+    .alert-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(245,158,11,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        color: #f59e0b;
+        font-size: 18px;
+    }
+
+    .alert-card.danger .alert-icon {
+        background: rgba(239,68,68,0.2);
+        color: #ef4444;
+    }
+
+    .alert-card.success .alert-icon {
+        background: rgba(16,185,129,0.2);
+        color: #10b981;
+    }
+
+    .alert-content h6 {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .alert-content p {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 0;
+    }
+
+    /* Botão Novo */
+    .btn-new {
+        background: linear-gradient(135deg, var(--ik-orange), #f08a00);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-new:hover {
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255,159,26,0.4);
+    }
+
+    /* Atalhos Rápidos */
+    .quick-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .quick-btn {
+        padding: 16px 24px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #475569;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s;
+    }
+
+    .quick-btn:hover {
+        border-color: var(--ik-teal);
+        color: var(--ik-teal);
+        background: #fff;
+    }
+
+    .quick-btn i {
+        font-size: 20px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1>Olá, {{ session.get('username', 'Usuário') }}! 👋</h1>
+                <p>{{ saudacao|default('Bem-vindo ao seu dashboard') }} | {{ data_atual|default('') }}</p>
+            </div>
+            <a href="{{ url_for('service_order.service_order_add') }}" class="btn-new">
+                <i class="fas fa-plus"></i> Nova OS
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon blue">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="kpi-value">{{ kpi.os_abertas|default(0) }}</div>
+                <div class="kpi-label">OS Abertas</div>
+                <div class="kpi-trend up">
+                    <i class="fas fa-arrow-up"></i> {{ kpi.os_abertas_var|default(0) }}% vs ontem
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon orange">
+                    <i class="fas fa-wrench"></i>
+                </div>
+                <div class="kpi-value">{{ kpi.os_andamento|default(0) }}</div>
+                <div class="kpi-label">Em Andamento</div>
+                <div class="kpi-trend down">
+                    <i class="fas fa-arrow-down"></i> {{ kpi.os_andamento_var|default(0) }}% hoje
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="kpi-value">{{ kpi.os_concluidas|default(0) }}</div>
+                <div class="kpi-label">Concluídas Hoje</div>
+                <div class="kpi-trend up">
+                    <i class="fas fa-arrow-up"></i> Meta: {{ kpi.meta_diaria|default(10) }}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon purple">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="kpi-value">R$ {{ kpi.vendas_hoje|default('0,00') }}</div>
+                <div class="kpi-label">Vendas Hoje</div>
+                <div class="kpi-trend up">
+                    <i class="fas fa-arrow-up"></i> {{ kpi.vendas_var|default(0) }}% vs ontem
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon red">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="kpi-value">{{ kpi.os_urgentes|default(0) }}</div>
+                <div class="kpi-label">OS Urgentes</div>
+                <div class="kpi-trend down">
+                    <i class="fas fa-clock"></i> Aguardando
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6">
+            <div class="kpi-card">
+                <div class="kpi-icon teal">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="kpi-value">{{ kpi.clientes_novos|default(0) }}</div>
+                <div class="kpi-label">Clientes Novos</div>
+                <div class="kpi-trend up">
+                    <i class="fas fa-arrow-up"></i> Este mês
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Coluna Esquerda -->
+        <div class="col-lg-8">
+            <!-- Gráfico de Vendas -->
+            <div class="section-card mb-4">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-chart-bar" style="color: var(--ik-teal);"></i>
+                        Vendas da Semana
+                    </div>
+                    <a href="{{ url_for('venda.vendas_relacao') }}" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+                </div>
+                <div class="section-body">
+                    <div class="chart-container">
+                        {% for dia in grafico_vendas|default([]) %}
+                        <div class="chart-bar" style="height: {{ dia.percentual }}%;">
+                            <span class="value">R$ {{ dia.valor }}</span>
+                            <span class="label">{{ dia.dia }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- OS em Andamento -->
+            <div class="section-card mb-4">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-wrench" style="color: var(--ik-orange);"></i>
+                        Ordens de Serviço em Andamento
+                    </div>
+                    <a href="{{ url_for('service_order.service_order_list') }}?status=in_progress" class="btn btn-sm btn-outline-primary">
+                        Ver Todas ({{ os_andamento|length }})
+                    </a>
+                </div>
+                <div class="section-body">
+                    {% for os in os_andamento|default([])[:5] %}
+                    <div class="os-item">
+                        <div class="os-status {{ os.priority|default('progress') }}"></div>
+                        <div class="os-info">
+                            <div class="os-title">OS #{{ os.order_number }} - {{ os.customer_name }}</div>
+                            <div class="os-meta">
+                                <i class="fas fa-car me-1"></i>{{ os.equipment_name or 'Sem veículo' }} |
+                                <i class="fas fa-user me-1"></i>{{ os.technician_name or 'Sem técnico' }}
+                            </div>
+                        </div>
+                        <div class="os-value">
+                            <div class="price">R$ {{ "%.2f"|format(os.total_value or 0) }}</div>
+                            <small class="text-muted">{{ os.started_at or '' }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-clipboard-check fa-2x mb-2"></i>
+                        <p>Nenhuma OS em andamento</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- OS Recentes -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-clock" style="color: #8b5cf6;"></i>
+                        OS Abertas Recentemente
+                    </div>
+                    <a href="{{ url_for('service_order.service_order_list') }}?status=open" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+                </div>
+                <div class="section-body">
+                    {% for os in os_recentes|default([])[:5] %}
+                    <div class="os-item">
+                        <div class="os-status open"></div>
+                        <div class="os-info">
+                            <div class="os-title">OS #{{ os.order_number }} - {{ os.customer_name }}</div>
+                            <div class="os-meta">
+                                <i class="fas fa-calendar me-1"></i>{{ os.opened_at }} |
+                                <span class="badge bg-light text-dark">{{ os.service_type or 'Manutenção' }}</span>
+                            </div>
+                        </div>
+                        <div class="os-value">
+                            <a href="{{ url_for('service_order.service_order_view', id=os.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p>Nenhuma OS aberta recentemente</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita -->
+        <div class="col-lg-4">
+            <!-- Alertas -->
+            <div class="section-card mb-4">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-bell" style="color: #ef4444;"></i>
+                        Alertas e Notificações
+                    </div>
+                    <span class="badge bg-danger">{{ alertas|length|default(0) }}</span>
+                </div>
+                <div class="section-body">
+                    {% for alerta in alertas|default([])[:3] %}
+                    <div class="alert-card {{ alerta.tipo|default('warning') }}">
+                        <div class="alert-icon">
+                            <i class="fas {{ alerta.icone|default('fa-exclamation') }}"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h6>{{ alerta.titulo }}</h6>
+                            <p>{{ alerta.descricao }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <p>Nenhum alerta no momento</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Afazeres / Tarefas -->
+            <div class="section-card mb-4">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-tasks" style="color: var(--ik-teal);"></i>
+                        Afazeres do Dia
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="addTask()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="section-body">
+                    {% for task in tarefas|default([]) %}
+                    <div class="task-item">
+                        <div class="task-checkbox {{ 'checked' if task.completed }}" onclick="toggleTask({{ task.id }})">
+                            {% if task.completed %}<i class="fas fa-check"></i>{% endif %}
+                        </div>
+                        <div class="task-content">
+                            <div class="task-text {{ 'completed' if task.completed }}">{{ task.texto }}</div>
+                            <div class="task-meta">{{ task.horario }}</div>
+                        </div>
+                        <span class="task-priority {{ task.priority|default('medium') }}">
+                            {{ task.priority|default('Média')|title }}
+                        </span>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p>Nenhuma tarefa para hoje</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-bolt" style="color: var(--ik-orange);"></i>
+                        Ações Rápidas
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="quick-actions">
+                        <a href="{{ url_for('service_order.service_order_add') }}" class="quick-btn">
+                            <i class="fas fa-plus-circle text-primary"></i>
+                            Nova OS
+                        </a>
+                        <a href="{{ url_for('pdv_prof.pdv_tela') }}" class="quick-btn">
+                            <i class="fas fa-cash-register text-success"></i>
+                            PDV
+                        </a>
+                        <a href="{{ url_for('cliente.clientes') }}" class="quick-btn">
+                            <i class="fas fa-user-plus text-info"></i>
+                            Novo Cliente
+                        </a>
+                        <a href="{{ url_for('inventory.inventory_list') }}" class="quick-btn">
+                            <i class="fas fa-boxes text-warning"></i>
+                            Estoque
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleTask(taskId) {
+    // Implementar chamada AJAX para marcar tarefa como concluída
+    const checkbox = document.querySelector(`[onclick="toggleTask(${taskId})"]`);
+    checkbox.classList.toggle('checked');
+    if (checkbox.classList.contains('checked')) {
+        checkbox.innerHTML = '<i class="fas fa-check"></i>';
+    } else {
+        checkbox.innerHTML = '';
+    }
+}
+
+function addTask() {
+    const texto = prompt('Nova tarefa:');
+    if (texto) {
+        // Implementar adição de tarefa
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

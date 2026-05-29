@@ -681,12 +681,148 @@ def bem_vindo():
     except Exception as e:
         print(f"[FX] Aviso: falha ao verificar cotações de fechamento (D-1): {e}")
 
-    return render_template('bem_vindo.html',
-                           fx_date=rate_date,
-                           fx_base_currency=base_code,
-                           fx_currencies=moedas,
-                           fx_can_update_today=fx_can_update_today,
-                           fx_can_update_prev_close=fx_can_update_prev_close)
+    # Buscar dados para o Dashboard
+    company_id = get_company_id()
+    hoje = date.today()
+    ontem = hoje - timedelta(days=1)
+    inicio_mes = hoje.replace(day=1)
+    
+    # KPIs
+    kpi = {}
+    
+    # OS Abertas hoje
+    row = db.fetch_one("""
+        SELECT COUNT(*) as cnt FROM service_orders
+        WHERE company_id = %s AND DATE(opened_at) = %s AND status = 'open'
+    """, (company_id, hoje))
+    kpi['os_abertas'] = row['cnt'] if row else 0
+    
+    # OS em andamento
+    row = db.fetch_one("""
+        SELECT COUNT(*) as cnt FROM service_orders
+        WHERE company_id = %s AND status = 'in_progress'
+    """, (company_id,))
+    kpi['os_andamento'] = row['cnt'] if row else 0
+    
+    # OS concluídas hoje
+    row = db.fetch_one("""
+        SELECT COUNT(*) as cnt FROM service_orders
+        WHERE company_id = %s AND DATE(completed_at) = %s AND status = 'completed'
+    """, (company_id, hoje))
+    kpi['os_concluidas'] = row['cnt'] if row else 0
+    
+    # OS urgentes
+    row = db.fetch_one("""
+        SELECT COUNT(*) as cnt FROM service_orders
+        WHERE company_id = %s AND status = 'open' AND priority = 'urgente'
+    """, (company_id,))
+    kpi['os_urgentes'] = row['cnt'] if row else 0
+    
+    # Vendas hoje
+    row = db.fetch_one("""
+        SELECT COALESCE(SUM(total_amount), 0) as total FROM sales
+        WHERE company_id = %s AND DATE(sale_date) = %s AND status = 'completed'
+    """, (company_id, hoje))
+    kpi['vendas_hoje'] = f"{row['total']:.2f}".replace('.', ',') if row else '0,00'
+    
+    # Clientes novos este mês
+    row = db.fetch_one("""
+        SELECT COUNT(*) as cnt FROM customers
+        WHERE company_id = %s AND DATE(created_at) >= %s
+    """, (company_id, inicio_mes))
+    kpi['clientes_novos'] = row['cnt'] if row else 0
+    
+    # OS em andamento (lista)
+    os_andamento = db.fetch_all("""
+        SELECT so.id, so.order_number, so.total_value, so.started_at, so.priority,
+               c.name as customer_name,
+               e.name as equipment_name,
+               t.name as technician_name
+        FROM service_orders so
+        JOIN customers c ON so.customer_id = c.id
+        LEFT JOIN equipments e ON so.equipment_id = e.id
+        LEFT JOIN technicians t ON so.technician_id = t.id
+        WHERE so.company_id = %s AND so.status = 'in_progress'
+        ORDER BY so.started_at DESC
+        LIMIT 5
+    """, (company_id,))
+    
+    # OS recentes (abertas)
+    os_recentes = db.fetch_all("""
+        SELECT so.id, so.order_number, so.opened_at, so.service_type,
+               c.name as customer_name
+        FROM service_orders so
+        JOIN customers c ON so.customer_id = c.id
+        WHERE so.company_id = %s AND so.status = 'open'
+        ORDER BY so.opened_at DESC
+        LIMIT 5
+    """, (company_id,))
+    
+    # Gráfico de vendas (últimos 7 dias)
+    grafico_vendas = []
+    max_venda = 1
+    for i in range(6, -1, -1):
+        dia = hoje - timedelta(days=i)
+        row = db.fetch_one("""
+            SELECT COALESCE(SUM(total_amount), 0) as total
+            FROM sales
+            WHERE company_id = %s AND DATE(sale_date) = %s AND status = 'completed'
+        """, (company_id, dia))
+        valor = float(row['total']) if row else 0
+        grafico_vendas.append({
+            'dia': dia.strftime('%d/%m'),
+            'valor': f"{valor:.0f}",
+            'percentual': 0  # Calculado depois
+        })
+        if valor > max_venda:
+            max_venda = valor
+    
+    # Calcular percentuais
+    for item in grafico_vendas:
+        item['percentual'] = min(100, max(15, (float(item['valor']) / max_venda) * 100)) if max_venda > 0 else 15
+    
+    # Alertas
+    alertas = []
+    if kpi['os_urgentes'] > 0:
+        alertas.append({
+            'tipo': 'danger',
+            'icone': 'fa-exclamation-triangle',
+            'titulo': f'{kpi["os_urgentes"]} OS Urgentes',
+            'descricao': 'OS com prioridade urgente aguardando atendimento'
+        })
+    if kpi['os_andamento'] > 5:
+        alertas.append({
+            'tipo': 'warning',
+            'icone': 'fa-clock',
+            'titulo': 'Muitas OS em Andamento',
+            'descricao': f'{kpi["os_andamento"]} OS em execução simultânea'
+        })
+    
+    # Tarefas de exemplo (placeholder - idealmente buscar de tabela tasks)
+    tarefas = [
+        {'id': 1, 'texto': 'Revisar estoque de óleo', 'horario': '09:00', 'priority': 'high', 'completed': False},
+        {'id': 2, 'texto': 'Ligar cliente João', 'horario': '10:30', 'priority': 'medium', 'completed': True},
+        {'id': 3, 'texto': 'Orçamento da Hilux', 'horario': '14:00', 'priority': 'medium', 'completed': False},
+    ]
+    
+    # Saudação baseada na hora
+    hora_atual = datetime.now().hour
+    if hora_atual < 12:
+        saudacao = 'Bom dia'
+    elif hora_atual < 18:
+        saudacao = 'Boa tarde'
+    else:
+        saudacao = 'Boa noite'
+    
+    return render_template('dashboard_desktop.html',
+                           kpi=kpi,
+                           os_andamento=os_andamento or [],
+                           os_recentes=os_recentes or [],
+                           grafico_vendas=grafico_vendas,
+                           alertas=alertas,
+                           tarefas=tarefas,
+                           saudacao=saudacao,
+                           data_atual=hoje.strftime('%A, %d de %B de %Y').capitalize())
 
 
 @app.route('/bem-vindo/atualizar-fx', methods=['POST'])
