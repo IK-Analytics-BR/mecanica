@@ -113,15 +113,15 @@ ON DUPLICATE KEY UPDATE serial_number = VALUES(serial_number);
 -- ============================================================
 -- 6. MECÂNICOS/TÉCNICOS (8)
 -- ============================================================
-INSERT INTO technicians (name, email, phone, specialization, hourly_rate, active, created_at) VALUES
-('João das Peças', 'joao.pecas@demo.com', '11988880001', 'motor_transmissao', 85.00, 1, NOW()),
-('Pedro Elétrica', 'pedro.elec@demo.com', '11988880002', 'eletrica', 90.00, 1, NOW()),
-('Carlos Funilaria', 'carlos.fun@demo.com', '11988880003', 'funilaria', 75.00, 1, NOW()),
-('Marcos Arrefecimento', 'marcos.ar@demo.com', '11988880004', 'arrefecimento', 80.00, 1, NOW()),
-('Ricardo Suspensão', 'ricardo.sus@demo.com', '11988880005', 'suspensao', 82.00, 1, NOW()),
-('André Freios', 'andre.fre@demo.com', '11988880006', 'freios', 78.00, 1, NOW()),
-('Bruno Injeção', 'bruno.inj@demo.com', '11988880007', 'injeção', 95.00, 1, NOW()),
-('Fernando Geral', 'fernando.g@demo.com', '11988880008', 'revisao_geral', 70.00, 1, NOW())
+INSERT INTO technicians (name, email, phone, hourly_rate, active, created_at) VALUES
+('João das Peças', 'joao.pecas@demo.com', '11988880001', 85.00, 1, NOW()),
+('Pedro Elétrica', 'pedro.elec@demo.com', '11988880002', 90.00, 1, NOW()),
+('Carlos Funilaria', 'carlos.fun@demo.com', '11988880003', 75.00, 1, NOW()),
+('Marcos Arrefecimento', 'marcos.ar@demo.com', '11988880004', 80.00, 1, NOW()),
+('Ricardo Suspensão', 'ricardo.sus@demo.com', '11988880005', 82.00, 1, NOW()),
+('André Freios', 'andre.fre@demo.com', '11988880006', 78.00, 1, NOW()),
+('Bruno Injeção', 'bruno.inj@demo.com', '11988880007', 95.00, 1, NOW()),
+('Fernando Geral', 'fernando.g@demo.com', '11988880008', 70.00, 1, NOW())
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- ============================================================
