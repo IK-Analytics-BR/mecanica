@@ -1,5 +1,5 @@
 # 📋 Análise Completa MVP — IKFlow Mecânica
-**Atualizado em:** 28/05/2026 (revisão 8 — Fluxos WA testados em produção: `ok:true` | cron configurado | 78/93 = 84%)  
+**Atualizado em:** 28/05/2026 (revisão 9 — Agenda de Mecânicos implementada: FullCalendar + agendamento OS + preventivo automático | 81/93 = 87%)  
 **Fontes consolidadas:**
 - `PROPOSTA_MECANICA_IKFLOW.md` — proposta técnica completa
 - Fluxo de negócio descrito pelo cliente em sessão

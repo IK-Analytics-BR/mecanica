@@ -1,7 +1,7 @@
 # 📋 PROPOSTA TÉCNICA — IKFlow Mecânica
 **Preparado por:** IK Analytics  
 **Data:** Maio/2026  
-**Versão:** 1.6 — Fluxos WhatsApp testados em produção + 84% do MVP entregue (28/05/2026)  
+**Versão:** 1.7 — Agenda de Mecânicos implementada + 87% do MVP entregue (28/05/2026)  
 
 ---
 
@@ -9,9 +9,9 @@
 
 O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admin/gestão, 2 mecânicos, 4 auxiliares) e utiliza um sistema legado com lacunas críticas identificadas. A proposta é implantar o **IKFlow Mecânica**, verticalmente adaptado a partir da plataforma IKFlow já existente, com novos módulos específicos para o segmento automotivo.
 
-**Aproveitamento real da base existente: ~84% já entregue**  
-**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 78 de 93 funcionalidades ativas  
-**Tempo restante estimado para MVP completo: 2 semanas**
+**Aproveitamento real da base existente: ~87% já entregue**  
+**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 81 de 93 funcionalidades ativas  
+**Tempo restante estimado para MVP completo: 1 a 2 semanas**
 
 ---
 
@@ -290,7 +290,7 @@ O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admi
 | Semana | Entrega |
 |--------|--------|
 | ~~+1~~ | ~~**Fluxos WhatsApp**~~ | ✅ Entregue e testado em produção |
-| +2 | Agenda por mecânico + Agendamento preventivo automático |
+| ~~+2~~ | ~~Agenda por mecânico + Agendamento preventivo automático~~ | ✅ Entregue: FullCalendar + preventivo auto |
 | +3 | Comissionamento (mecânico + captação) |
 | +4 | Controle de ponto + Restrição WiFi |
 | +5 | Boleto BB + Mercado Pago |

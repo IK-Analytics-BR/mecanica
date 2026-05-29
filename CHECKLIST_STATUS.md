@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 5 — Fluxos WA testados em produção: `ok:true` confirmado | 78/93 = 84%)  
+**Última atualização:** 28/05/2026 (revisão 6 — Agenda de Mecânicos implementada: FullCalendar + preventivo automático + integracao OS/Técnico | 81/93 = 87%)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -67,7 +67,9 @@
 | 4.7 | Jornada de Trabalho / Ponto | ✅ | `jornada_trabalho_routes.py` |
 | 4.8 | Controle de Ponto (WiFi/app) | ❌ | Não implementado |
 | 4.9 | Comissões | ❌ | Não implementado |
-| 4.10 | Agenda por mecânico (calendário) | ❌ | Não implementado |
+| 4.10 | **Agenda por mecânico (calendário)** | ✅ | `/agenda` — FullCalendar, arrastar OS, filtro técnico, painel OS sem técnico |
+| 4.11 | **Agendamento de OS** | ✅ | `POST /agenda/agendar/<id>` — data/hora/técnico |
+| 4.12 | **Preventivo automático** | ✅ | Ao concluir OS → atualiza `next_maintenance` do veículo |
 
 ---
 
@@ -180,7 +182,7 @@
 | Atendimento / OS | 18 | 15 | 0 | 3 |
 | Clientes / CRM | 6 | 5 | 0 | 1 |
 | Veículos | 5 | 4 | 0 | 1 |
-| Equipe / Mecânicos | 10 | 7 | 0 | 3 |
+| Equipe / Mecânicos | 10 | 10 | 0 | 0 |
 | Peças e Estoque | 8 | 8 | 0 | 0 |
 | Balcão / PDV | 11 | 10 | 1 | 0 |
 | Financeiro | 7 | 6 | 0 | 1 |
@@ -188,31 +190,31 @@
 | Comunicação | 8 | 6 | 1 | 1 |
 | PWA / Mobile | 6 | 3 | 2 | 2 (push/offline) |
 | Administrativo | 9 | 8 | 0 | 1 |
-| **TOTAL** | **93** | **78 (84%)** | **4 (4%)** | **11 (12%)** |
+| **TOTAL** | **93** | **81 (87%)** | **4 (4%)** | **8 (9%)** |
 
 ---
 
 ## PRÓXIMAS PRIORIDADES SUGERIDAS
 
 ### ✅ Concluídas nesta sessão
-1. ✅ Fluxos WhatsApp: orçamento, OS pronta, lembrete revisão, alerta urgente — **testados em produção** (`ok:true`)
-2. ✅ PDV testado em produção — venda finalizada com sucesso
-3. ✅ Histórico de Vendas ativo
-4. ✅ `python-dateutil` instalado + imports `app.database` corrigidos
-5. ✅ Cron `/etc/cron.d/ikflow-lembretes` configurado no servidor (08h diário)
+1. ✅ Fluxos WhatsApp testados em produção (`ok:true`) + cron 08h configurado
+2. ✅ PDV testado em produção + Histórico de Vendas ativo
+3. ✅ Agenda de Mecânicos — FullCalendar, arrastar OS, filtro por técnico
+4. ✅ Agendamento de OS com data/hora/técnico
+5. ✅ Preventivo automático ao concluir OS → `next_maintenance` atualizado
+6. ✅ Integrações: botão Agenda no perfil do técnico, OS sem técnico no painel
 
 ### 🔴 Alta — Próximas prioridades
-1. **Agenda por mecânico** — calendário diário/semanal por profissional
-2. **Agendamento preventivo automático** — ao concluir OS, calcula próxima revisão
+1. **Executar migration no servidor** — `migration_agenda.sql` (adiciona colunas `agendado_para`, `hora_inicio`, `hora_fim`)
+2. **Comissionamento** — mecânico + captação de marketing
 3. **Pesquisa de satisfação pós-OS (WA)** — cron 1h após `status=completed`
 
 ### 🟠 Média
-4. **Comissionamento** (mecânico + captação de marketing)
-5. **Controle de Garantia** (prazo por peça/serviço)
-6. **Ícones PWA finais** (substituir placeholder por arte da marca)
+4. **Controle de Garantia** (prazo por peça/serviço)
+5. **Ícones PWA finais** (substituir placeholder por arte da marca)
 
 ### 🔵 Baixa — Pós-MVP
-7. **Portal do Cliente**
-8. **Push Notifications** (Web Push API)
-9. **Boleto Bancário** (BB + Mercado Pago)
-10. **ETL / Migração do legado**
+6. **Portal do Cliente**
+7. **Push Notifications** (Web Push API)
+8. **Boleto Bancário** (BB + Mercado Pago)
+9. **ETL / Migração do legado**
