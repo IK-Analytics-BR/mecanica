@@ -27,7 +27,7 @@
   </div>
 </div>
 
-{% if not order.cpf_cnpj %}
+{% if not order.cpf and not order.cnpj %}
 <div class="alert alert-warning">
   <i class="fas fa-exclamation-triangle me-2"></i>
   O cliente não possui CPF/CNPJ cadastrado. O boleto pode ser gerado, mas a confirmação de pagamento pode falhar.

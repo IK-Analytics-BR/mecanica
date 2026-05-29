@@ -38,7 +38,7 @@ def boleto_gerar(order_id):
 
     order = db.fetch_one("""
         SELECT so.*, so.total_geral as valor,
-               c.name as customer_name, c.cpf_cnpj, c.email as customer_email,
+               c.name as customer_name, c.cpf, c.cnpj, c.email as customer_email,
                c.phone as customer_phone, c.address, c.city, c.state, c.zip_code
         FROM service_orders so
         LEFT JOIN customers c ON c.id = so.customer_id
@@ -74,8 +74,14 @@ def boleto_gerar(order_id):
         return redirect(url_for('service_order.service_order_view', order_id=order_id))
 
     # Monta CPF/CNPJ limpo
-    cpf_cnpj = ''.join(filter(str.isdigit, order.get('cpf_cnpj') or ''))
-    doc_type = 'CPF' if len(cpf_cnpj) <= 11 else 'CNPJ'
+    _cpf  = ''.join(filter(str.isdigit, order.get('cpf')  or ''))
+    _cnpj = ''.join(filter(str.isdigit, order.get('cnpj') or ''))
+    if _cnpj:
+        cpf_cnpj, doc_type = _cnpj, 'CNPJ'
+    elif _cpf:
+        cpf_cnpj, doc_type = _cpf, 'CPF'
+    else:
+        cpf_cnpj, doc_type = '00000000000', 'CPF'
 
     payload = {
         'transaction_amount': round(valor, 2),
