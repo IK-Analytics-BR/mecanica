@@ -490,7 +490,14 @@
                         <li><a href="{{ url_for('dashboard.performance_report') }}"><i class="fas fa-chart-line"></i> Desempenho</a></li>
                         {% endif %}
                         <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='relatorios') }}"><i class="fas fa-star text-warning"></i> Relatórios Gerenciais <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
+                        {% if blueprint_exists('comissao') %}
+                        <li><a href="{{ url_for('comissao.comissao_lista') }}"><i class="fas fa-percentage text-success"></i> Comissões</a></li>
+                        {% else %}
                         <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='comissoes') }}"><i class="fas fa-percentage"></i> Comissões <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
+                        {% endif %}
+                        {% if blueprint_exists('garantia') %}
+                        <li><a href="{{ url_for('garantia.garantia_lista') }}"><i class="fas fa-shield-alt text-info"></i> Garantias</a></li>
+                        {% endif %}
                     </ul>
                 </li>
                 

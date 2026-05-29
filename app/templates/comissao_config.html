@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Configurar Comissões{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="fas fa-cog me-2"></i>Configurar % de Comissão</h4>
+    <a href="{{ url_for('comissao.comissao_lista') }}" class="btn btn-outline-secondary btn-sm">← Voltar</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-semibold">Definir percentual</div>
+        <div class="card-body">
+          <form method="post">
+            <div class="mb-3">
+              <label class="form-label">Mecânico</label>
+              <select name="technician_id" class="form-select" required>
+                <option value="">Selecione...</option>
+                {% for t in technicians %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Percentual (%)</label>
+              <input type="number" name="percentual" class="form-control" step="0.5" min="0" max="100" value="10" required>
+            </div>
+            <button class="btn btn-primary w-100">Salvar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header fw-semibold">Configurações atuais</div>
+        <table class="table mb-0">
+          <thead class="table-light"><tr><th>Mecânico</th><th class="text-end">%</th></tr></thead>
+          <tbody>
+            {% for c in configs %}
+            <tr>
+              <td>{{ c.technician_name }}</td>
+              <td class="text-end fw-bold">{{ c.percentual }}%</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-center text-muted py-3">Nenhum configurado (padrão 10%)</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

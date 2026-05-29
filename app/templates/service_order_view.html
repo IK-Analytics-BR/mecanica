@@ -109,6 +109,16 @@
     {% endif %}
     {% endif %}
 
+    {# NFS-e — emitir nota fiscal de serviço #}
+    {% if order.status == 'completed' %}
+    {% if blueprint_exists('nfse') %}
+    <a href="{{ url_for('nfse.nfse_emitir', order_id=order.id) }}"
+       class="btn btn-outline-primary" title="Emitir Nota Fiscal de Serviço para esta OS">
+      <i class="fas fa-file-invoice me-1"></i> Emitir NFS-e
+    </a>
+    {% endif %}
+    {% endif %}
+
     {# Cancelar #}
     {% if order.status not in ('completed','canceled') %}
     <form method="post" action="{{ url_for('service_order.service_order_cancel', order_id=order.id) }}"

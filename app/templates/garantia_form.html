@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Nova Garantia — {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="fas fa-shield-alt me-2 text-info"></i>Nova Garantia — {{ order.order_number }}</h4>
+    <a href="{{ url_for('garantia.garantia_lista') }}" class="btn btn-outline-secondary btn-sm">← Voltar</a>
+  </div>
+
+  <div class="card border-0 shadow-sm" style="max-width:520px">
+    <div class="card-body">
+      <p class="text-muted mb-3">
+        <strong>Cliente:</strong> {{ order.customer_name or '—' }} &nbsp;|&nbsp;
+        <strong>Veículo:</strong> {{ order.equipment_name or '—' }}
+      </p>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Tipo de Garantia</label>
+          <select name="tipo" class="form-select" required>
+            <option value="servico">Serviço</option>
+            <option value="peca">Peça</option>
+            <option value="ambos">Serviço + Peça</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descrição</label>
+          <textarea name="descricao" class="form-control" rows="3" required
+                    placeholder="Ex: Garantia de 90 dias sobre serviço de troca de embreagem"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Prazo (dias)</label>
+          <input type="number" name="prazo_dias" class="form-control" value="90" min="1" required>
+        </div>
+        <button class="btn btn-info text-white w-100">
+          <i class="fas fa-shield-alt me-1"></i> Registrar Garantia
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

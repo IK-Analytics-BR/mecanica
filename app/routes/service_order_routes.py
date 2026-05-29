@@ -27,6 +27,16 @@ try:
 except Exception:
     _baixar_estoque = None
 
+try:
+    from routes.comissao_routes import registrar_comissao_os as _registrar_comissao
+except Exception:
+    _registrar_comissao = None
+
+try:
+    from routes.garantia_routes import registrar_garantia_os as _registrar_garantia
+except Exception:
+    _registrar_garantia = None
+
 # Criar o blueprint
 service_order_bp = Blueprint('service_order', __name__)
 
@@ -452,7 +462,21 @@ def service_order_edit(order_id):
                                 )
                     except Exception as _e:
                         print(f'[ESTOQUE] Erro baixa automática OS {order_id}: {_e}')
-            
+
+                # Comissão automática do mecânico
+                if _registrar_comissao:
+                    try:
+                        _registrar_comissao(order_id)
+                    except Exception as _e:
+                        print(f'[COMISSAO] Erro ao registrar comissão OS {order_id}: {_e}')
+
+                # Garantia automática (90 dias padrão)
+                if _registrar_garantia:
+                    try:
+                        _registrar_garantia(order_id, prazo_dias=90)
+                    except Exception as _e:
+                        print(f'[GARANTIA] Erro ao registrar garantia OS {order_id}: {_e}')
+
             # Criar alerta se um técnico foi atribuído
             if is_technician_assigned:
                 # Buscar o nome do técnico

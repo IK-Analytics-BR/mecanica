@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
 from database import get_db
+from utils.auth import login_required
 
 nfse_bp = Blueprint('nfse', __name__)
 
@@ -110,6 +111,7 @@ def _gerar_xml_abrasf(order: dict, cfg: dict, rps_numero: int) -> str:
 # ─────────────────────────────────────────────────────────────
 
 @nfse_bp.route('/nfse')
+@login_required
 def nfse_lista():
     db = get_db()
     cfg = _get_config(db)
@@ -127,6 +129,7 @@ def nfse_lista():
 
 
 @nfse_bp.route('/nfse/configurar', methods=['GET', 'POST'])
+@login_required
 def nfse_config():
     db = get_db()
     cfg = _get_config(db)
@@ -159,6 +162,7 @@ def nfse_config():
 
 
 @nfse_bp.route('/nfse/emitir/<int:order_id>', methods=['GET', 'POST'])
+@login_required
 def nfse_emitir(order_id):
     """Emite NFS-e para uma OS concluída."""
     db = get_db()

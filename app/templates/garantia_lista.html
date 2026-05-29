@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Garantias — IKFlow Mecânica{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+  <h4 class="mb-3"><i class="fas fa-shield-alt me-2 text-info"></i>Controle de Garantias</h4>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="fs-5 fw-bold text-success">{{ kpis.vigentes or 0 }}</div>
+          <small class="text-muted">Vigentes</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="fs-5 fw-bold text-warning">{{ kpis.vencendo or 0 }}</div>
+          <small class="text-muted">Vencendo em 30 dias</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="fs-5 fw-bold text-danger">{{ kpis.acionadas or 0 }}</div>
+          <small class="text-muted">Acionadas</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center border-0 shadow-sm">
+        <div class="card-body py-3">
+          <div class="fs-5 fw-bold text-secondary">{{ kpis.expiradas or 0 }}</div>
+          <small class="text-muted">Expiradas</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtro de status -->
+  <div class="d-flex gap-2 mb-3">
+    {% for s, label in [('vigente','Vigentes'),('acionada','Acionadas'),('expirada','Expiradas'),('todos','Todas')] %}
+    <a href="?status={{ s }}"
+       class="btn btn-sm {% if status == s %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      {{ label }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>OS</th>
+            <th>Cliente</th>
+            <th>Veículo / Placa</th>
+            <th>Tipo</th>
+            <th>Válida até</th>
+            <th>Dias restantes</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in garantias %}
+          <tr>
+            <td><a href="{{ url_for('service_order.service_order_view', order_id=g.service_order_id) }}">{{ g.order_number }}</a></td>
+            <td>{{ g.customer_name or '—' }}</td>
+            <td>{{ g.equipment_name or '—' }} {% if g.placa %}<small class="text-muted">({{ g.placa }})</small>{% endif %}</td>
+            <td><span class="badge bg-light text-dark border">{{ g.tipo }}</span></td>
+            <td>{{ g.data_fim.strftime('%d/%m/%Y') if g.data_fim else '—' }}</td>
+            <td>
+              {% set d = g.dias_restantes %}
+              {% if d is not none %}
+                {% if d < 0 %}<span class="text-muted">Expirada</span>
+                {% elif d <= 7 %}<span class="badge bg-danger">{{ d }}d</span>
+                {% elif d <= 30 %}<span class="badge bg-warning text-dark">{{ d }}d</span>
+                {% else %}<span class="badge bg-success">{{ d }}d</span>{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if g.status == 'vigente' %}<span class="badge bg-success">Vigente</span>
+              {% elif g.status == 'acionada' %}<span class="badge bg-danger">Acionada</span>
+              {% elif g.status == 'expirada' %}<span class="badge bg-secondary">Expirada</span>
+              {% else %}<span class="badge bg-light text-dark">{{ g.status }}</span>{% endif %}
+            </td>
+            <td>
+              {% if g.status == 'vigente' %}
+              <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
+                      data-bs-target="#modalAcionar{{ g.id }}">Acionar</button>
+              <div class="modal fade" id="modalAcionar{{ g.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                  <form method="post" action="{{ url_for('garantia.garantia_acionar', gid=g.id) }}">
+                    <div class="modal-content">
+                      <div class="modal-header"><h5 class="modal-title">Acionar Garantia — {{ g.order_number }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                      <div class="modal-body">
+                        <textarea name="observacao" class="form-control" rows="3"
+                                  placeholder="Descreva o problema acionado..."></textarea>
+                      </div>
+                      <div class="modal-footer">
+                        <button class="btn btn-danger">Confirmar Acionamento</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">Nenhuma garantia encontrada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
