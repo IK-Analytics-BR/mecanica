@@ -752,8 +752,7 @@ def relatorio_mecanicos():
             SUM(so.status = 'completed')                                    AS os_concluidas,
             SUM(so.status = 'canceled')                                     AS os_canceladas,
             COALESCE(SUM(CASE WHEN so.status='completed' THEN so.total_geral END), 0) AS receita,
-            ROUND(AVG(CASE WHEN so.status='completed' AND so.minutos_servico > 0
-                      THEN so.minutos_servico END) / 60, 1)                AS media_horas,
+            NULL                                                            AS media_horas,
             ROUND(COALESCE(SUM(CASE WHEN so.status='completed' THEN so.total_geral END), 0)
                   / NULLIF(SUM(so.status='completed'), 0), 2)              AS ticket_medio
         FROM technicians t
@@ -817,17 +816,16 @@ def relatorio_servicos():
     # Itens / peças mais usados nas OS (top 20)
     top_pecas = db.fetch_all("""
         SELECT
-            COALESCE(soi.descricao, s.name, 'Item sem nome')   AS descricao,
-            SUM(soi.quantidade)                                 AS qtd_total,
+            COALESCE(soi.descricao, 'Item sem nome')            AS descricao,
+            SUM(COALESCE(soi.quantidade, soi.quantity, 0))      AS qtd_total,
             COUNT(DISTINCT soi.service_order_id)                AS em_os,
-            ROUND(AVG(soi.valor_unitario), 2)                   AS preco_medio,
-            SUM(soi.valor_total)                                AS receita_total
+            ROUND(AVG(COALESCE(soi.valor_unitario, soi.unit_cost, 0)), 2) AS preco_medio,
+            SUM(COALESCE(soi.valor_total, 0))                   AS receita_total
         FROM service_order_items soi
-        LEFT JOIN supplies s ON s.id = soi.supply_id
         JOIN service_orders so ON so.id = soi.service_order_id
         WHERE so.open_date BETWEEN %s AND %s
           AND so.active = TRUE AND so.status = 'completed'
-        GROUP BY descricao
+        GROUP BY soi.descricao
         ORDER BY qtd_total DESC
         LIMIT 20
     """, (data_ini, data_fim)) or []
