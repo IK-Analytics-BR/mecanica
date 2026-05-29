@@ -15,6 +15,7 @@ from datetime import datetime, date, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, current_app
 from werkzeug.utils import secure_filename
 from database import get_db
+from utils.auth import login_required
 
 pix_bp = Blueprint('pix', __name__)
 
@@ -70,6 +71,7 @@ def _gerar_qr_estatico(chave_pix: str, nome: str, cidade: str, valor: float, txi
 # ─────────────────────────────────────────────────────────────
 
 @pix_bp.route('/pix')
+@login_required
 def pix_painel():
     db = get_db()
     cfg = _get_config(db)
@@ -97,6 +99,7 @@ def pix_painel():
 
 
 @pix_bp.route('/pix/configurar', methods=['GET', 'POST'])
+@login_required
 def pix_config():
     db = get_db()
     cfg = _get_config(db)
@@ -143,6 +146,7 @@ def pix_config():
 
 
 @pix_bp.route('/pix/gerar/<int:order_id>', methods=['GET', 'POST'])
+@login_required
 def pix_gerar(order_id):
     """Gera cobrança PIX para uma OS."""
     db = get_db()

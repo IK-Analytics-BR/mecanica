@@ -22,6 +22,11 @@ try:
 except Exception:
     _preventivo = None
 
+try:
+    from utils.estoque_helper import registrar_movimentacao as _baixar_estoque
+except Exception:
+    _baixar_estoque = None
+
 # Criar o blueprint
 service_order_bp = Blueprint('service_order', __name__)
 
@@ -190,9 +195,7 @@ def api_cadastrar_veiculo_rapido():
 @login_required
 def service_order_add():
     """Adiciona uma nova ordem de serviço."""
-    print("\n[DEBUG] Iniciando service_order_add")
     db = get_db()
-    print("[DEBUG] Conexão com o banco de dados estabelecida")
     
     if request.method == 'POST':
         import json
@@ -284,64 +287,18 @@ def service_order_add():
         else:
             flash('Erro ao cadastrar ordem de serviço.', 'danger')
     
-    # Buscar clientes, equipamentos, insumos, planos de manutenção e técnicos para o formulário
-    print("[DEBUG] Buscando clientes...")
+    company_id = get_company_id()
     customers = db.fetch_all("""
         SELECT id, name FROM customers
-        WHERE active = TRUE
+        WHERE active = TRUE AND company_id = %s
         ORDER BY name
-    """)
-    print(f"[DEBUG] Clientes encontrados: {len(customers)}")
-    for customer in customers:
-        print(f"[DEBUG] Cliente: {customer['id']} - {customer['name']}")
-        
-    # Solução alternativa: se não houver clientes, criar alguns para teste
-    if not customers:
-        print("[DEBUG] Nenhum cliente encontrado. Criando clientes para teste...")
-        # Inserir clientes de teste
-        db.insert("""
-            INSERT INTO customers (name, cnpj, contact_name, phone, email, address, city, state, zip_code, notes, active)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, ('Cliente Teste 1', '12.345.678/0001-90', 'Contato Teste 1', '(11) 1234-5678', 'cliente1@teste.com', 'Rua Teste 1', 'São Paulo', 'SP', '01234-567', 'Cliente de teste 1', True))
-        
-        db.insert("""
-            INSERT INTO customers (name, cnpj, contact_name, phone, email, address, city, state, zip_code, notes, active)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, ('Cliente Teste 2', '98.765.432/0001-10', 'Contato Teste 2', '(11) 8765-4321', 'cliente2@teste.com', 'Rua Teste 2', 'São Paulo', 'SP', '01234-567', 'Cliente de teste 2', True))
-        
-        # Buscar os clientes novamente
-        customers = db.fetch_all("""
-            SELECT id, name FROM customers
-            WHERE active = TRUE
-            ORDER BY name
-        """)
-        print(f"[DEBUG] Clientes criados: {len(customers)}")
-        for customer in customers:
-            print(f"[DEBUG] Cliente: {customer['id']} - {customer['name']}")
+    """, (company_id,))
             
-    # Verificar se há equipamentos associados aos clientes
-    equipments_count = db.fetch_one("""
-        SELECT COUNT(*) as count FROM equipment
-        WHERE active = TRUE
-    """)
-    
-    if equipments_count and equipments_count['count'] == 0 and customers:
-        print("[DEBUG] Nenhum equipamento encontrado. Criando equipamentos para teste...")
-        # Criar equipamentos de teste para os clientes
-        for customer in customers:
-            db.insert("""
-                INSERT INTO equipment (name, model, serial_number, customer_id, location, status, active)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (f'Equipamento Teste - {customer["name"]}', 'Modelo Teste', f'SN-{customer["id"]}-001', customer['id'], 'Local Teste', 'active', True))
-        
-        print("[DEBUG] Equipamentos criados com sucesso!")
-    
-    
     equipments = db.fetch_all("""
         SELECT id, name, customer_id FROM equipment
-        WHERE active = TRUE
+        WHERE active = TRUE AND company_id = %s
         ORDER BY name
-    """)
+    """, (company_id,))
     
     supplies = db.fetch_all("""
         SELECT id, name FROM supplies
@@ -360,14 +317,6 @@ def service_order_add():
         WHERE active = TRUE AND status = 'active'
         ORDER BY name
     """)
-    
-    print("[DEBUG] Renderizando template service_order_form.html")
-    print(f"[DEBUG] Dados passados para o template:")
-    print(f"[DEBUG] - customers: {len(customers)} itens")
-    print(f"[DEBUG] - equipments: {len(equipments)} itens")
-    print(f"[DEBUG] - supplies: {len(supplies)} itens")
-    print(f"[DEBUG] - maintenance_plans: {len(maintenance_plans)} itens")
-    print(f"[DEBUG] - technicians: {len(technicians)} itens")
     
     return render_template(
         'service_order_form.html',
@@ -478,6 +427,31 @@ def service_order_edit(order_id):
                         _preventivo(order_id)
                     except Exception as _e:
                         print(f'[AGENDA] Erro trigger preventivo: {_e}')
+
+                # Baixa automática de estoque: itens da OS com supply_id ou produto_id
+                if _baixar_estoque:
+                    try:
+                        itens_os = db.fetch_all("""
+                            SELECT supply_id, produto_id, quantidade, quantity, descricao
+                            FROM service_order_items
+                            WHERE service_order_id = %s
+                        """, (order_id,))
+                        for item in (itens_os or []):
+                            pid = item.get('produto_id') or item.get('supply_id')
+                            qty = float(item.get('quantidade') or item.get('quantity') or 0)
+                            if pid and qty > 0:
+                                _baixar_estoque(
+                                    produto_id=int(pid),
+                                    tipo='saida',
+                                    quantidade=qty,
+                                    origem_tela='OS',
+                                    referencia_tipo='os',
+                                    referencia_id=order_id,
+                                    referencia_codigo=order.get('order_number', ''),
+                                    observacao=f'Baixa automática ao concluir OS {order.get("order_number","")}'
+                                )
+                    except Exception as _e:
+                        print(f'[ESTOQUE] Erro baixa automática OS {order_id}: {_e}')
             
             # Criar alerta se um técnico foi atribuído
             if is_technician_assigned:

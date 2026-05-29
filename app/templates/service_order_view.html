@@ -99,6 +99,16 @@
     </form>
     {% endif %}
 
+    {# PIX — cobrar valor da OS #}
+    {% if order.get('status_orcamento') == 'aprovado' or order.status == 'completed' %}
+    {% if blueprint_exists('pix') %}
+    <a href="{{ url_for('pix.pix_gerar', order_id=order.id) }}"
+       class="btn btn-success" title="Gerar cobrança PIX para esta OS">
+      <i class="fas fa-qrcode me-1"></i> Cobrar via PIX
+    </a>
+    {% endif %}
+    {% endif %}
+
     {# Cancelar #}
     {% if order.status not in ('completed','canceled') %}
     <form method="post" action="{{ url_for('service_order.service_order_cancel', order_id=order.id) }}"
