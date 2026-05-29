@@ -1,19 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from functools import wraps
-from app.database import Database
-
-# Decorator para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-# Função para obter conexão com o banco de dados (usa configuração automática)
-def get_db():
-    return Database()
+from flask import Blueprint, render_template, request, jsonify
+from utils.auth import login_required
+from database import get_db
 
 cfop_bp = Blueprint('cfop', __name__)
 
@@ -24,7 +11,6 @@ def cfops():
     # Buscar CFOPs no banco de dados (limitado a 100 para não sobrecarregar)
     db = get_db()
     cfops = db.fetch_all("SELECT * FROM cfop ORDER BY codigo LIMIT 100")
-    db.close()
     return render_template('cfop_list.html', cfops=cfops or [])
 
 # Rota para buscar CFOPs por código ou descrição (API)
@@ -65,8 +51,7 @@ def search_cfops():
     )
     
     cfops = db.fetch_all(query, params)
-    db.close()
-    
+
     # Formatar resultados para Select2
     results = []
     for cfop in (cfops or []):
@@ -84,8 +69,7 @@ def get_cfop_details(codigo):
     # Buscar CFOP no banco de dados
     db = get_db()
     cfop = db.fetch_one("SELECT * FROM cfop WHERE codigo = %s", (codigo,))
-    db.close()
-    
+
     if cfop:
         return jsonify({
             'success': True,

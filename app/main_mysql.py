@@ -25,6 +25,13 @@ def _try_import(module_name, attr_name):
         print(f"[ROUTES] Aviso: não foi possível importar {module_name}.{attr_name}: {e}")
         return None
 
+# Guards de modo — APP_MODE definido no env; default=mecanica
+APP_MODE = (os.getenv('APP_MODE') or 'mecanica').strip().lower()
+if APP_MODE not in ('global', 'industrial', 'varejo', 'mecanica'):
+    APP_MODE = 'mecanica'
+_modo_industrial = APP_MODE in ('industrial', 'global')
+_modo_comercial  = APP_MODE in ('varejo', 'global')
+
 cliente_bp = _try_import('routes.cliente_routes_mysql', 'cliente_bp')
 produto_bp = _try_import('routes.produto_routes_mysql', 'produto_bp')
 ncm_bp = _try_import('routes.ncm_routes', 'ncm_bp')
@@ -40,10 +47,10 @@ service_order_bp = _try_import('routes.service_order_routes', 'service_order_bp'
 alert_bp = _try_import('routes.alert_routes', 'alert_bp')
 dashboard_bp = _try_import('routes.dashboard_routes', 'dashboard_bp')
 integration_bp = _try_import('routes.integration_routes', 'integration_bp')
-vendedor_bp = _try_import('routes.vendedor_routes', 'vendedor_bp')
+vendedor_bp = _try_import('routes.vendedor_routes', 'vendedor_bp') if _modo_comercial else None
 cash_register_bp = _try_import('routes.cash_register_routes', 'cash_register_bp')
 company_bp = _try_import('routes.company_routes', 'company_bp')
-segment_bp = _try_import('routes.segment_routes', 'segment_bp')
+segment_bp = _try_import('routes.segment_routes', 'segment_bp') if _modo_comercial else None
 
 # Módulo Financeiro
 bank_account_bp = _try_import('routes.bank_account_routes', 'bank_account_bp')
@@ -92,8 +99,9 @@ importar_clientes_bp = _try_import('routes.importar_clientes_routes', 'importar_
 
 # Módulo de Clientes em Potencial
 clientes_potenciais_bp = _try_import('routes.clientes_potenciais_routes', 'clientes_potenciais_bp')
-rota_vendas_bp       = _try_import('routes.rota_vendas_routes', 'rota_vendas_bp')
-questionario_visita_bp = _try_import('routes.questionario_visita_routes', 'questionario_visita_bp')
+# Rota de vendas e questionario de visita — só para modo comercial/distribuição
+rota_vendas_bp         = _try_import('routes.rota_vendas_routes', 'rota_vendas_bp')                   if _modo_comercial else None
+questionario_visita_bp = _try_import('routes.questionario_visita_routes', 'questionario_visita_bp')    if _modo_comercial else None
 
 # Módulo de Importação de NF-e
 importar_nfe_bp = _try_import('routes.importar_nfe', 'importar_nfe')
@@ -112,10 +120,10 @@ empresa_bp = _try_import('routes.empresa_routes', 'empresa_bp')
 # Módulo Jornada / Ponto
 jornada_trabalho_bp = _try_import('routes.jornada_trabalho_routes', 'jornada_trabalho_bp')
 
-# Módulo Execução de Serviços (adaptado de Produção Industrial)
-ordem_producao_bp = _try_import('routes.ordem_producao_routes', 'ordem_producao_bp')
-producao_pausas_bp = _try_import('routes.producao_pausas_routes', 'producao_pausas_bp')
-config_producao_bp = _try_import('routes.config_producao_routes', 'config_producao_bp')
+# Módulos Industriais — só carregados em APP_MODE=industrial ou global
+ordem_producao_bp  = _try_import('routes.ordem_producao_routes',  'ordem_producao_bp')  if _modo_industrial else None
+producao_pausas_bp = _try_import('routes.producao_pausas_routes', 'producao_pausas_bp') if _modo_industrial else None
+config_producao_bp = _try_import('routes.config_producao_routes', 'config_producao_bp') if _modo_industrial else None
 
 # Módulo Comercial - Orçamentos
 orcamento_bp = _try_import('routes.orcamento_routes', 'orcamento_bp')
@@ -155,10 +163,6 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Por favor, faça login para acessar esta página.'
 login_manager.login_message_category = 'danger'
-
-APP_MODE = (os.getenv('APP_MODE') or 'mecanica').strip().lower()
-if APP_MODE not in ('global', 'industrial', 'varejo', 'mecanica'):
-    APP_MODE = 'mecanica'
 
 
 class User(UserMixin):
