@@ -8,10 +8,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Purchase Order Fixes CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/purchase_order_fixes.css') }}">
+    <!-- Custom CSS (v2) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+    <!-- Purchase Order Fixes CSS (v2) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/purchase_order_fixes.css') }}?v=2">
     <!-- PWA -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#0b2447">
@@ -1146,8 +1146,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Custom JS (v2) -->
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=2"></script>
     {% block scripts %}{% endblock %}
     {% block modals %}{% endblock %}
 

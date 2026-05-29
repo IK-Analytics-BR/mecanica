@@ -13,10 +13,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS Desktop -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/purchase_order_fixes.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/desktop.css') }}">
+    <!-- Custom CSS Desktop (v2) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/purchase_order_fixes.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/desktop.css') }}?v=2">
     
     <!-- CSRF token -->
     <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
@@ -352,6 +352,39 @@
             sessionStorage.setItem('isMobile', isMobile);
             console.log('[PWA Desktop] Standalone:', isStandalone, 'Mobile:', isMobile);
         })();
+        
+        // ══ FORÇAR ATUALIZAÇÃO DO PWA ══
+        (function() {
+            // Adicionar timestamp para cache-busting em CSS/JS
+            const timestamp = new Date().getTime();
+            document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
+                const url = el.href || el.src;
+                if (url && url.includes('/static/') && !url.includes('?v=')) {
+                    const newUrl = url + (url.includes('?') ? '&' : '?') + 'v=' + timestamp;
+                    if (el.href) el.href = newUrl;
+                    if (el.src) el.src = newUrl;
+                }
+            });
+            
+            // Forçar atualização do service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration('/').then(reg => {
+                    if (reg) {
+                        reg.update().then(() => console.log('[PWA] SW update checked'));
+                        // Forçar skipWaiting se houver novo SW esperando
+                        if (reg.waiting) {
+                            reg.waiting.postMessage({ action: 'skipWaiting' });
+                        }
+                    }
+                });
+                
+                // Escutar por novos service workers
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('[PWA] Novo SW ativado, recarregando...');
+                    window.location.reload();
+                });
+            }
+        })();
     </script>
 
     <div class="wrapper">
@@ -570,10 +603,10 @@
         </a>
     </nav>
 
-    <!-- Scripts -->
+    <!-- Scripts (v2) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}?v=2"></script>
 
     <!-- Sidebar Toggle -->
     <script>
