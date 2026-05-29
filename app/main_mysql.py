@@ -159,6 +159,10 @@ nfse_bp2    = _try_import('routes.nfse_routes',     'nfse_bp')
 comissao_bp = _try_import('routes.comissao_routes', 'comissao_bp')
 garantia_bp = _try_import('routes.garantia_routes', 'garantia_bp')
 
+# Módulos Semana 9: Push Notifications + Portal do Cliente
+push_bp   = _try_import('routes.push_routes',   'push_bp')
+portal_bp = _try_import('routes.portal_routes', 'portal_bp')
+
 # Cadastros Auxiliares
 transportadora_bp = _try_import('routes.transportadora_routes', 'transportadora_bp')
 condicao_pagamento_bp = _try_import('routes.condicao_pagamento_routes', 'condicao_pagamento_bp')
@@ -306,6 +310,8 @@ for _bp in (
     nfse_bp2,
     comissao_bp,
     garantia_bp,
+    push_bp,
+    portal_bp,
     transportadora_bp,
     condicao_pagamento_bp,
     currency_bp,

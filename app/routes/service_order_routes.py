@@ -42,6 +42,11 @@ try:
 except Exception:
     _audit = None
 
+try:
+    from routes.push_routes import push_notificar_os as _push_os
+except Exception:
+    _push_os = None
+
 # Criar o blueprint
 service_order_bp = Blueprint('service_order', __name__)
 
@@ -484,6 +489,13 @@ def service_order_edit(order_id):
                         _registrar_garantia(order_id, prazo_dias=90)
                     except Exception as _e:
                         print(f'[GARANTIA] Erro ao registrar garantia OS {order_id}: {_e}')
+
+                # Push notification ao concluir
+                if _push_os:
+                    try:
+                        _push_os(order_id, 'completed')
+                    except Exception as _e:
+                        print(f'[PUSH] Erro push OS {order_id}: {_e}')
 
             # Criar alerta se um técnico foi atribuído
             if is_technician_assigned:

@@ -787,15 +787,48 @@
       }
     })();
     </script>
-    <!-- PWA Service Worker -->
+    <!-- PWA Service Worker + Web Push -->
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/static/js/service-worker.js', { scope: '/' })
-            .then(function(reg) { console.log('[PWA] Service Worker registrado:', reg.scope); })
-            .catch(function(err) { console.warn('[PWA] Service Worker falhou:', err); });
-        });
-      }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async function() {
+        try {
+          const reg = await navigator.serviceWorker.register('/static/js/service-worker.js', { scope: '/' });
+          console.log('[PWA] SW registrado:', reg.scope);
+
+          // Solicitar permissão e subscrever push (se VAPID disponível)
+          if ('PushManager' in window) {
+            const keyResp = await fetch('/push/vapid-public-key');
+            const keyData = await keyResp.json();
+            if (!keyData.publicKey) return;
+
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') return;
+
+            const urlBase64ToUint8 = base64String => {
+              const padding = '='.repeat((4 - base64String.length % 4) % 4);
+              const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+              const raw = atob(base64);
+              return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+            };
+
+            const sub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8(keyData.publicKey),
+            });
+
+            await fetch('/push/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json',
+                         'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+              body: JSON.stringify(sub.toJSON()),
+            });
+            console.log('[PUSH] Subscrito com sucesso');
+          }
+        } catch(err) {
+          console.warn('[PWA/PUSH] Erro:', err);
+        }
+      });
+    }
     </script>
 </body>
 </html>

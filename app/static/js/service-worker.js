@@ -80,3 +80,41 @@ self.addEventListener('sync', event => {
     console.log('[SW] Sincronizando dados pendentes...');
   }
 });
+
+// ── Web Push Notifications ──────────────────────────────────
+self.addEventListener('push', event => {
+  let data = { titulo: 'IKFlow Mecânica', corpo: 'Nova notificação', url: '/' };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch (e) {
+    if (event.data) data.corpo = event.data.text();
+  }
+  const options = {
+    body: data.corpo,
+    icon: '/static/img/icon-192.png',
+    badge: '/static/img/icon-192.png',
+    data: { url: data.url || '/' },
+    vibrate: [200, 100, 200],
+    tag: 'ikflow-notif',
+    renotify: true,
+  };
+  event.waitUntil(
+    self.registration.showNotification(data.titulo, options)
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const url = (event.notification.data || {}).url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});

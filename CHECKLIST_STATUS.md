@@ -1,5 +1,5 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 9 — Audit Semanas 7-8: CSRF global, audit_log, rate limit WA, pesquisa satisfação WA, apresentações protegidas, usuario_bp | 96/100 = 96%)  
+**Última atualização:** 28/05/2026 (revisão 10 — Semana 9: Push Notifications PWA, Portal do Cliente com token, aprovação de orçamento remota | 98/100 = 98%)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
 
 ---
@@ -44,7 +44,7 @@
 | 2.3 | Clientes em Potencial (CRM) | ✅ | `/clientes-potenciais` |
 | 2.4 | Rota de Captação | ✅ | `/rotas_vendas` — no menu |
 | 2.5 | Pesquisa Pós-Atendimento | ✅ | `/questionario-visita` — no menu |
-| 2.6 | Portal do Cliente | ❌ | Não implementado |
+| 2.6 | Portal do Cliente | ✅ | `/portal/<token>` — ver OS, aprovar orçamento, histórico, garantias |
 
 ---
 
@@ -160,7 +160,7 @@
 | 10.2 | Cache offline (service worker) | ✅ | `/static/js/service-worker.js` |
 | 10.3 | Ícones PWA | ⚠️ | Placeholder gerado — substituir por arte final |
 | 10.4 | Layout responsivo mobile | ✅ | Bootstrap 5.3 + sidebar colapsável |
-| 10.5 | Push Notifications | ❌ | Não implementado |
+| 10.5 | Push Notifications | ✅ | `push_routes.py` + SW handler + subscrição automática VAPID |
 | 10.6 | Sincronização offline real | ❌ | Não implementado (SW só faz cache) |
 
 ---
