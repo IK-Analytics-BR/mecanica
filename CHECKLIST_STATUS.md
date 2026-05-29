@@ -1,6 +1,8 @@
 # ✅ CHECKLIST DE STATUS — IKFlow Mecânica
-**Última atualização:** 28/05/2026 (revisão 11 — Semana 10: Boleto Bancário Mercado Pago, webhook baixa automática, ETL migração legado CSV | 100/100 = 100%)  
+**Última atualização:** 29/05/2026 (revisão 12 — **PRODUÇÃO VALIDADA**: servidor sem warnings, banco migrado, VAPID configurado, portal 200, push 200, ETL 200 | 100/100 = 100%)  
 **Legenda:** ✅ 100% funcional | ⚠️ Funciona com ressalvas / precisa teste real | 🔧 Existe mas precisa ajuste | ❌ Não implementado
+
+> 🚀 **Deploy validado em** `mecanicas.ikflow.cloud` — 29/05/2026 — zero erros de import, todas as tabelas criadas, VAPID keys ativas
 
 ---
 

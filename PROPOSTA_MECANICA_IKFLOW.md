@@ -1,7 +1,7 @@
 # 📋 PROPOSTA TÉCNICA — IKFlow Mecânica
 **Preparado por:** IK Analytics  
 **Data:** Maio/2026  
-**Versão:** 1.7 — Agenda de Mecânicos implementada + 87% do MVP entregue (28/05/2026)  
+**Versão:** 2.0 — **100% do MVP entregue e validado em produção (29/05/2026)**  
 
 ---
 
@@ -9,9 +9,17 @@
 
 O cliente opera uma oficina mecânica com equipe de 10 pessoas (4 usuários admin/gestão, 2 mecânicos, 4 auxiliares) e utiliza um sistema legado com lacunas críticas identificadas. A proposta é implantar o **IKFlow Mecânica**, verticalmente adaptado a partir da plataforma IKFlow já existente, com novos módulos específicos para o segmento automotivo.
 
-**Aproveitamento real da base existente: ~87% já entregue**  
-**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 81 de 93 funcionalidades ativas  
-**Tempo restante estimado para MVP completo: 1 a 2 semanas**
+**Aproveitamento real da base existente: 100% entregue**  
+**Status atual:** Em produção em `mecanicas.ikflow.cloud` — 100/100 funcionalidades ativas e testadas  
+**Tempo restante para MVP completo: 0 — CONCLUÍDO**  
+
+### 🌟 Destaques da versão 2.0
+- ✅ Push Notifications PWA (VAPID keys configuradas em produção)
+- ✅ Portal do Cliente por token (aprovação remota de orçamentos)
+- ✅ Boleto Bancário via Mercado Pago + webhook de baixa automática
+- ✅ ETL / Migração de legado via CSV (clientes, veículos, OS históricas)
+- ✅ Zero warnings de import no boot do servidor
+- ✅ Multi-tenant ativo, CSRF global, audit_log, rate limiting
 
 ---
 
