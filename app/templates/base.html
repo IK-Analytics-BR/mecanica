@@ -221,7 +221,7 @@
                 </li>
 
                 {# ══════════════════════════════════════════════
-                   1. ATENDIMENTO — OS, Orçamento, Agenda
+                   1. ATENDIMENTO — OS, Orçamento, Agenda, Garantia
                 ══════════════════════════════════════════════ #}
                 <li>
                     <a href="#atendimentoSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
@@ -232,9 +232,6 @@
                         {% if blueprint_exists('service_order') %}
                         <li><a href="{{ url_for('service_order.service_order_list') }}"><i class="fas fa-clipboard-list"></i> Ordens de Serviço</a></li>
                         <li><a href="{{ url_for('service_order.service_order_avulso') }}"><i class="fas fa-user-clock text-warning"></i> OS Avulsa (Balcão)</a></li>
-                        {% if blueprint_exists('service_order') %}
-                        <li><a href="{{ url_for('service_order.service_order_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard OS</a></li>
-                        {% endif %}
                         {% endif %}
                         {% if blueprint_exists('orcamentos') %}
                         <li><a href="{{ url_for('orcamentos.lista') }}"><i class="fas fa-file-invoice-dollar"></i> Orçamentos</a></li>
@@ -243,12 +240,12 @@
                         <li class="menu-header">Agenda</li>
                         {% if blueprint_exists('agenda') %}
                         <li><a href="{{ url_for('agenda.agenda_index') }}"><i class="fas fa-calendar-alt text-primary"></i> Agenda de Mecânicos</a></li>
-                        {% else %}
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='agenda') }}"><i class="fas fa-calendar-alt text-primary"></i> Agenda de Serviços <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
                         {% endif %}
 
                         <li class="menu-header">Garantia</li>
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='garantia') }}"><i class="fas fa-shield-alt text-success"></i> Controle de Garantia <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
+                        {% if blueprint_exists('garantia') %}
+                        <li><a href="{{ url_for('garantia.garantia_lista') }}"><i class="fas fa-shield-alt text-success"></i> Controle de Garantia</a></li>
+                        {% endif %}
 
                         <li class="menu-header">Fiscal</li>
                         {% if blueprint_exists('nfe_emissao') %}
@@ -305,13 +302,15 @@
                         {% if blueprint_exists('clientes_potenciais') %}
                         <li><a href="{{ url_for('clientes_potenciais.lista') }}"><i class="fas fa-user-plus"></i> Clientes em Potencial</a></li>
                         {% endif %}
+                        {% if blueprint_exists('portal') %}
+                        <li><a href="{{ url_for('portal.portal_index') }}"><i class="fas fa-globe text-info"></i> Portal do Cliente</a></li>
+                        {% endif %}
                         {% if blueprint_exists('rota_vendas') %}
                         <li><a href="{{ url_for('rota_vendas.rotas_vendas_list') }}"><i class="fas fa-route"></i> Rota de Captação</a></li>
                         {% endif %}
                         {% if blueprint_exists('questionario_visita') %}
                         <li><a href="{{ url_for('questionario_visita.questionario_visita_geral') }}"><i class="fas fa-poll"></i> Pesquisa Pós-Atendimento</a></li>
                         {% endif %}
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='portal-cliente') }}"><i class="fas fa-globe text-info"></i> Portal do Cliente <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
                         {% if blueprint_exists('segment') %}
                         <li><a href="{{ url_for('segment.segmentos') }}"><i class="fas fa-layer-group"></i> Segmentos</a></li>
                         {% endif %}
@@ -359,8 +358,9 @@
                         {% if blueprint_exists('jornada_trabalho') %}
                         <li><a href="{{ url_for('jornada_trabalho.listar_jornadas') }}"><i class="fas fa-clock"></i> Jornada / Ponto</a></li>
                         {% endif %}
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='ponto') }}"><i class="fas fa-fingerprint"></i> Controle de Ponto <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='comissoes') }}"><i class="fas fa-percentage text-success"></i> Comissões <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
+                        {% if blueprint_exists('comissao') %}
+                        <li><a href="{{ url_for('comissao.comissao_lista') }}"><i class="fas fa-percentage text-success"></i> Comissões</a></li>
+                        {% endif %}
                         <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='app-mecanico') }}"><i class="fas fa-mobile-alt text-primary"></i> App Mobile <span class="badge bg-warning text-dark ms-1" style="font-size:9px">Out/26</span></a></li>
                     </ul>
                 </li>
@@ -447,8 +447,9 @@
                         {% if blueprint_exists('pix') %}
                         <li><a href="{{ url_for('pix.pix_painel') }}"><i class="fas fa-qrcode" style="color:#32bcad"></i> PIX</a></li>
                         {% endif %}
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='boleto') }}"><i class="fas fa-barcode"></i> Boleto Bancário <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
-
+                        {% if blueprint_exists('boleto') %}
+                        <li><a href="{{ url_for('boleto.boleto_gerar', order_id=0) }}"><i class="fas fa-barcode"></i> Boleto Bancário</a></li>
+                        {% endif %}
                         {% if blueprint_exists('payment_config') %}
                         <li class="menu-header">Configurações</li>
                         <li><a href="{{ url_for('payment_config.payment_config_list') }}"><i class="fas fa-credit-card"></i> Formas de Pagamento</a></li>
@@ -484,100 +485,78 @@
                         <i class="fas fa-chart-bar"></i> Relatórios
                     </a>
                     <ul class="collapse list-unstyled" id="relatoriosSubmenu">
+                        <li class="menu-header">Dashboards</li>
                         {% if blueprint_exists('dashboard') %}
                         <li><a href="{{ url_for('dashboard.cmms_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard Geral</a></li>
-                        <li><a href="{{ url_for('service_order.service_order_dashboard') }}"><i class="fas fa-clipboard-list text-primary"></i> Dashboard de OS</a></li>
+                        {% endif %}
+                        <li class="menu-header">Relatórios</li>
+                        {% if blueprint_exists('dashboard') %}
                         <li><a href="{{ url_for('dashboard.maintenance_report') }}"><i class="fas fa-wrench"></i> Relatório de OS</a></li>
                         <li><a href="{{ url_for('dashboard.cost_report') }}"><i class="fas fa-coins"></i> Custos</a></li>
-                        <li><a href="{{ url_for('dashboard.performance_report') }}"><i class="fas fa-chart-line"></i> Desempenho</a></li>
+                        <li><a href="{{ url_for('dashboard.performance_report') }}"><i class="fas fa-chart-line"></i> Desempenho Veículos</a></li>
                         {% endif %}
                         <li><a href="{{ url_for('reports.relatorio_mecanicos') }}"><i class="fas fa-user-cog text-primary"></i> Desempenho Mecânicos</a></li>
                         <li><a href="{{ url_for('reports.relatorio_servicos') }}"><i class="fas fa-list-ol text-info"></i> Ranking de Serviços</a></li>
                         {% if blueprint_exists('comissao') %}
                         <li><a href="{{ url_for('comissao.comissao_lista') }}"><i class="fas fa-percentage text-success"></i> Comissões</a></li>
-                        {% else %}
-                        <li><a href="{{ url_for('em_desenvolvimento', funcionalidade='comissoes') }}"><i class="fas fa-percentage"></i> Comissões <span class="badge bg-info ms-1" style="font-size:9px">Em breve</span></a></li>
-                        {% endif %}
-                        {% if blueprint_exists('garantia') %}
-                        <li><a href="{{ url_for('garantia.garantia_lista') }}"><i class="fas fa-shield-alt text-info"></i> Garantias</a></li>
                         {% endif %}
                     </ul>
                 </li>
                 
-                {# Verifica se tem alguma permissão no módulo Administração #}
+                {# ══════════════════════════════════════════════
+                   11. CONFIGURAÇÕES (agrupador único)
+                ══════════════════════════════════════════════ #}
                 {% set tem_admin = is_admin or permissoes.get('admin.empresas', {}).get('visualizar') or permissoes.get('admin.usuarios', {}).get('visualizar') or permissoes.get('admin.permissoes', {}).get('visualizar') or permissoes.get('admin.config_pdv', {}).get('visualizar') or permissoes.get('admin.importar_clientes', {}).get('visualizar') or permissoes.get('admin.importar_nfe', {}).get('visualizar') %}
                 {% if tem_admin %}
-                <!-- Administração -->
                 <li>
-                    <a href="#adminSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                        <i class="fas fa-cog"></i> Administração
+                    <a href="#configSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="fas fa-sliders-h"></i> Configurações
                     </a>
-                    <ul class="collapse list-unstyled" id="adminSubmenu">
-                        {% if is_admin or permissoes.get('admin.empresas', {}).get('visualizar') %}
-                        {% if blueprint_exists('empresa') %}
-                        <li>
-                            <a href="{{ url_for('empresa.empresas') }}"><i class="fas fa-building"></i> Empresas</a>
-                        </li>
-                        {% endif %}
-                        {% endif %}
-                        {% if is_admin and blueprint_exists('currency') %}
-                        <li>
-                            <a href="{{ url_for('currency.lista') }}"><i class="fas fa-coins"></i> Moedas e Câmbio</a>
-                        </li>
+                    <ul class="collapse list-unstyled" id="configSubmenu">
+
+                        <li class="menu-header">Empresa & Usuários</li>
+                        {% if (is_admin or permissoes.get('admin.empresas', {}).get('visualizar')) and blueprint_exists('empresa') %}
+                        <li><a href="{{ url_for('empresa.empresas') }}"><i class="fas fa-building"></i> Empresas</a></li>
                         {% endif %}
                         {% if (is_admin or permissoes.get('admin.usuarios', {}).get('visualizar')) and blueprint_exists('usuario') %}
-                        <li>
-                            <a href="{{ url_for('usuario.usuarios') }}"><i class="fas fa-user-cog"></i> Usuários</a>
-                        </li>
+                        <li><a href="{{ url_for('usuario.usuarios') }}"><i class="fas fa-user-cog"></i> Usuários</a></li>
                         {% endif %}
                         {% if (is_admin or permissoes.get('admin.permissoes', {}).get('visualizar')) and blueprint_exists('permissoes') %}
-                        <li>
-                            <a href="{{ url_for('permissoes.lista') }}"><i class="fas fa-key text-warning"></i> Permissões de Usuário</a>
-                        </li>
+                        <li><a href="{{ url_for('permissoes.lista') }}"><i class="fas fa-key text-warning"></i> Permissões</a></li>
                         {% endif %}
-                        {% if blueprint_exists('importar_clientes') %}
-                        <li>
-                            <a href="{{ url_for('importar_clientes.importar_clientes_form') }}"><i class="fas fa-file-import"></i> Importar Clientes</a>
-                        </li>
-                        {% endif %}
-                        {% if blueprint_exists('nfe_upload') %}
-                        <li>
-                            <a href="{{ url_for('nfe_upload.importar_nfe_upload_page') }}"><i class="fas fa-file-invoice"></i> Importar XML (NF-e)</a>
-                        </li>
+
+                        <li class="menu-header">Fiscal & Pagamento</li>
+                        {% if blueprint_exists('payment_config') %}
+                        <li><a href="{{ url_for('payment_config.payment_config_list') }}"><i class="fas fa-credit-card"></i> Formas de Pagamento</a></li>
                         {% endif %}
                         {% if blueprint_exists('nfe_emissao') %}
-                        <li>
-                            <a href="{{ url_for('nfe_emissao.config_email_nfe') }}"><i class="fas fa-envelope-open-text"></i> Config. Email NF-e</a>
-                        </li>
-                        <li>
-                            <a href="{{ url_for('nfe_emissao.numeracao_config') }}"><i class="fas fa-hashtag"></i> Numeração NF-e</a>
-                        </li>
+                        <li><a href="{{ url_for('nfe_emissao.config_email_nfe') }}"><i class="fas fa-envelope-open-text"></i> Config. Email NF-e</a></li>
+                        <li><a href="{{ url_for('nfe_emissao.numeracao_config') }}"><i class="fas fa-hashtag"></i> Numeração NF-e</a></li>
+                        {% endif %}
+                        {% if is_admin and blueprint_exists('currency') %}
+                        <li><a href="{{ url_for('currency.lista') }}"><i class="fas fa-coins"></i> Moedas e Câmbio</a></li>
+                        {% endif %}
+
+                        <li class="menu-header">PDV & Comunicação</li>
+                        {% if blueprint_exists('pdv_config') %}
+                        <li><a href="{{ url_for('pdv_config.configuracoes') }}"><i class="fas fa-cash-register"></i> Configurações do PDV</a></li>
+                        {% endif %}
+                        {% if blueprint_exists('whatsapp') %}
+                        <li><a href="{{ url_for('whatsapp.whatsapp_config') }}"><i class="fab fa-whatsapp text-success"></i> Configurar WhatsApp</a></li>
+                        {% endif %}
+
+                        <li class="menu-header">Importação & Dados</li>
+                        {% if blueprint_exists('importar_clientes') %}
+                        <li><a href="{{ url_for('importar_clientes.importar_clientes_form') }}"><i class="fas fa-file-import"></i> Importar Clientes</a></li>
+                        {% endif %}
+                        {% if blueprint_exists('nfe_upload') %}
+                        <li><a href="{{ url_for('nfe_upload.importar_nfe_upload_page') }}"><i class="fas fa-file-invoice"></i> Importar XML (NF-e)</a></li>
                         {% endif %}
                         {% if is_admin and blueprint_exists('etl') %}
-                        <li>
-                            <a href="{{ url_for('etl.etl_painel') }}"><i class="fas fa-database text-warning"></i> ETL / Migração Legado</a>
-                        </li>
+                        <li><a href="{{ url_for('etl.etl_painel') }}"><i class="fas fa-database text-warning"></i> ETL / Migração Legado</a></li>
                         {% endif %}
-                        <li>
-                            <a href="{{ url_for('em_desenvolvimento', funcionalidade='seguranca_auditoria') }}"><i class="fas fa-shield-alt"></i> Segurança & Auditoria</a>
-                        </li>
                         {% if blueprint_exists('integration') %}
-                        <li>
-                            <a href="#integrationsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
-                                <i class="fas fa-exchange-alt"></i> Integrações
-                            </a>
-                            <ul class="collapse list-unstyled" id="integrationsSubmenu">
-                                <li>
-                                    <a href="{{ url_for('integration.integrations_dashboard') }}">Integrações</a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for('integration.erp_config') }}">ERP</a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for('integration.iot_config') }}">IoT</a>
-                                </li>
-                            </ul>
-                        </li>
+                        <li><a href="{{ url_for('integration.integrations_dashboard') }}"><i class="fas fa-exchange-alt"></i> Integrações ERP/IoT</a></li>
                         {% endif %}
                     </ul>
                 </li>
