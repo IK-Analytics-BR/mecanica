@@ -97,11 +97,11 @@ def cmms_dashboard():
     # Top 5 veículos com mais OS
     top_equipment = db.fetch_all("""
         SELECT e.name as equipment_name,
-               COALESCE(e.license_plate, e.name) as label,
+               e.name as label,
                COUNT(so.id) as count
         FROM service_orders so
         JOIN equipment e ON so.equipment_id = e.id
-        GROUP BY e.id, e.name, e.license_plate
+        GROUP BY e.id, e.name
         ORDER BY count DESC
         LIMIT 5
     """)
