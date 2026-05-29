@@ -151,3 +151,78 @@ ul ul a {
         display: none;
     }
 }
+
+/* ── PWA / Mobile melhorias ─────────────────────────────── */
+
+/* Safe-area para iPhone com notch/Dynamic Island */
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+/* Navbar fixa no topo com safe-area */
+.navbar {
+    padding-top: calc(0.5rem + env(safe-area-inset-top));
+}
+
+/* Tabelas: scroll horizontal em mobile sem quebrar layout */
+@media (max-width: 768px) {
+    .table-responsive-mobile {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    table {
+        min-width: 500px;
+    }
+    .table-responsive-mobile table {
+        min-width: unset;
+    }
+
+    /* Cards sem overflow lateral */
+    .card {
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+
+    /* Botões de ação: empilhar em mobile */
+    .action-bar {
+        flex-direction: column !important;
+    }
+    .action-bar .btn {
+        width: 100%;
+    }
+
+    /* Formulários: campos full-width */
+    .form-control, .form-select {
+        font-size: 16px !important; /* evita zoom automático no iOS */
+    }
+
+    /* Texto menor em badges e labels */
+    .badge { font-size: 11px; }
+
+    /* Conteúdo principal sem padding excessivo */
+    #content {
+        padding: 10px !important;
+    }
+
+    /* Ocultar colunas menos importantes em tabelas mobile */
+    .d-mobile-none { display: none !important; }
+
+    /* KPI cards: 2 por linha */
+    .kpi-row .col-md-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    /* Modal: full-screen em mobile */
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+    }
+    .modal-content {
+        border-radius: 12px 12px 0 0;
+        min-height: 50vh;
+    }
+}
