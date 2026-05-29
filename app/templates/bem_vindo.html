@@ -16,10 +16,10 @@
         <h5><i class="fas fa-info-circle text-warning me-2"></i>Configuração Inicial</h5>
         <p class="mb-2">Este é um sistema novo. Para começar a usar, você precisa cadastrar algumas informações básicas:</p>
         <ol class="mb-0">
-            <li><strong>Empresa:</strong> Cadastre sua empresa em <a href="{{ url_for('empresa.empresas') }}">Empresas</a></li>
-            <li><strong>Produtos:</strong> Adicione seus produtos em <a href="{{ url_for('produto.produtos') }}">Produtos</a></li>
-            <li><strong>Clientes:</strong> Cadastre seus clientes em <a href="{{ url_for('cliente.clientes') }}">Clientes</a></li>
-            <li><strong>Fornecedores:</strong> Adicione fornecedores em <a href="{{ url_for('fornecedor.fornecedores') }}">Fornecedores</a></li>
+            <li><strong>Empresa:</strong> Cadastre sua empresa em <a href="/empresas">Empresas</a></li>
+            <li><strong>Produtos:</strong> Adicione seus produtos em <a href="/produtos">Produtos</a></li>
+            <li><strong>Clientes:</strong> Cadastre seus clientes em <a href="/clientes">Clientes</a></li>
+            <li><strong>Fornecedores:</strong> Adicione fornecedores em <a href="/fornecedores">Fornecedores</a></li>
         </ol>
     </div>
 
@@ -27,35 +27,35 @@
     <div class="menu-section">
         <h5 class="mb-3"><i class="fas fa-bolt text-primary me-2"></i>Acesso Rápido</h5>
         <div class="menu-grid">
-            <a href="{{ url_for('empresa.empresas') }}" class="menu-item">
+            <a href="/empresas" class="menu-item">
                 <i class="fas fa-building"></i>
                 <span>Empresas</span>
             </a>
-            <a href="{{ url_for('cliente.clientes') }}" class="menu-item">
+            <a href="/clientes" class="menu-item">
                 <i class="fas fa-users"></i>
                 <span>Clientes</span>
             </a>
-            <a href="{{ url_for('produto.produtos') }}" class="menu-item">
+            <a href="/produtos" class="menu-item">
                 <i class="fas fa-box"></i>
                 <span>Produtos</span>
             </a>
-            <a href="{{ url_for('fornecedor.fornecedores') }}" class="menu-item">
+            <a href="/fornecedores" class="menu-item">
                 <i class="fas fa-truck"></i>
                 <span>Fornecedores</span>
             </a>
-            <a href="{{ url_for('purchase_order.purchase_order_list') if 'purchase_order' in session.get('permissoes', {}) else '#' }}" class="menu-item">
+            <a href="/compras" class="menu-item">
                 <i class="fas fa-shopping-cart"></i>
                 <span>Compras</span>
             </a>
-            <a href="{{ url_for('venda.venda_pdv_moderna') if 'venda' in session.get('permissoes', {}) else '#' }}" class="menu-item">
+            <a href="/vendas/pdv" class="menu-item">
                 <i class="fas fa-cash-register"></i>
                 <span>Vendas</span>
             </a>
-            <a href="{{ url_for('inventory.inventory_list') }}" class="menu-item">
+            <a href="/estoque" class="menu-item">
                 <i class="fas fa-warehouse"></i>
                 <span>Estoque</span>
             </a>
-            <a href="{{ url_for('usuario.usuarios') }}" class="menu-item">
+            <a href="/usuarios" class="menu-item">
                 <i class="fas fa-user-cog"></i>
                 <span>Usuários</span>
             </a>
