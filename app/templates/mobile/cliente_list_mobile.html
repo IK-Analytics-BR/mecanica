@@ -1,0 +1,318 @@
+{#
+  LISTA DE CLIENTES - Versão Mobile/PWA
+  Cards em vez de tabela para melhor visualização em telas pequenas
+#}
+{% extends 'layouts/base_desktop.html' %}
+
+{% block title %}Clientes - IKFlow{% endblock %}
+
+{% block content %}
+<style>
+    .cliente-mobile-container {
+        padding: 16px;
+        padding-bottom: 100px;
+    }
+
+    .cliente-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 4px solid var(--ik-teal);
+    }
+
+    .cliente-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .cliente-nome {
+        font-weight: 700;
+        font-size: 16px;
+        color: #1e293b;
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    .cliente-id {
+        font-size: 11px;
+        color: #94a3b8;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .cliente-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .cliente-info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .cliente-info-item i {
+        width: 16px;
+        color: var(--ik-teal);
+    }
+
+    .cliente-actions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .cliente-action-btn {
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+    }
+
+    .cliente-action-btn i {
+        font-size: 16px;
+    }
+
+    .btn-view { background: #e0f2fe; color: #0369a1; }
+    .btn-view:hover { background: #bae6fd; }
+
+    .btn-edit { background: #fef3c7; color: #92400e; }
+    .btn-edit:hover { background: #fde68a; }
+
+    .btn-delete { background: #fee2e2; color: #991b1b; }
+    .btn-delete:hover { background: #fecaca; }
+
+    .btn-products { background: #f3e8ff; color: #6b21a8; }
+    .btn-products:hover { background: #e9d5ff; }
+
+    /* Search Bar */
+    .search-bar-mobile {
+        position: sticky;
+        top: 0;
+        background: #f8fafc;
+        padding: 12px 16px;
+        z-index: 100;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .search-input-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .search-input-group input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 15px;
+    }
+
+    .search-input-group button {
+        padding: 12px 16px;
+        background: var(--ik-teal);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+    }
+
+    /* FAB */
+    .fab-cliente {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--ik-orange);
+        color: #fff;
+        border: none;
+        font-size: 24px;
+        box-shadow: 0 4px 15px rgba(255,159,26,0.4);
+        z-index: 1030;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Paginação */
+    .pagination-mobile {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+        padding-bottom: 20px;
+    }
+
+    .pagination-mobile a, .pagination-mobile span {
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .pagination-mobile a {
+        background: #fff;
+        color: var(--ik-teal);
+        text-decoration: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+
+    .pagination-mobile span.current {
+        background: var(--ik-teal);
+        color: #fff;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94a3b8;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        color: #cbd5e1;
+    }
+
+    /* Desktop: ocultar versão mobile */
+    @media (min-width: 992px) {
+        body:not(.pwa-standalone) .cliente-mobile-container {
+            display: none;
+        }
+    }
+</style>
+
+<!-- Search Bar -->
+<div class="search-bar-mobile">
+    <form method="GET" action="{{ url_for('cliente.clientes') }}">
+        <div class="search-input-group">
+            <input type="text" name="search_term" placeholder="Buscar cliente..." value="{{ search_term|default('') }}">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </div>
+    </form>
+</div>
+
+<!-- Lista de Clientes (Cards) -->
+<div class="cliente-mobile-container">
+    {% for cliente in clientes %}
+    <div class="cliente-card">
+        <div class="cliente-header">
+            <div class="cliente-nome">{{ cliente.name or 'Sem nome' }}</div>
+            <span class="cliente-id">#{{ cliente.id }}</span>
+        </div>
+        
+        <div class="cliente-info">
+            {% if cliente.cnpj %}
+            <div class="cliente-info-item">
+                <i class="fas fa-id-card"></i>
+                <span>{{ cliente.cnpj }}</span>
+            </div>
+            {% endif %}
+            
+            {% if cliente.city or cliente.state %}
+            <div class="cliente-info-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ cliente.city or '-' }}/{{ cliente.state or '-' }}</span>
+            </div>
+            {% endif %}
+            
+            {% if cliente.phone %}
+            <div class="cliente-info-item">
+                <i class="fas fa-phone"></i>
+                <span>{{ cliente.phone }}</span>
+            </div>
+            {% endif %}
+            
+            {% if cliente.email %}
+            <div class="cliente-info-item">
+                <i class="fas fa-envelope"></i>
+                <span>{{ cliente.email|truncate(30) }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="cliente-actions">
+            <a href="{{ url_for('cliente.cliente_visualizar', id=cliente.id) }}" class="cliente-action-btn btn-view">
+                <i class="fas fa-eye"></i>
+                Ver
+            </a>
+            <a href="{{ url_for('cliente.cliente_editar', id=cliente.id) }}" class="cliente-action-btn btn-edit">
+                <i class="fas fa-edit"></i>
+                Editar
+            </a>
+            <a href="{{ url_for('cliente.cliente_excluir', id=cliente.id) }}" class="cliente-action-btn btn-delete" onclick="return confirm('Excluir este cliente?')">
+                <i class="fas fa-trash"></i>
+                Excluir
+            </a>
+            <a href="{{ url_for('cliente.customer_products_page', customer_id=cliente.id) }}" class="cliente-action-btn btn-products">
+                <i class="fas fa-sitemap"></i>
+                Produtos
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h5>Nenhum cliente encontrado</h5>
+        <p>Cadastre seu primeiro cliente</p>
+    </div>
+    {% endfor %}
+    
+    <!-- Paginação -->
+    {% if total_pages > 1 %}
+    <div class="pagination-mobile">
+        {% if page > 1 %}
+        <a href="{{ url_for('cliente.clientes', page=page-1, search_term=search_term) }}">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+        
+        <span class="current">{{ page }} / {{ total_pages }}</span>
+        
+        {% if page < total_pages %}
+        <a href="{{ url_for('cliente.clientes', page=page+1, search_term=search_term) }}">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- FAB Novo Cliente -->
+<a href="{{ url_for('cliente.cliente_cadastrar') }}" class="fab-cliente">
+    <i class="fas fa-plus"></i>
+</a>
+
+<!-- Versão Desktop (tabela original) -->
+<div class="d-none d-lg-block">
+    {{ caller() if caller else '' }}
+</div>
+
+<script>
+// Detectar se é mobile/PWA e aplicar comportamento
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+if (isMobile || isStandalone) {
+    document.body.classList.add('mobile-view-active');
+}
+</script>
+{% endblock %}
