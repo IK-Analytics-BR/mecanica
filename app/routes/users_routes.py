@@ -3,44 +3,16 @@ Rotas para o módulo de Usuários e Permissões.
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from functools import wraps
 import datetime
 import hashlib
 import secrets
 import re
 
 from database import get_db
+from utils.auth import login_required, admin_required
 
 # Criar o blueprint
 users_bp = Blueprint('users', __name__)
-
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-# Decorador para verificar se o usuário é administrador
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        
-        db = get_db()
-        user = db.fetch_one("SELECT * FROM users WHERE username = %s", (session['username'],))
-        
-        if not user or user['role'] != 'admin':
-            flash('Você não tem permissão para acessar esta página.', 'danger')
-            return redirect(url_for('dashboard'))
-        
-        return f(*args, **kwargs)
-    return decorated_function
 
 @users_bp.route('/usuarios')
 @admin_required

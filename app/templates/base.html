@@ -328,7 +328,7 @@
                         <li><a href="{{ url_for('equipamento.equipamentos') }}"><i class="fas fa-car-side"></i> Cadastro de Veículos</a></li>
                         {% endif %}
                         {% if blueprint_exists('hour_meter') %}
-                        <li><a href="{{ url_for('hour_meter.hour_meter_list') }}"><i class="fas fa-tachometer-alt"></i> KM / Horímetro</a></li>
+                        <li><a href="{{ url_for('hour_meter.hour_meter_list') }}"><i class="fas fa-road"></i> Quilometragem</a></li>
                         {% endif %}
                         {% if blueprint_exists('maintenance_plan') %}
                         <li><a href="{{ url_for('maintenance_plan.maintenance_plan_list') }}"><i class="fas fa-clipboard-check"></i> Planos de Revisão</a></li>
@@ -349,14 +349,8 @@
                         {% if blueprint_exists('technician') %}
                         <li><a href="{{ url_for('technician.technicians_list') }}"><i class="fas fa-users-cog"></i> Mecânicos / Técnicos</a></li>
                         {% endif %}
-                        {% if blueprint_exists('ordem_producao') %}
-                        <li><a href="{{ url_for('ordem_producao.meu_gantt') }}"><i class="fas fa-hard-hat text-warning"></i> Meu Painel (Mecânico)</a></li>
-                        <li><a href="{{ url_for('ordem_producao.lider_painel') }}"><i class="fas fa-user-tie text-primary"></i> Painel do Líder</a></li>
-                        <li><a href="{{ url_for('ordem_producao.listar_ops') }}"><i class="fas fa-tasks"></i> Ordens de Execução</a></li>
-                        <li><a href="{{ url_for('ordem_producao.producao_gantt') }}"><i class="fas fa-project-diagram"></i> Gantt de Serviços</a></li>
-                        {% endif %}
-                        {% if blueprint_exists('producao_pausas') %}
-                        <li><a href="{{ url_for('producao_pausas.listar_motivos') }}"><i class="fas fa-pause-circle"></i> Motivos de Pausa</a></li>
+                        {% if blueprint_exists('agenda') %}
+                        <li><a href="{{ url_for('agenda.agenda_index') }}"><i class="fas fa-calendar-check text-warning"></i> Minha Agenda</a></li>
                         {% endif %}
 
                         <li class="menu-header">Ponto & RH</li>
@@ -490,6 +484,7 @@
                     <ul class="collapse list-unstyled" id="relatoriosSubmenu">
                         {% if blueprint_exists('dashboard') %}
                         <li><a href="{{ url_for('dashboard.cmms_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard Geral</a></li>
+                        <li><a href="{{ url_for('service_order.service_order_dashboard') }}"><i class="fas fa-clipboard-list text-primary"></i> Dashboard de OS</a></li>
                         <li><a href="{{ url_for('dashboard.maintenance_report') }}"><i class="fas fa-wrench"></i> Relatório de OS</a></li>
                         <li><a href="{{ url_for('dashboard.cost_report') }}"><i class="fas fa-coins"></i> Custos</a></li>
                         <li><a href="{{ url_for('dashboard.performance_report') }}"><i class="fas fa-chart-line"></i> Desempenho</a></li>

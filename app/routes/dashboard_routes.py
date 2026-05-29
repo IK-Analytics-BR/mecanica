@@ -5,39 +5,30 @@ Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from functools import wraps
 from datetime import datetime, timedelta
 import calendar
 import json
 
 from database import get_db
+from utils.auth import login_required
 
 # Criar o blueprint
 dashboard_bp = Blueprint('dashboard', __name__)
 
-# Decorador para verificar se o usuário está logado
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'username' not in session:
-            flash('Por favor, faça login para acessar esta página.', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
+@dashboard_bp.route('/dashboard')
 @dashboard_bp.route('/cmms_dashboard')
 @login_required
 def cmms_dashboard():
     """Dashboard geral do CMMS."""
     db = get_db()
     
-    # Estatísticas de equipamentos
+    # KPI: Veículos cadastrados
     equipment_stats = db.fetch_one("""
         SELECT
             COUNT(*) as total,
-            SUM(CASE WHEN wear_percentage >= 100 THEN 1 ELSE 0 END) as critical_count,
-            SUM(CASE WHEN wear_percentage >= 80 AND wear_percentage < 100 THEN 1 ELSE 0 END) as warning_count,
-            SUM(CASE WHEN wear_percentage < 80 THEN 1 ELSE 0 END) as normal_count
+            SUM(CASE WHEN next_maintenance IS NOT NULL AND next_maintenance <= CURDATE() THEN 1 ELSE 0 END) as critical_count,
+            SUM(CASE WHEN next_maintenance IS NOT NULL AND next_maintenance BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as warning_count,
+            SUM(CASE WHEN next_maintenance IS NULL OR next_maintenance > DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) as normal_count
         FROM equipment
         WHERE active = TRUE
     """)
@@ -103,25 +94,42 @@ def cmms_dashboard():
     # Inverter para ordem cronológica
     months_data.reverse()
     
-    # Top 5 equipamentos com mais ordens de serviço
+    # Top 5 veículos com mais OS
     top_equipment = db.fetch_all("""
-        SELECT e.name as equipment_name, COUNT(so.id) as count
+        SELECT e.name as equipment_name,
+               COALESCE(e.license_plate, e.name) as label,
+               COUNT(so.id) as count
         FROM service_orders so
         JOIN equipment e ON so.equipment_id = e.id
-        GROUP BY e.name
+        GROUP BY e.id, e.name, e.license_plate
         ORDER BY count DESC
         LIMIT 5
     """)
-    
-    # Top 5 técnicos com mais ordens de serviço
+
+    # Top 5 mecânicos com mais OS concluídas
     top_technicians = db.fetch_all("""
-        SELECT u.name as technician_name, COUNT(so.id) as count
+        SELECT t.name as technician_name, COUNT(so.id) as count
         FROM service_orders so
-        JOIN users u ON so.technician_id = u.id
+        JOIN technicians t ON so.technician_id = t.id
         WHERE so.technician_id IS NOT NULL
-        GROUP BY u.name
+          AND so.status = 'completed'
+        GROUP BY t.id, t.name
         ORDER BY count DESC
         LIMIT 5
+    """)
+
+    # KPI: Receita do mês atual (OS concluídas)
+    receita_mes = db.fetch_one("""
+        SELECT COALESCE(SUM(total_cost), 0) as receita
+        FROM service_orders
+        WHERE status = 'completed'
+          AND MONTH(completion_date) = MONTH(CURDATE())
+          AND YEAR(completion_date)  = YEAR(CURDATE())
+    """)
+
+    # KPI: Técnicos ativos
+    tecnicos_ativos = db.fetch_one("""
+        SELECT COUNT(*) as total FROM technicians WHERE status = 'active'
     """)
     
     # Ordens de serviço recentes
@@ -202,6 +210,8 @@ def cmms_dashboard():
         recent_alerts=recent_alerts,
         upcoming_maintenance=upcoming_maintenance,
         alert_types=alert_types,
+        receita_mes=receita_mes,
+        tecnicos_ativos=tecnicos_ativos,
         active_page='cmms_dashboard'
     )
 

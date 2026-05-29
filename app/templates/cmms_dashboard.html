@@ -1,17 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard CMMS - Sistema de Gestão de Suprimentos{% endblock %}
+{% block title %}Dashboard — IKFlow Mecânica{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4">
-    <div class="alert alert-info">
-        <strong>Nota:</strong> Antes da solicitação: caso já tenha na versão atual, avance para a próxima.
-    </div>
-
-    <h1 class="mt-4">Dashboard CMMS</h1>
+    <h1 class="mt-4"><i class="fas fa-tachometer-alt me-2 text-primary"></i> Dashboard Geral</h1>
     <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item active">Dashboard CMMS</li>
+        <li class="breadcrumb-item active">Início</li>
     </ol>
     
     <!-- Cards de estatísticas -->
@@ -21,14 +16,14 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="small text-white-50">Equipamentos</div>
+                            <div class="small text-white-50">Veículos Cadastrados</div>
                             <div class="display-6">{{ equipment_stats.total }}</div>
                         </div>
-                        <i class="fas fa-cogs fa-3x opacity-50"></i>
+                        <i class="fas fa-car fa-3x opacity-50"></i>
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{{ url_for('equipamento.index') }}">Ver Detalhes</a>
+                    <a class="small text-white stretched-link" href="{{ url_for('equipamento.equipamentos') }}">Ver Veículos</a>
                     <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
@@ -72,14 +67,14 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="small text-white-50">Planos de Manutenção</div>
-                            <div class="display-6">{{ maintenance_plan_stats.total }}</div>
+                            <div class="small text-white-50">Receita do Mês (OS)</div>
+                            <div class="display-6">R$ {{ '{:,.0f}'.format(receita_mes.receita|float) if receita_mes else '0' }}</div>
                         </div>
-                        <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+                        <i class="fas fa-dollar-sign fa-3x opacity-50"></i>
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{{ url_for('maintenance_plan.maintenance_plan_list') }}">Ver Detalhes</a>
+                    <a class="small text-white stretched-link" href="{{ url_for('service_order.service_order_list') }}">Ver OS Concluídas</a>
                     <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
@@ -92,32 +87,32 @@
             <div class="card mb-4">
                 <div class="card-header">
                     <i class="fas fa-cogs me-1"></i>
-                    Status dos Equipamentos
+                    Status de Revisões
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
                             <div class="card bg-danger text-white mb-3">
                                 <div class="card-body text-center">
-                                    <h5>Crítico</h5>
+                                    <h5>Atrasados</h5>
                                     <h2>{{ equipment_stats.critical_count }}</h2>
-                                    <p class="small mb-0">Desgaste ≥ 100%</p>
+                                    <p class="small mb-0">Revisão vencida</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card bg-warning text-white mb-3">
                                 <div class="card-body text-center">
-                                    <h5>Alerta</h5>
+                                    <h5>Próximos</h5>
                                     <h2>{{ equipment_stats.warning_count }}</h2>
-                                    <p class="small mb-0">Desgaste ≥ 80%</p>
+                                    <p class="small mb-0">Revisão em 30 dias</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card bg-success text-white mb-3">
                                 <div class="card-body text-center">
-                                    <h5>Normal</h5>
+                                    <h5>Em Dia</h5>
                                     <h2>{{ equipment_stats.normal_count }}</h2>
                                     <p class="small mb-0">Desgaste < 80%</p>
                                 </div>
