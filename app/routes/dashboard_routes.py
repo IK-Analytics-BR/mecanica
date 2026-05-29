@@ -364,8 +364,8 @@ def performance_report():
         performance_list = db.fetch_all(f"""
             SELECT e.name as equipment_name,
                    COUNT(so.id) as repair_count,
-                   AVG(TIMESTAMPDIFF(HOUR, so.open_date, so.completion_date)) as mttr,
-                   NULL as mtbf,
+                   COALESCE(ROUND(AVG(TIMESTAMPDIFF(HOUR, so.open_date, so.completion_date)), 1), 0) as mttr,
+                   0 as mtbf,
                    COUNT(so.id) as failure_count,
                    COALESCE(SUM(so.total_geral), 0) as total_cost,
                    0 as total_downtime_minutes,
@@ -378,7 +378,7 @@ def performance_report():
               AND so.status = 'completed'
               {extra}
             GROUP BY e.id, e.name
-            ORDER BY repair_count DESC
+            ORDER BY repair_count DESC, COALESCE(SUM(so.total_geral), 0) DESC
         """, tuple(params))
     except Exception:
         performance_list = []

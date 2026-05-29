@@ -60,9 +60,9 @@
               <tr><th>#</th><th>Cliente</th><th class="text-center">OS</th><th class="text-end">Receita</th><th class="text-end">Ticket Médio</th></tr>
             </thead>
             <tbody>
-              {% for i, c in top_clientes | enumerate(start=1) %}
+              {% for c in top_clientes %}
               <tr>
-                <td class="text-muted">{{ i }}º</td>
+                <td class="text-muted">{{ loop.index }}º</td>
                 <td>{{ c.cliente }}</td>
                 <td class="text-center">{{ c.total_os }}</td>
                 <td class="text-end fw-bold text-success">R$ {{ '%.2f'|format(c.receita|float) }}</td>
@@ -96,9 +96,9 @@
           </tr>
         </thead>
         <tbody>
-          {% for i, p in top_pecas | enumerate(start=1) %}
+          {% for p in top_pecas %}
           <tr>
-            <td class="text-muted">{{ i }}º</td>
+            <td class="text-muted">{{ loop.index }}º</td>
             <td>{{ p.descricao }}</td>
             <td class="text-center fw-bold">{{ p.qtd_total }}</td>
             <td class="text-center">{{ p.em_os }}</td>

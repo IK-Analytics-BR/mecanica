@@ -59,9 +59,9 @@
           </tr>
         </thead>
         <tbody>
-          {% for i, m in mecanicos | enumerate(start=1) %}
+          {% for m in mecanicos %}
           <tr>
-            <td class="text-muted">{{ i }}º</td>
+            <td class="text-muted">{{ loop.index }}º</td>
             <td class="fw-semibold">{{ m.nome }}</td>
             <td><span class="badge bg-light text-dark border">{{ m.especialidade or '—' }}</span></td>
             <td class="text-center">{{ m.total_os or 0 }}</td>
