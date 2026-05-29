@@ -37,6 +37,11 @@ try:
 except Exception:
     _registrar_garantia = None
 
+try:
+    from utils.audit_log import registrar_audit as _audit
+except Exception:
+    _audit = None
+
 # Criar o blueprint
 service_order_bp = Blueprint('service_order', __name__)
 
@@ -292,6 +297,9 @@ def service_order_add():
             except Exception as e:
                 print(f'[OS] Erro ao salvar itens: {e}')
 
+            if _audit:
+                _audit('service_orders', order_id, 'create',
+                       dados_depois={'order_number': order_number, 'status': 'open'})
             flash(f'OS {order_number} salva com sucesso!', 'success')
             return redirect(url_for('service_order.service_order_view', order_id=order_id))
         else:
@@ -735,6 +743,10 @@ def service_order_cancel(order_id):
                 WHERE id = %s
             """, (item['quantity'], item['supply_id']))
         
+        if _audit:
+            _audit('service_orders', order_id, 'cancel',
+                   dados_antes={'status': order.get('status')},
+                   dados_depois={'status': 'canceled'})
         flash('Ordem de serviço cancelada com sucesso!', 'success')
     else:
         flash('Erro ao cancelar ordem de serviço.', 'danger')

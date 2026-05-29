@@ -20,6 +20,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="IKFlow">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icon-192.png') }}">
+    <!-- CSRF token global (Flask-WTF) -->
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
     <style>
         :root {
             --ik-teal: #08a5b2;
@@ -468,7 +470,7 @@
                         <li><a href="{{ url_for('whatsapp.whatsapp_config') }}"><i class="fas fa-cog"></i> Configurar WhatsApp</a></li>
                         {% endif %}
                         {% if blueprint_exists('whatsapp') %}
-                        <li><a href="{{ url_for('whatsapp.whatsapp_painel') }}"><i class="fas fa-bell text-warning"></i> Lembretes Automáticos</a></li>
+                        <li><a href="{{ url_for('whatsapp.whatsapp_painel') }}"><i class="fas fa-bell text-warning"></i> Disparar Lembretes</a></li>
                         {% endif %}
                     </ul>
                 </li>
@@ -764,6 +766,27 @@
     
     <!-- Bloco para JavaScript adicional das páginas -->
     {% block extra_js %}{% endblock %}
+    {% block scripts %}{% endblock %}
+    <!-- CSRF: injeta token em todos os fetch/XMLHttpRequest -->
+    <script>
+    (function() {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+      if (!csrfToken) return;
+      // fetch global
+      const _origFetch = window.fetch;
+      window.fetch = function(url, opts = {}) {
+        opts.headers = opts.headers || {};
+        if (!(opts.headers instanceof Headers)) {
+          opts.headers['X-CSRFToken'] = csrfToken;
+        }
+        return _origFetch(url, opts);
+      };
+      // jQuery AJAX se existir
+      if (window.$ && $.ajaxSetup) {
+        $.ajaxSetup({ headers: { 'X-CSRFToken': csrfToken } });
+      }
+    })();
+    </script>
     <!-- PWA Service Worker -->
     <script>
       if ('serviceWorker' in navigator) {

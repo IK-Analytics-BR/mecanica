@@ -3,6 +3,11 @@ import os
 import sys
 from functools import wraps
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+try:
+    from flask_wtf.csrf import CSRFProtect
+    _csrf_available = True
+except ImportError:
+    _csrf_available = False
 
 # Adicionar o diretório atual ao caminho de importação
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -74,9 +79,10 @@ kardex_bp = _try_import('routes.kardex_routes', 'kardex_bp')
 # Módulo de Relatórios
 reports_bp = _try_import('routes.reports_routes', 'reports_bp')
 
-# Módulo de Usuários e Permissões
-users_bp = _try_import('routes.users_routes', 'users_bp')
-permissoes_bp = _try_import('routes.permissoes_routes', 'permissoes_bp')
+# Módulo de Usuários e Permissões (usuario_bp = principal; users_bp = legado mantido para compatibilidade)
+usuario_bp    = _try_import('routes.usuario_routes_mysql', 'usuario_bp')
+users_bp      = _try_import('routes.users_routes',         'users_bp')
+permissoes_bp = _try_import('routes.permissoes_routes',    'permissoes_bp')
 
 # API para verificação de documentos
 api_bp = _try_import('routes.api_routes', 'api_bp')
@@ -159,7 +165,13 @@ import os.path
 
 # Criar a aplicação Flask
 app = Flask(__name__)
-app.secret_key = 'chave_secreta_do_sistema'
+app.secret_key = os.environ.get('SECRET_KEY', 'chave_secreta_do_sistema')
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600
+
+# Proteção CSRF global (Flask-WTF)
+if _csrf_available:
+    _csrf = CSRFProtect(app)
 
 # Flask-Login
 login_manager = LoginManager()
@@ -707,8 +719,9 @@ def bem_vindo_atualizar_fx():
 
 
 @app.route('/apresentacao-ikflow')
+@login_required
 def apresentacao_ikflow():
-    """Apresentação pública do IK Flow / IK Analytics (não exige login)."""
+    """Apresentação do IK Flow / IK Analytics (exige login)."""
     try:
         return render_template('apresentacao_ikflow.html')
     except Exception as e:
@@ -717,8 +730,9 @@ def apresentacao_ikflow():
 
 
 @app.route('/apresentacao-ikflow-v2')
+@login_required
 def apresentacao_ikflow_v2():
-    """Nova versão da apresentação IK Flow baseada no layout consolidado (não exige login)."""
+    """Nova versão da apresentação IK Flow (exige login)."""
     try:
         return render_template('apresentacao_ikflow_v2.html')
     except Exception as e:
