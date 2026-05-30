@@ -2,6 +2,25 @@
 
 {% block title %}Contas a Pagar - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    .row > [class*="col-md"] { width: 100% !important; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    .table-responsive { overflow-x: auto; }
+    #payablesTable { font-size: 12px; min-width: 620px; }
+    #payablesTable .btn { padding: 4px 8px; font-size: 11px; }
+    .float-end { position: static !important; margin-top: 8px; display: block; }
+    .float-end .btn { width: 100%; padding: 10px; border-radius: 10px; }
+    .row.mb-4 > [class*="col-"] { margin-bottom: 8px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Contas a Pagar</h1>

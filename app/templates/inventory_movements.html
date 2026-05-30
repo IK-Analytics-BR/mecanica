@@ -2,6 +2,24 @@
 
 {% block title %}Movimentações de Estoque - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-header .float-end { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .card-header .float-end .btn { font-size: 12px; padding: 6px 10px; border-radius: 8px; }
+    .card-body { padding: 12px; }
+    .row > [class*="col-md"] { width: 100% !important; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    .table-responsive { overflow-x: auto; }
+    #movementsTable { font-size: 12px; min-width: 560px; }
+    .badge { font-size: 11px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Movimentações de Estoque</h1>

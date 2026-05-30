@@ -2,6 +2,34 @@
 
 {% block title %}Fluxo de Caixa - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    /* Filtros em coluna */
+    .row > [class*="col-md"] { width: 100% !important; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    /* KPI cards 2x2 */
+    .row > .col-xl-3 { width: 50% !important; padding: 4px; }
+    .row > .col-xl-3 .card-body { padding: 10px 12px; }
+    .row > .col-xl-3 h5 { font-size: 13px; }
+    .row > .col-xl-3 .display-6 { font-size: 1.4rem; }
+    /* Gráficos */
+    .row > .col-xl-8, .row > .col-xl-4,
+    .row > .col-xl-6 { width: 100% !important; }
+    canvas { max-height: 220px; }
+    /* Tabela transações */
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 500px; }
+    /* Botão aplicar filtros */
+    button[type="submit"] { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">{{ title }}</h1>

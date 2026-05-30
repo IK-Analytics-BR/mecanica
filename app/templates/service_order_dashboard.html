@@ -2,6 +2,31 @@
 
 {% block title %}Dashboard de Ordens de Serviço - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    /* Cards KPI em grid 2x2 */
+    .row > .col-xl-3.col-md-6 { width: 50% !important; padding: 4px; }
+    .card .display-6 { font-size: 1.8rem; }
+    .card .fa-3x { font-size: 2rem; }
+    .card-body { padding: 12px; }
+    /* Demais cols */
+    .row > .col-xl-6, .row > .col-md-8,
+    .row > .col-md-4, .row > .col-md-6 { width: 100% !important; }
+    /* Tabelas recentes */
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 480px; }
+    table .btn { padding: 4px 7px; font-size: 11px; }
+    /* Gráficos canvas */
+    canvas { max-height: 220px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .alert { font-size: 13px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <div class="alert alert-info">

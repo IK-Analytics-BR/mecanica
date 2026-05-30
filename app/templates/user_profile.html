@@ -2,6 +2,23 @@
 
 {% block title %}Meu Perfil - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .row > .col-xl-8 { width: 100% !important; }
+    .card { border-radius: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 14px 12px; }
+    .card-header .float-end .btn { font-size: 12px; padding: 7px 12px; }
+    .row > [class*="col-md"] { width: 100% !important; }
+    .form-control, .form-select { height: 44px; font-size: 15px; }
+    .btn { width: 100%; padding: 12px; border-radius: 10px; margin-top: 6px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Meu Perfil</h1>

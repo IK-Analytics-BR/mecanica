@@ -2,6 +2,29 @@
 
 {% block title %}Relatórios de Estoque - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    /* Tabs em scroll horizontal */
+    .nav-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-tabs .nav-link { white-space: nowrap; font-size: 13px; padding: 8px 12px; }
+    /* Filtros e cols */
+    .row > [class*="col-md"], .row > [class*="col-xl"] { width: 100% !important; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    .card { border-radius: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    /* Tabelas */
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 480px; }
+    .btn { width: 100%; padding: 10px; border-radius: 10px; margin-top: 4px; }
+    .input-group .btn, .btn-sm { width: auto !important; margin-top: 0; padding: 6px 10px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Relatórios de Estoque</h1>

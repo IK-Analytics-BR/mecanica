@@ -4,6 +4,21 @@
 
 {% block page_title %}Login{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    .row.justify-content-center { margin: 0 !important; }
+    .col-md-6 { width: 100% !important; padding: 12px; }
+    .card.form-container { border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+    .card-body { padding: 24px 20px; }
+    .form-control { height: 48px; font-size: 16px; border-radius: 10px; }
+    .form-label { font-size: 14px; font-weight: 600; }
+    .btn-primary { width: 100%; padding: 14px; font-size: 16px; border-radius: 10px; }
+    .card-footer { font-size: 14px; padding: 16px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
