@@ -1310,7 +1310,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async function() {
         try {
-          const reg = await navigator.serviceWorker.register('/static/js/service-worker.js', { scope: '/' });
+          const reg = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
           console.log('[PWA] SW registrado:', reg.scope);
           
           // Forçar atualização imediata do SW

@@ -171,7 +171,15 @@
             $('#dataTable').DataTable({
                 order: [[4, 'desc']],
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                    decimal: ',',
+                    thousands: '.',
+                    search: 'Buscar:',
+                    lengthMenu: 'Mostrar _MENU_ registros',
+                    zeroRecords: 'Nenhum resultado encontrado',
+                    info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+                    infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+                    infoFiltered: '(filtrado de _MAX_ total)',
+                    paginate: { first: '«', last: '»', next: '›', previous: '‹' }
                 }
             });
         }
