@@ -54,16 +54,16 @@
 
 | # | Tela | Template | Status |
 |---|------|----------|--------|
-| 31 | Usuários Lista | `users_list.html` | ⬜ |
-| 32 | Usuário Form | `user_form.html` | ⬜ |
-| 33 | Permissões | `admin/permissoes_lista.html` | ⬜ |
-| 34 | Relatório Financeiro | `financial_report.html` | ⬜ |
-| 35 | Relatório Compras | `purchase_report.html` | ⬜ |
-| 36 | Relatório Consolidado | `consolidated_report.html` | ⬜ |
-| 37 | Pedido Compra Lista | `purchase_order_list.html` | ⬜ |
+| 31 | Usuários Lista | `users_list.html` | ✅ |
+| 32 | Usuário Form | `user_form.html` | ✅ |
+| 33 | Permissões | `admin/permissoes_lista.html` | ✅ |
+| 34 | Relatório Financeiro | `financial_report.html` | ✅ |
+| 35 | Relatório Compras | `purchase_report.html` | ✅ |
+| 36 | Relatório Consolidado | `consolidated_report.html` | ✅ |
+| 37 | Pedido Compra Lista | `purchase_order_list.html` | ✅ |
 | 38 | Pedido Compra Form | `purchase_order_form_fixed.html` | ⬜ |
 | 39 | NF-e / NFS-e | `nfe/ nfse/` | ⬜ |
-| 40 | Configurações Empresa | `company_settings.html` | ⬜ |
+| 40 | Configurações Empresa | `company_settings.html` | ✅ |
 
 ---
 

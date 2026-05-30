@@ -2,6 +2,22 @@
 
 {% block title %}{{ 'Novo Usuário' if not user else 'Editar Usuário' }} - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .row > [class*="col-md"], .row > .col-xl-8 { width: 100% !important; }
+    .form-control, .form-select { height: 44px; font-size: 15px; padding: 10px 12px; }
+    .form-label { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .card { border-radius: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 14px 12px; }
+    .btn { width: 100%; padding: 12px; font-size: 14px; border-radius: 10px; margin-top: 4px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">{{ 'Novo Usuário' if not user else 'Editar Usuário' }}</h1>

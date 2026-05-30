@@ -2,6 +2,23 @@
 
 {% block title %}Permissões de Usuário{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1, h2, h4 { font-size: 18px !important; }
+    .breadcrumb { font-size: 12px; }
+    .card { border-radius: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 420px; }
+    .btn { width: 100%; padding: 10px; border-radius: 10px; margin-top: 4px; font-size: 13px; }
+    .btn-sm { width: auto !important; padding: 5px 9px !important; margin-top: 0 !important; }
+    .row > [class*="col-md"] { width: 100% !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row mb-4">

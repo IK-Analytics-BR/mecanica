@@ -2,6 +2,27 @@
 
 {% block title %}Relatórios de Compras - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .nav-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-tabs .nav-link { white-space: nowrap; font-size: 13px; padding: 8px 12px; }
+    .row > [class*="col-md"], .row > [class*="col-xl"] { width: 100% !important; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    .card { border-radius: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 480px; }
+    canvas { max-height: 200px; }
+    .btn { width: 100%; padding: 10px; border-radius: 10px; margin-top: 4px; }
+    .btn-sm { width: auto !important; padding: 5px 10px !important; margin-top: 0 !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">{{ title }}</h1>

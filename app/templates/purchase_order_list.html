@@ -2,6 +2,24 @@
 
 {% block title %}Pedidos de Compra - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    .row > [class*="col-md"] { width: 100% !important; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 540px; }
+    table .btn { padding: 4px 8px; font-size: 11px; width: auto; }
+    .float-end .btn { width: 100%; padding: 10px; border-radius: 10px; margin-top: 6px; }
+    .badge { font-size: 11px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Pedidos de Compra</h1>
