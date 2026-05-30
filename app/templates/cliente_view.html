@@ -21,6 +21,20 @@
     .equipment-card {
         margin-bottom: 15px;
     }
+    @media (max-width: 768px) {
+        .d-flex.justify-content-between { flex-direction: column; gap: 10px; }
+        .btn-toolbar { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn-toolbar .btn { flex: 1 1 40%; padding: 10px; font-size: 13px; border-radius: 10px; }
+        .row > .col-md-8, .row > .col-md-4,
+        .row > .col-md-6, .row > .col-md-3 { width: 100% !important; }
+        .view-container { padding: 14px; border-radius: 10px; }
+        .view-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px; }
+        .view-value { font-size: 14px; margin-bottom: 12px; }
+        .equipment-card .card { border-radius: 12px; }
+        .equipment-card .card-body { padding: 12px; }
+        h1.h2 { font-size: 20px; }
+        .border-bottom { padding-bottom: 12px !important; margin-bottom: 12px !important; }
+    }
 </style>
 {% endblock %}
 

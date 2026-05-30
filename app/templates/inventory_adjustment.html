@@ -2,6 +2,29 @@
 
 {% block title %}Ajuste de Estoque - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .row > [class*="col-md"], .row > .col-xl-8 { width: 100% !important; }
+    .form-control, .form-select { height: 44px; font-size: 15px; padding: 10px 12px; }
+    textarea.form-control { height: auto; min-height: 80px; }
+    .form-label { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .card { border-radius: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 14px 12px; }
+    .d-flex.justify-content-between,
+    .d-grid { flex-direction: column; gap: 8px; }
+    .btn { width: 100%; padding: 12px; font-size: 14px; border-radius: 10px; margin: 0 !important; }
+    .input-group .btn { width: auto !important; }
+    /* Ajuste tipo — botões lado a lado */
+    .btn-group-toggle { display: flex; gap: 6px; }
+    .btn-group-toggle .btn { flex: 1; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Ajuste de Estoque</h1>

@@ -2,6 +2,42 @@
 
 {% block title %}{% if cliente %}Editar{% else %}Cadastrar{% endif %} Cliente - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    .container-fluid { padding-left: 10px !important; padding-right: 10px !important; }
+    /* Tabs em scroll horizontal */
+    .nav-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 4px; }
+    .nav-tabs .nav-link { white-space: nowrap; padding: 8px 12px; font-size: 13px; border-radius: 8px 8px 0 0; }
+    /* Campos — coluna única */
+    .row > [class*="col-md"] { width: 100% !important; }
+    .row > .col-md-2, .row > .col-md-3 { width: 100% !important; }
+    /* Inputs touch-friendly */
+    .form-control, .form-select { height: 44px; font-size: 15px; padding: 10px 12px; }
+    textarea.form-control { height: auto; min-height: 80px; }
+    .form-label { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .form-text { font-size: 11px; }
+    /* Card tabs */
+    .card { border-radius: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 14px 12px; }
+    /* Botões de ação full width */
+    .d-flex.justify-content-between,
+    .d-flex.gap-2 { flex-direction: column; gap: 8px; }
+    .btn-lg, .btn { width: 100%; padding: 12px; font-size: 14px; border-radius: 10px; margin: 0 !important; }
+    /* Modal responsivo */
+    .modal-dialog { margin: 8px; }
+    .modal-body { padding: 14px; }
+    /* Seção duplicados */
+    .d-grid.gap-2 .btn { margin-bottom: 4px; }
+    /* Breadcrumb */
+    .breadcrumb { font-size: 12px; }
+    /* Botão busca CEP */
+    .input-group .btn { width: auto !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     {% if show_duplicate_modal %}
