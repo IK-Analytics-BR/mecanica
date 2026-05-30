@@ -1045,6 +1045,16 @@ def em_desenvolvimento(funcionalidade=None):
     })
     return render_template('em_desenvolvimento.html', funcionalidade=funcionalidade, **dados)
 
+@app.route('/service-worker.js')
+def service_worker():
+    """Serve o service worker com header que permite escopo global (/)."""
+    import os as _os
+    response = send_from_directory(_os.path.join(app.root_path, 'static', 'js'), 'service-worker.js',
+                                   mimetype='application/javascript')
+    response.headers['Service-Worker-Allowed'] = '/'
+    response.headers['Cache-Control'] = 'no-cache'
+    return response
+
 @app.route('/pwa/inicio')
 @login_required
 def pwa_inicio():
