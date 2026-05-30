@@ -593,6 +593,25 @@
     {% block styles %}{% endblock %}
 </head>
 <body>
+    <!-- ══ DRAWER: funções globais PRIMEIRO ══ -->
+    <script>
+    window.openDrawer = function() {
+        var sb = document.getElementById('sidebar');
+        if (!sb) { console.warn('[Drawer] #sidebar nao encontrado'); return; }
+        sb.style.setProperty('transform', 'translateX(0%)', 'important');
+        sb.style.setProperty('pointer-events', 'auto', 'important');
+        document.body.style.overflow = 'hidden';
+        console.log('[Drawer] aberto ok');
+    };
+    window.closeDrawer = function() {
+        var sb = document.getElementById('sidebar');
+        if (!sb) return;
+        sb.style.setProperty('transform', 'translateX(-110%)', 'important');
+        sb.style.setProperty('pointer-events', 'none', 'important');
+        document.body.style.overflow = '';
+    };
+    </script>
+
     <!-- ══ DETECÇÃO PWA + ORIENTAÇÃO ══ -->
     <script>
     (function() {
@@ -1185,32 +1204,14 @@
     </script>
 
     <script>
-    /* ══ DRAWER MENU — funções globais ══ */
-    window.openDrawer = function() {
-        var sb = document.getElementById('sidebar');
-        if (!sb) return;
-        sb.style.transform = 'translateX(0%)';
-        sb.style.pointerEvents = 'auto';
-        document.body.style.overflow = 'hidden';
-    };
-    window.closeDrawer = function() {
-        var sb = document.getElementById('sidebar');
-        if (!sb) return;
-        sb.style.transform = 'translateX(-110%)';
-        sb.style.pointerEvents = 'none';
-        document.body.style.overflow = '';
-    };
+    /* ══ DRAWER: listeners e bottom nav ativo ══ */
     document.addEventListener('DOMContentLoaded', function() {
-        // Botão fechar dentro do drawer
         var closeBtn = document.getElementById('drawerClose');
         if (closeBtn) closeBtn.onclick = window.closeDrawer;
-        // Fechar ao clicar em link de navegação (não submenus)
         document.querySelectorAll('#sidebar a[href]').forEach(function(a) {
-            if (!a.getAttribute('data-bs-toggle')) {
+            if (!a.getAttribute('data-bs-toggle'))
                 a.addEventListener('click', window.closeDrawer);
-            }
         });
-        // Busca no menu
         var si = document.getElementById('sidebarSearchInput');
         if (si) {
             si.addEventListener('input', function() {
@@ -1220,13 +1221,11 @@
                 });
             });
         }
-        // Marcar item ativo no bottom nav
         var path = window.location.pathname;
         document.querySelectorAll('#bottomNav .bn-item[href]').forEach(function(item) {
             var href = item.getAttribute('href');
-            if (href && href !== '/' && path.startsWith(href)) {
+            if (href && href !== '/' && path.startsWith(href))
                 item.classList.add('active');
-            }
         });
     });
     </script>
