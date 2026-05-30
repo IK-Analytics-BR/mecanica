@@ -1,6 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Desempenho por Mecânico{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h4 { font-size: 16px !important; }
+    .d-flex.justify-content-between { flex-direction: column; gap: 8px; align-items: flex-start !important; }
+    .d-flex.justify-content-between .btn { width: 100%; padding: 10px; border-radius: 10px; font-size: 13px; }
+    .row > [class*="col-md"], .row > [class*="col-xl"] { width: 100% !important; }
+    .card { border-radius: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 460px; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    canvas { max-height: 200px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center mb-3">

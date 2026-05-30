@@ -27,26 +27,26 @@
 
 | # | Tela | Template | Status |
 |---|------|----------|--------|
-| 11 | Dashboard OS | `service_order_dashboard.html` | 🔄 |
-| 12 | OS Avulsa | `service_order_avulso.html` | ⬜ |
-| 13 | Editar OS | `service_order_edit.html` | ⬜ |
-| 14 | Relatório Mecânicos | `relatorio_mecanicos.html` | ⬜ |
-| 15 | Relatório Serviços | `relatorio_servicos.html` | ⬜ |
+| 11 | Dashboard OS | `service_order_dashboard.html` | ✅ |
+| 12 | OS Avulsa | `service_order_avulso.html` | ✅ |
+| 13 | Editar OS | `service_order_edit.html` | ✅ |
+| 14 | Relatório Mecânicos | `relatorio_mecanicos.html` | ✅ |
+| 15 | Relatório Serviços | `relatorio_servicos.html` | ✅ |
 | 16 | Lista Técnicos | `technician_list.html` | ✅ |
-| 17 | Form Técnico | `technician_form.html` | ⬜ |
-| 18 | Movimentações Estoque | `inventory_movements.html` | ⬜ |
-| 19 | Relatório Estoque | `inventory_report.html` | ⬜ |
+| 17 | Form Técnico | `technician_form.html` | ✅ |
+| 18 | Movimentações Estoque | `inventory_movements.html` | ✅ |
+| 19 | Relatório Estoque | `inventory_report.html` | ✅ |
 | 20 | C/R Lista | `accounts_receivable_list.html` | ✅ |
-| 21 | C/R Form | `accounts_receivable_form.html` | ⬜ |
-| 22 | C/P Lista | `accounts_payable_list.html` | ⬜ |
-| 23 | Fluxo de Caixa | `cash_flow_dashboard.html` | ⬜ |
+| 21 | C/R Form | `accounts_receivable_form.html` | ✅ |
+| 22 | C/P Lista | `accounts_payable_list.html` | ✅ |
+| 23 | Fluxo de Caixa | `cash_flow_dashboard.html` | ✅ |
 | 24 | Fornecedor Lista | `fornecedor_list.html` | ✅ |
-| 25 | Fornecedor Form | `fornecedor_form.html` | ⬜ |
-| 26 | Produto Lista | `produto_list.html` | ⬜ |
-| 27 | Produto Form | `produto_form_abas.html` | ⬜ |
-| 28 | Agenda Mecânico | `agenda_mecanico.html` | ⬜ |
-| 29 | Perfil Usuário | `user_profile.html` | ⬜ |
-| 30 | Login | `auth/login.html` | ⬜ |
+| 25 | Fornecedor Form | `fornecedor_form.html` | ✅ |
+| 26 | Produto Lista | `produto_list.html` | ✅ |
+| 27 | Produto Form | `produto_form_abas.html` | ✅ |
+| 28 | Agenda Mecânico | `agenda_mecanico.html` | ✅ |
+| 29 | Perfil Usuário | `user_profile.html` | ✅ |
+| 30 | Login | `auth/login.html` | ✅ |
 
 ---
 
