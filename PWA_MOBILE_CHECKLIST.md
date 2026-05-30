@@ -12,14 +12,14 @@
 |---|------|----------|--------|
 | 1 | Dashboard / Início | `bem_vindo.html` | ✅ |
 | 2 | Lista de OS | `service_order_list.html` | ✅ |
-| 3 | Nova OS (form) | `service_order_form.html` | 🔄 |
-| 4 | Visualizar OS | `service_order_view.html` | ⬜ |
+| 3 | Nova OS (form) | `service_order_form.html` | ✅ |
+| 4 | Visualizar OS | `service_order_view.html` | ✅ |
 | 5 | Lista de Clientes | `cliente_list.html` | ✅ |
-| 6 | Form Cliente | `cliente_form.html` | ⬜ |
-| 7 | Visualizar Cliente | `cliente_view.html` | ⬜ |
+| 6 | Form Cliente | `cliente_form.html` | ✅ |
+| 7 | Visualizar Cliente | `cliente_view.html` | ✅ |
 | 8 | Lista Estoque | `inventory_list.html` | ✅ |
-| 9 | Ajuste de Estoque | `inventory_adjustment.html` | ⬜ |
-| 10 | Transferência Estoque | `inventory_transfer.html` | ⬜ |
+| 9 | Ajuste de Estoque | `inventory_adjustment.html` | ✅ |
+| 10 | Transferência Estoque | `inventory_transfer.html` | 🔄 |
 
 ---
 

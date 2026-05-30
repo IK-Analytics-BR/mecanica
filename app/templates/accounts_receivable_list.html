@@ -2,6 +2,29 @@
 
 {% block title %}Contas a Receber - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    /* Filtros em coluna */
+    .row > [class*="col-md"] { width: 100% !important; }
+    .form-select, .form-control { height: 44px; font-size: 14px; }
+    /* Tabela com scroll horizontal */
+    .table-responsive { overflow-x: auto; }
+    #receivablesTable { font-size: 12px; min-width: 680px; }
+    #receivablesTable .btn { padding: 4px 8px; font-size: 11px; }
+    /* Botão nova conta */
+    .float-end { position: static !important; margin-top: 8px; display: block; }
+    .float-end .btn { width: 100%; padding: 10px; border-radius: 10px; }
+    /* Resumo cards topo */
+    .row.mb-4 > [class*="col-"] { margin-bottom: 8px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Contas a Receber</h1>

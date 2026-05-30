@@ -2,6 +2,28 @@
 
 {% block title %}Técnicos - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    /* Filtros em coluna */
+    .row > [class*="col-md"] { width: 100% !important; }
+    .col-md-6.text-end { text-align: left !important; margin-top: 8px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 4px; }
+    .btn-group .btn { flex: 1 1 40%; font-size: 12px; padding: 7px; border-radius: 8px !important; }
+    /* Tabela scroll */
+    .table-responsive { overflow-x: auto; }
+    #techniciansTable { font-size: 12px; min-width: 540px; }
+    /* Botão novo */
+    .float-end .btn { font-size: 13px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Técnicos</h1>
