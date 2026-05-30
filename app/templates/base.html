@@ -233,8 +233,7 @@
         }
 
         @media (max-width: 768px) {
-            /* Esconder sidebar desktop e navbar desktop */
-            #sidebar { display: none !important; }
+            /* Esconder navbar desktop */
             .navbar { display: none !important; }
 
             /* Mostrar header mobile */
@@ -310,19 +309,21 @@
                 flex-direction: column;
                 position: fixed !important;
                 top: 0;
-                left: -280px;
+                left: 0;
                 width: 280px !important;
                 min-width: 280px !important;
                 max-width: 280px !important;
                 height: 100vh;
                 z-index: 1055;
-                transition: left .3s cubic-bezier(.4,0,.2,1);
+                transform: translateX(-280px);
+                transition: transform .3s cubic-bezier(.4,0,.2,1);
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 padding-bottom: env(safe-area-inset-bottom);
             }
             #sidebar.drawer-open {
-                left: 0 !important;
+                transform: translateX(0) !important;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.4);
             }
 
             /* Content: compensar header + busca + bottom nav */
@@ -1307,10 +1308,24 @@
     })();
     </script>
     
+    <!-- Indicador de versão -->
+    <div id="pwa-version-indicator" style="position:fixed;bottom:4px;right:4px;font-size:11px;background:#08a5b2;color:#fff;padding:2px 6px;border-radius:4px;z-index:99999;font-family:monospace;">v5</div>
+
+    <!-- ══ PWA v5 ══ -->
+    <script>
+    // Detectar standalone
+    (function() {
+        const isStandalone = window.navigator.standalone === true;
+        if (isStandalone) {
+            document.body.classList.add('pwa-standalone');
+            console.log('[PWA] v5 - standalone detectado');
+        }
+    })();
+    </script>
+
     <!-- ══ iOS PWA UPDATE FORCE ══ -->
     <script>
     (function() {
-      // Detectar iOS
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       const isStandalone = window.navigator.standalone === true;
       

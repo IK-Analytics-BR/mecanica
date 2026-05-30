@@ -1142,7 +1142,7 @@ def login():
             if empresas and len(empresas) == 1:
                 _set_empresa_in_session(empresas[0])
                 flash('Login realizado com sucesso!', 'success')
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('bem_vindo'))
 
             if empresas and len(empresas) > 1:
                 flash('Selecione a empresa para acessar.', 'info')
@@ -1151,7 +1151,7 @@ def login():
             # Sem empresas vinculadas
             if session.get('role') == 'admin':
                 flash('Login realizado com sucesso!', 'success')
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('bem_vindo'))
 
             session.pop('username', None)
             session.pop('role', None)
