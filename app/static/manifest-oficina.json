@@ -1,0 +1,16 @@
+{
+  "name": "IKFlow Oficina",
+  "short_name": "Oficina",
+  "description": "App para Atendente e Mecânico - IKFlow Mecânica",
+  "start_url": "/pwa/inicio",
+  "display": "standalone",
+  "background_color": "#0b2447",
+  "theme_color": "#08a5b2",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/static/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/static/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "pt-BR"
+}

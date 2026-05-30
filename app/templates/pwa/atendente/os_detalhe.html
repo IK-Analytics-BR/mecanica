@@ -1,0 +1,187 @@
+{% extends 'pwa/base_pwa.html' %}
+
+{% block title %}OS {{ os.order_number }}{% endblock %}
+{% block header_title %}{{ os.order_number }}{% endblock %}
+{% block role_badge %}Atendente{% endblock %}
+
+{% block bottom_nav %}
+<a href="/atendente/" class="pwa-nav-item">
+    <i class="fas fa-home"></i><span>Início</span>
+</a>
+<a href="/atendente/nova-os" class="pwa-nav-item">
+    <i class="fas fa-plus-circle"></i><span>Nova OS</span>
+</a>
+<a href="/atendente/historico" class="pwa-nav-item">
+    <i class="fas fa-list-alt"></i><span>Histórico</span>
+</a>
+<a href="/logout" class="pwa-nav-item">
+    <i class="fas fa-sign-out-alt"></i><span>Sair</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- STATUS BANNER -->
+<div style="background:{% if os.status=='in_progress' %}var(--yellow){% elif os.status=='completed' %}var(--green){% elif os.status=='cancelled' %}var(--red){% else %}var(--teal){% endif %};
+     color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+    <i class="fas fa-{% if os.status=='in_progress' %}wrench{% elif os.status=='completed' %}check-circle{% elif os.status=='cancelled' %}times-circle{% else %}clipboard-list{% endif %}" style="font-size:24px;"></i>
+    <div>
+        <div style="font-size:12px;opacity:.85;font-weight:600;">Status atual</div>
+        <div style="font-size:18px;font-weight:800;">{{ os.status_label }}</div>
+    </div>
+</div>
+
+<!-- CLIENTE + VEÍCULO -->
+<div class="pwa-card" style="margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:10px;">Cliente e Veículo</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800;flex-shrink:0;">
+            {{ os.customer_name[0]|upper }}
+        </div>
+        <div>
+            <div style="font-size:16px;font-weight:800;">{{ os.customer_name }}</div>
+            {% if os.customer_phone %}
+            <a href="tel:{{ os.customer_phone }}" style="font-size:13px;color:var(--teal);text-decoration:none;font-weight:600;">
+                <i class="fas fa-phone"></i> {{ os.customer_phone }}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% if os.plate %}
+    <div style="background:#f0f4f8;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:12px;">
+        <span class="os-placa" style="font-size:16px;padding:4px 14px;">{{ os.plate }}</span>
+        <div>
+            <div style="font-weight:700;font-size:14px;">{{ os.brand or '' }} {{ os.model or '' }}</div>
+            <div style="font-size:12px;color:var(--gray);">{{ os.year or '' }}{% if os.color %} · {{ os.color }}{% endif %}{% if os.chassis %} · {{ os.chassis }}{% endif %}</div>
+        </div>
+    </div>
+    {% else %}
+    <div style="color:var(--gray);font-size:13px;"><i class="fas fa-car-side"></i> Veículo não informado</div>
+    {% endif %}
+</div>
+
+<!-- PROBLEMA RELATADO -->
+{% if os.customer_complaint %}
+<div class="pwa-card" style="margin-bottom:12px;border-left:4px solid var(--orange);">
+    <div style="font-size:12px;font-weight:700;color:var(--orange);text-transform:uppercase;margin-bottom:6px;">
+        <i class="fas fa-comment-alt"></i> Cliente relatou
+    </div>
+    <div style="font-size:15px;color:#1f2937;line-height:1.5;">{{ os.customer_complaint }}</div>
+</div>
+{% endif %}
+
+<!-- DIAGNÓSTICO DO MECÂNICO -->
+{% if os.diagnostico %}
+<div class="pwa-card" style="margin-bottom:12px;border-left:4px solid var(--teal);">
+    <div style="font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;margin-bottom:6px;">
+        <i class="fas fa-stethoscope"></i> Diagnóstico do Mecânico
+    </div>
+    <div style="font-size:15px;color:#1f2937;line-height:1.5;">{{ os.diagnostico }}</div>
+</div>
+{% endif %}
+
+<!-- MECÂNICO -->
+<div class="pwa-card" style="margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:10px;">Mecânico Responsável</div>
+    <form method="POST" action="/service_orders/{{ os.id }}/atribuir-tecnico" id="formTecnico" style="display:flex;gap:10px;">
+        <select name="technician_id" class="pwa-input" style="flex:1;padding:12px;">
+            <option value="">Sem mecânico</option>
+            {% for t in tecnicos %}
+            <option value="{{ t.id }}" {{ 'selected' if t.id == os.technician_id else '' }}>{{ t.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-pwa btn-teal" style="width:auto;padding:12px 16px;">
+            <i class="fas fa-save"></i>
+        </button>
+    </form>
+</div>
+
+<!-- ITENS -->
+<div class="pwa-card" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;">Peças e Serviços</div>
+        <span style="font-size:13px;font-weight:700;color:var(--teal);">{{ itens|length }} item(s)</span>
+    </div>
+    {% if itens %}
+        {% for item in itens %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6;">
+            <div>
+                <div style="font-size:13px;font-weight:700;">{{ item.product_name or 'Item' }}</div>
+                <div style="font-size:12px;color:var(--gray);">{{ item.item_type }} · Qtd: {{ item.quantity }}</div>
+            </div>
+            <div style="font-size:14px;font-weight:800;color:var(--navy);">R$ {{ "%.2f"|format(item.unit_price * item.quantity) }}</div>
+        </div>
+        {% endfor %}
+        <div style="display:flex;justify-content:space-between;padding:10px 0 0;font-size:16px;font-weight:800;color:var(--navy);">
+            <span>Total</span>
+            <span style="color:var(--green);">R$ {{ "%.2f"|format(itens|sum(attribute='unit_price')|float) }}</span>
+        </div>
+    {% else %}
+        <div style="text-align:center;color:var(--gray);font-size:14px;padding:16px;">
+            <i class="fas fa-box-open" style="font-size:32px;color:#d1d5db;display:block;margin-bottom:8px;"></i>
+            Nenhum item adicionado ainda
+        </div>
+    {% endif %}
+</div>
+
+<!-- ORÇAMENTO -->
+{% if os.status_orcamento in ['rascunho','em_aprovacao','aprovado'] %}
+<div class="pwa-card" style="margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:10px;">Orçamento</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span class="status-badge {% if os.status_orcamento=='aprovado' %}badge-concluida{% elif os.status_orcamento=='em_aprovacao' %}badge-andamento{% else %}badge-open{% endif %}">
+            {{ 'Aprovado' if os.status_orcamento=='aprovado' else ('Aguardando Aprovação' if os.status_orcamento=='em_aprovacao' else 'Rascunho') }}
+        </span>
+        {% if os.total_geral %}
+        <span style="font-size:16px;font-weight:800;color:var(--navy);">R$ {{ "%.2f"|format(os.total_geral) }}</span>
+        {% endif %}
+    </div>
+    {% if os.status_orcamento == 'rascunho' %}
+    <div class="pwa-field">
+        <label class="pwa-label">Observação para o cliente</label>
+        <textarea id="obsOrcamento" class="pwa-input" rows="2" placeholder="Ex: Preço pode variar conforme diagnóstico..." style="resize:none;height:70px;"></textarea>
+    </div>
+    <button type="button" class="btn-pwa btn-orange" onclick="enviarOrcamento()">
+        <i class="fas fa-paper-plane"></i> Enviar Orçamento ao Cliente
+    </button>
+    {% elif os.status_orcamento == 'em_aprovacao' %}
+    <div style="background:#fef3c7;border-radius:10px;padding:12px;font-size:13px;color:#92400e;font-weight:600;">
+        <i class="fas fa-clock"></i> Aguardando aprovação do cliente
+    </div>
+    {% endif %}
+    <div style="margin-top:10px;">
+        <a href="/service_orders/{{ os.id }}" class="btn-pwa btn-outline-teal" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;">
+            <i class="fas fa-edit"></i> Abrir OS Completa
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- AÇÕES RÁPIDAS -->
+<div style="display:flex;gap:10px;margin-bottom:16px;">
+    {% if os.customer_phone %}
+    <a href="https://wa.me/55{{ os.customer_phone|replace('(','') |replace(')','') |replace(' ','') |replace('-','') }}"
+       target="_blank" class="btn-pwa" style="background:#25D366;color:#fff;flex:1;text-decoration:none;font-size:13px;padding:12px;">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+    </a>
+    {% endif %}
+    <a href="/service_orders/{{ os.id }}/pdf" target="_blank"
+       class="btn-pwa btn-navy" style="text-decoration:none;flex:1;font-size:13px;padding:12px;">
+        <i class="fas fa-file-pdf"></i> PDF
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function enviarOrcamento(){
+    var obs = document.getElementById('obsOrcamento').value;
+    var fd = new FormData();
+    fd.append('obs_orcamento', obs);
+    fetch('/atendente/os/{{ os.id }}/enviar-orcamento',{method:'POST',body:fd})
+    .then(r=>r.json()).then(function(d){
+        if(d.ok){ showToast(d.msg); setTimeout(()=>location.reload(), 1500); }
+        else showToast('Erro ao enviar','error');
+    });
+}
+</script>
+{% endblock %}

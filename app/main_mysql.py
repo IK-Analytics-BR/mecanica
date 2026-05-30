@@ -163,6 +163,9 @@ garantia_bp = _try_import('routes.garantia_routes', 'garantia_bp')
 # Módulo Mecânico (App mobile para oficina)
 mecanico_bp = _try_import('routes.mecanico_routes', 'mecanico_bp')
 
+# PWA Atendente (App dedicado para atendente/auxiliar)
+atendente_bp = _try_import('routes.atendente_routes', 'atendente_bp')
+
 # Módulos Semana 9: Push Notifications + Portal do Cliente
 push_bp   = _try_import('routes.push_routes',   'push_bp')
 portal_bp = _try_import('routes.portal_routes', 'portal_bp')
@@ -319,6 +322,7 @@ for _bp in (
     comissao_bp,
     garantia_bp,
     mecanico_bp,
+    atendente_bp,
     push_bp,
     portal_bp,
     boleto_bp,
@@ -1041,6 +1045,17 @@ def em_desenvolvimento(funcionalidade=None):
     })
     return render_template('em_desenvolvimento.html', funcionalidade=funcionalidade, **dados)
 
+@app.route('/pwa/inicio')
+@login_required
+def pwa_inicio():
+    """Redireciona para o PWA correto conforme o role do usuário logado."""
+    role = (session.get('role') or '').lower()
+    if role in ('mecanico', 'mechanic'):
+        return redirect(url_for('mecanico.index'))
+    if role in ('atendente', 'auxiliar'):
+        return redirect(url_for('atendente.index'))
+    return redirect(url_for('bem_vindo'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -1148,6 +1163,12 @@ def login():
             if empresas and len(empresas) == 1:
                 _set_empresa_in_session(empresas[0])
                 flash('Login realizado com sucesso!', 'success')
+                # Redirecionar para PWA conforme role
+                _role = (session.get('role') or '').lower()
+                if _role in ('mecanico', 'mechanic'):
+                    return redirect(url_for('mecanico.index'))
+                if _role in ('atendente', 'auxiliar'):
+                    return redirect(url_for('atendente.index'))
                 return redirect(url_for('bem_vindo'))
 
             if empresas and len(empresas) > 1:

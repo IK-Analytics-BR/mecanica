@@ -1,0 +1,456 @@
+{% extends 'pwa/base_pwa.html' %}
+
+{% block title %}Nova OS{% endblock %}
+{% block header_title %}Nova OS{% endblock %}
+{% block role_badge %}Atendente{% endblock %}
+
+{% block bottom_nav %}
+<a href="/atendente/" class="pwa-nav-item">
+    <i class="fas fa-home"></i><span>Início</span>
+</a>
+<a href="/atendente/nova-os" class="pwa-nav-item active">
+    <i class="fas fa-plus-circle"></i><span>Nova OS</span>
+</a>
+<a href="/atendente/historico" class="pwa-nav-item">
+    <i class="fas fa-list-alt"></i><span>Histórico</span>
+</a>
+<a href="/logout" class="pwa-nav-item">
+    <i class="fas fa-sign-out-alt"></i><span>Sair</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- PASSO A PASSO VISUAL -->
+<div style="display:flex;gap:0;margin-bottom:20px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);">
+    <div class="step-pill active" id="pill1" style="flex:1;padding:10px 4px;text-align:center;background:var(--teal);color:#fff;font-size:11px;font-weight:700;">
+        <i class="fas fa-user"></i><br>1. Cliente
+    </div>
+    <div class="step-pill" id="pill2" style="flex:1;padding:10px 4px;text-align:center;background:#e5e7eb;color:var(--gray);font-size:11px;font-weight:700;">
+        <i class="fas fa-car"></i><br>2. Veículo
+    </div>
+    <div class="step-pill" id="pill3" style="flex:1;padding:10px 4px;text-align:center;background:#e5e7eb;color:var(--gray);font-size:11px;font-weight:700;">
+        <i class="fas fa-comment-alt"></i><br>3. Problema
+    </div>
+    <div class="step-pill" id="pill4" style="flex:1;padding:10px 4px;text-align:center;background:#e5e7eb;color:var(--gray);font-size:11px;font-weight:700;">
+        <i class="fas fa-check"></i><br>4. Confirmar
+    </div>
+</div>
+
+<form id="formNovaOS" method="POST" action="/atendente/nova-os">
+    <input type="hidden" name="customer_id" id="customerId">
+    <input type="hidden" name="equipment_id" id="equipmentId">
+
+    <!-- STEP 1: CLIENTE -->
+    <div id="step1">
+        <div class="pwa-card">
+            <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:14px;">
+                <i class="fas fa-user" style="color:var(--teal);"></i> Quem é o cliente?
+            </div>
+
+            <!-- Busca -->
+            <div class="pwa-field">
+                <label class="pwa-label">Buscar por nome ou CPF/CNPJ</label>
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="buscaCliente" class="pwa-input" placeholder="Ex: João Silva ou 123.456..."
+                           autocomplete="off" inputmode="text">
+                </div>
+                <div id="resultadosCliente" style="display:none;border:2px solid var(--teal);border-radius:12px;overflow:hidden;margin-top:4px;"></div>
+            </div>
+
+            <!-- Cliente selecionado -->
+            <div id="clienteSelecionado" style="display:none;background:#f0fdf4;border-radius:12px;padding:14px;border:2px solid var(--green);margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-weight:800;font-size:15px;" id="clienteNomeExib"></div>
+                        <div style="font-size:13px;color:var(--gray);" id="clienteInfoExib"></div>
+                    </div>
+                    <button type="button" onclick="limparCliente()" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cadastro rápido -->
+            <div id="cadastroRapidoCliente" style="display:none;">
+                <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px;">
+                    Não encontrado — Cadastrar agora
+                </div>
+                <div class="pwa-field">
+                    <label class="pwa-label">Nome completo *</label>
+                    <input type="text" id="novoClienteNome" class="pwa-input" placeholder="Nome do cliente">
+                </div>
+                <div class="pwa-field">
+                    <label class="pwa-label">Telefone *</label>
+                    <input type="tel" id="novoClienteTel" class="pwa-input" placeholder="(11) 99999-0000" inputmode="tel">
+                </div>
+                <div class="pwa-field">
+                    <label class="pwa-label">CPF / CNPJ</label>
+                    <input type="text" id="novoClienteCpf" class="pwa-input" placeholder="Opcional" inputmode="numeric">
+                </div>
+                <button type="button" class="btn-pwa btn-teal" onclick="cadastrarCliente()">
+                    <i class="fas fa-user-plus"></i> Cadastrar Cliente
+                </button>
+            </div>
+
+            <div style="margin-top:16px;">
+                <button type="button" id="btnStep1" class="btn-pwa btn-teal" onclick="irStep2()" disabled>
+                    Próximo — Veículo <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 2: VEÍCULO -->
+    <div id="step2" style="display:none;">
+        <div class="pwa-card">
+            <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:14px;">
+                <i class="fas fa-car" style="color:var(--teal);"></i> Qual o veículo?
+            </div>
+
+            <!-- Veículos do cliente -->
+            <div id="listaVeiculos" style="margin-bottom:14px;"></div>
+
+            <!-- Novo veículo -->
+            <div id="novoVeiculoForm">
+                <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">
+                    <i class="fas fa-plus-circle" style="color:var(--teal);"></i> Cadastrar veículo
+                </div>
+                <div class="pwa-field">
+                    <label class="pwa-label">Placa *</label>
+                    <input type="text" id="novaPlaca" class="pwa-input" placeholder="ABC1D23"
+                           style="text-transform:uppercase;letter-spacing:2px;font-size:20px;font-weight:800;text-align:center;"
+                           maxlength="8" inputmode="text">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="pwa-field">
+                        <label class="pwa-label">Marca</label>
+                        <select id="novaMarca" class="pwa-input" style="padding:12px;">
+                            <option value="">Selecione</option>
+                            <option>Chevrolet</option><option>Volkswagen</option><option>Fiat</option>
+                            <option>Ford</option><option>Honda</option><option>Toyota</option>
+                            <option>Hyundai</option><option>Renault</option><option>Jeep</option>
+                            <option>Nissan</option><option>Mitsubishi</option><option>Peugeot</option>
+                            <option>Citroën</option><option>Kia</option><option>BMW</option>
+                            <option>Mercedes-Benz</option><option>Outra</option>
+                        </select>
+                    </div>
+                    <div class="pwa-field">
+                        <label class="pwa-label">Modelo</label>
+                        <input type="text" id="novoModelo" class="pwa-input" placeholder="Ex: Gol">
+                    </div>
+                    <div class="pwa-field">
+                        <label class="pwa-label">Ano</label>
+                        <input type="number" id="novoAno" class="pwa-input" placeholder="2020" inputmode="numeric" min="1950" max="2030">
+                    </div>
+                    <div class="pwa-field">
+                        <label class="pwa-label">Cor</label>
+                        <input type="text" id="novaCor" class="pwa-input" placeholder="Prata">
+                    </div>
+                </div>
+                <button type="button" class="btn-pwa btn-outline-teal" onclick="cadastrarVeiculo()">
+                    <i class="fas fa-car"></i> Cadastrar Veículo
+                </button>
+            </div>
+
+            <div style="margin-top:16px;display:flex;gap:10px;">
+                <button type="button" class="btn-pwa" style="background:#e5e7eb;color:#374151;flex:1;" onclick="irStep(1)">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <button type="button" id="btnStep2" class="btn-pwa btn-teal" style="flex:2;" onclick="irStep3()" disabled>
+                    Próximo <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 3: PROBLEMA -->
+    <div id="step3" style="display:none;">
+        <div class="pwa-card">
+            <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:14px;">
+                <i class="fas fa-comment-alt" style="color:var(--teal);"></i> O que o cliente relatou?
+            </div>
+            <div class="pwa-field">
+                <label class="pwa-label">Descrição do problema *</label>
+                <textarea name="customer_complaint" id="txtProblema" class="pwa-input"
+                          rows="4" placeholder="Ex: Barulho ao frear, motor aquecendo, óleo caindo..."
+                          style="resize:none;height:120px;"></textarea>
+            </div>
+
+            <!-- Atalhos rápidos de queixa -->
+            <div style="margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:8px;">Toque para adicionar:</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    {% set queixas = ['Revisão geral','Troca de óleo','Barulho ao frear','Motor aquecendo',
+                                      'Freio duro','Vibração no volante','Luz acesa no painel','Ar-condicionado',
+                                      'Alinhamento','Balanceamento','Vazamento de óleo','Bateria fraca'] %}
+                    {% for q in queixas %}
+                    <button type="button" onclick="addQueixa('{{ q }}')"
+                            style="background:#f3f4f6;border:1px solid #d1d5db;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;color:#374151;border:none;">
+                        {{ q }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="pwa-field">
+                <label class="pwa-label">Prioridade</label>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                    <label style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;" id="prio-normal">
+                        <input type="radio" name="priority" value="normal" checked style="display:none;">
+                        <i class="fas fa-circle" style="color:#6b7280;font-size:18px;"></i>
+                        <span style="font-size:12px;font-weight:700;">Normal</span>
+                    </label>
+                    <label style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;" id="prio-alta">
+                        <input type="radio" name="priority" value="high" style="display:none;">
+                        <i class="fas fa-exclamation-circle" style="color:var(--orange);font-size:18px;"></i>
+                        <span style="font-size:12px;font-weight:700;">Alta</span>
+                    </label>
+                    <label style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;" id="prio-urgente">
+                        <input type="radio" name="priority" value="urgent" style="display:none;">
+                        <i class="fas fa-fire" style="color:var(--red);font-size:18px;"></i>
+                        <span style="font-size:12px;font-weight:700;">Urgente</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="pwa-field">
+                <label class="pwa-label">Mecânico responsável (opcional)</label>
+                <select name="technician_id" class="pwa-input" style="padding:12px;">
+                    <option value="">Atribuir depois</option>
+                    {% for t in tecnicos %}
+                    <option value="{{ t.id }}">{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-top:16px;display:flex;gap:10px;">
+                <button type="button" class="btn-pwa" style="background:#e5e7eb;color:#374151;flex:1;" onclick="irStep(2)">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <button type="button" class="btn-pwa btn-teal" style="flex:2;" onclick="irStep4()">
+                    Revisar <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP 4: CONFIRMAÇÃO -->
+    <div id="step4" style="display:none;">
+        <div class="pwa-card">
+            <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:16px;text-align:center;">
+                <i class="fas fa-clipboard-check" style="color:var(--green);font-size:28px;display:block;margin-bottom:8px;"></i>
+                Confirmar abertura da OS
+            </div>
+            <div style="background:#f9fafb;border-radius:12px;padding:14px;margin-bottom:16px;">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div>
+                        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;">Cliente</div>
+                        <div style="font-size:16px;font-weight:700;" id="confCliente">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;">Veículo</div>
+                        <div style="font-size:16px;font-weight:700;" id="confVeiculo">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;">Problema relatado</div>
+                        <div style="font-size:14px;color:#374151;" id="confProblema">—</div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button type="button" class="btn-pwa" style="background:#e5e7eb;color:#374151;flex:1;" onclick="irStep(3)">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <button type="submit" class="btn-pwa btn-green" style="flex:2;">
+                    <i class="fas fa-check"></i> Abrir OS!
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.step-pill { transition: background .2s, color .2s; }
+.prioridade-sel { border-color: var(--teal) !important; background: #f0fdfa; }
+</style>
+<script>
+var clienteData = null, veiculoData = null;
+var buscarTimer = null;
+
+// ── BUSCA CLIENTE ──
+document.getElementById('buscaCliente').addEventListener('input', function(){
+    clearTimeout(buscarTimer);
+    var q = this.value.trim();
+    if(q.length < 2){
+        document.getElementById('resultadosCliente').style.display='none';
+        if(q.length===0){ document.getElementById('cadastroRapidoCliente').style.display='none'; }
+        return;
+    }
+    buscarTimer = setTimeout(function(){
+        fetch('/atendente/api/buscar-cliente?q='+encodeURIComponent(q))
+        .then(r=>r.json()).then(function(data){
+            var div = document.getElementById('resultadosCliente');
+            if(!data.length){
+                div.style.display='none';
+                document.getElementById('cadastroRapidoCliente').style.display='block';
+                document.getElementById('novoClienteNome').value = q;
+                return;
+            }
+            document.getElementById('cadastroRapidoCliente').style.display='none';
+            div.innerHTML = data.map(function(c){
+                return '<div onclick="selecionarCliente('+JSON.stringify(c)+')" style="padding:12px 14px;border-bottom:1px solid #f3f4f6;cursor:pointer;display:flex;flex-direction:column;gap:2px;background:#fff;">'
+                    +'<span style="font-weight:700;font-size:14px;">'+c.name+'</span>'
+                    +'<span style="font-size:12px;color:var(--gray);">'+(c.cpf_cnpj||'')+(c.phone?' · '+c.phone:'')+'</span>'
+                    +'</div>';
+            }).join('');
+            div.style.display='block';
+        });
+    }, 350);
+});
+
+function selecionarCliente(c){
+    clienteData = c;
+    document.getElementById('customerId').value = c.id;
+    document.getElementById('clienteNomeExib').textContent = c.name;
+    document.getElementById('clienteInfoExib').textContent = (c.cpf_cnpj||'')+(c.phone?' · '+c.phone:'');
+    document.getElementById('clienteSelecionado').style.display='block';
+    document.getElementById('resultadosCliente').style.display='none';
+    document.getElementById('cadastroRapidoCliente').style.display='none';
+    document.getElementById('buscaCliente').value = '';
+    document.getElementById('btnStep1').disabled = false;
+    carregarVeiculos(c.id);
+}
+
+function limparCliente(){
+    clienteData = null; veiculoData = null;
+    document.getElementById('customerId').value='';
+    document.getElementById('clienteSelecionado').style.display='none';
+    document.getElementById('btnStep1').disabled=true;
+}
+
+function cadastrarCliente(){
+    var nome = document.getElementById('novoClienteNome').value.trim();
+    var tel  = document.getElementById('novoClienteTel').value.trim();
+    var cpf  = document.getElementById('novoClienteCpf').value.trim();
+    if(!nome){ showToast('Informe o nome do cliente', 'error'); return; }
+    fetch('/atendente/api/cadastrar-cliente',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({name:nome, phone:tel, cpf_cnpj:cpf})
+    }).then(r=>r.json()).then(function(d){
+        if(d.ok){ selecionarCliente({id:d.id, name:d.name, phone:tel, cpf_cnpj:cpf}); showToast('Cliente cadastrado!'); }
+        else showToast(d.erro||'Erro ao cadastrar', 'error');
+    });
+}
+
+// ── VEÍCULOS ──
+function carregarVeiculos(customerId){
+    fetch('/atendente/api/veiculos-cliente/'+customerId)
+    .then(r=>r.json()).then(function(veiculos){
+        var div = document.getElementById('listaVeiculos');
+        if(!veiculos.length){ div.innerHTML=''; return; }
+        div.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:8px;">Veículos cadastrados</div>'
+            + veiculos.map(function(v){
+                return '<div onclick="selecionarVeiculo('+JSON.stringify(v)+')" style="padding:12px 14px;border-radius:10px;background:#f9fafb;border:2px solid #e5e7eb;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;" id="vcard-'+v.id+'">'
+                    +'<span class="os-placa" style="font-size:14px;padding:4px 12px;">'+v.plate+'</span>'
+                    +'<div><div style="font-weight:700;font-size:14px;">'+(v.brand||'')+' '+(v.model||'')+'</div>'
+                    +'<div style="font-size:12px;color:var(--gray);">'+(v.year||'')+' · '+(v.color||'')+'</div></div>'
+                    +'</div>';
+            }).join('');
+    });
+}
+
+function selecionarVeiculo(v){
+    veiculoData = v;
+    document.getElementById('equipmentId').value = v.id;
+    document.querySelectorAll('[id^="vcard-"]').forEach(function(el){
+        el.style.borderColor='#e5e7eb'; el.style.background='#f9fafb';
+    });
+    var el = document.getElementById('vcard-'+v.id);
+    if(el){ el.style.borderColor='var(--teal)'; el.style.background='#f0fdfa'; }
+    document.getElementById('btnStep2').disabled = false;
+}
+
+function cadastrarVeiculo(){
+    var placa = document.getElementById('novaPlaca').value.trim().toUpperCase();
+    if(!placa){ showToast('Informe a placa', 'error'); return; }
+    fetch('/atendente/api/cadastrar-veiculo',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+            customer_id: clienteData.id,
+            plate: placa,
+            brand: document.getElementById('novaMarca').value,
+            model: document.getElementById('novoModelo').value,
+            year:  document.getElementById('novoAno').value || null,
+            color: document.getElementById('novaCor').value
+        })
+    }).then(r=>r.json()).then(function(d){
+        if(d.ok){
+            selecionarVeiculo({id:d.id, plate:d.plate, brand:document.getElementById('novaMarca').value,
+                model:document.getElementById('novoModelo').value,
+                year:document.getElementById('novoAno').value,
+                color:document.getElementById('novaCor').value});
+            showToast('Veículo cadastrado!');
+        } else showToast(d.erro||'Erro', 'error');
+    });
+}
+
+// ── QUEIXAS RÁPIDAS ──
+function addQueixa(txt){
+    var ta = document.getElementById('txtProblema');
+    ta.value = ta.value ? ta.value+'. '+txt : txt;
+}
+
+// ── PRIORIDADE VISUAL ──
+document.querySelectorAll('input[name="priority"]').forEach(function(r){
+    r.closest('label').addEventListener('click', function(){
+        document.querySelectorAll('input[name="priority"]').forEach(function(x){
+            x.closest('label').style.borderColor='#e5e7eb';
+            x.closest('label').style.background='';
+        });
+        this.style.borderColor='var(--teal)';
+        this.style.background='#f0fdfa';
+    });
+});
+
+// ── STEPS ──
+function setPill(n){
+    for(var i=1;i<=4;i++){
+        var p = document.getElementById('pill'+i);
+        if(i<=n){ p.style.background='var(--teal)'; p.style.color='#fff'; }
+        else { p.style.background='#e5e7eb'; p.style.color='var(--gray)'; }
+    }
+}
+function irStep(n){
+    for(var i=1;i<=4;i++) document.getElementById('step'+i).style.display='none';
+    document.getElementById('step'+n).style.display='block';
+    setPill(n);
+    window.scrollTo(0,0);
+}
+function irStep2(){
+    if(!clienteData){ showToast('Selecione um cliente','error'); return; }
+    irStep(2);
+}
+function irStep3(){
+    if(!veiculoData && !document.getElementById('novaPlaca').value){
+        if(!confirm('Continuar sem veículo?')) return;
+    }
+    irStep(3);
+}
+function irStep4(){
+    var prob = document.getElementById('txtProblema').value.trim();
+    if(!prob){ showToast('Descreva o problema relatado pelo cliente','error'); return; }
+    document.getElementById('confCliente').textContent = clienteData ? clienteData.name : '—';
+    document.getElementById('confVeiculo').textContent = veiculoData ? veiculoData.plate+' — '+(veiculoData.brand||'')+' '+(veiculoData.model||'') : 'Sem veículo';
+    document.getElementById('confProblema').textContent = prob;
+    irStep(4);
+}
+
+// Máscara placa
+document.getElementById('novaPlaca').addEventListener('input', function(){
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+});
+</script>
+{% endblock %}

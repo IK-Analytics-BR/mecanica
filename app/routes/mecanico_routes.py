@@ -29,8 +29,50 @@ def mecanico_required(f):
 @login_required
 @mecanico_required
 def index():
-    """Redireciona para a agenda do mecânico."""
-    return redirect(url_for('mecanico.minha_agenda'))
+    """Dashboard principal do mecânico."""
+    from datetime import date
+    db = get_db()
+    technician_id = session.get('technician_id') or session.get('user_id')
+    company_id = get_company_id()
+    hoje = date.today()
+
+    os_hoje = db.fetch_all("""
+        SELECT so.id, so.order_number, so.status, so.customer_complaint, so.started_at,
+               c.name as customer_name,
+               e.plate as equipment_plate, e.brand as equipment_brand, e.model as equipment_model
+        FROM service_orders so
+        JOIN customers c ON so.customer_id = c.id
+        LEFT JOIN equipment e ON so.equipment_id = e.id
+        WHERE so.technician_id = %s AND so.company_id = %s
+          AND DATE(so.open_date) = %s AND so.active = TRUE
+        ORDER BY FIELD(so.status,'in_progress','open','completed'), so.open_date DESC
+    """, (technician_id, company_id, hoje)) or []
+
+    _STATUS = {'open':'Aberta','in_progress':'Em Andamento','completed':'Concluída','cancelled':'Cancelada'}
+    for o in os_hoje:
+        o['status_text'] = _STATUS.get(o['status'], o['status'])
+
+    os_andamento = [o for o in os_hoje if o['status'] == 'in_progress']
+
+    comissao_mes = db.fetch_one("""
+        SELECT COALESCE(SUM(amount),0) as total FROM commissions
+        WHERE technician_id=%s AND MONTH(created_at)=MONTH(NOW()) AND YEAR(created_at)=YEAR(NOW())
+    """, (technician_id,))
+    comissao_total = float((comissao_mes or {}).get('total', 0))
+
+    stats = {
+        'hoje': len(os_hoje),
+        'andamento': sum(1 for o in os_hoje if o['status']=='in_progress'),
+        'concluidas': sum(1 for o in os_hoje if o['status']=='completed'),
+    }
+
+    from datetime import datetime
+    data_atual = datetime.now().strftime('%A, %d de %B').capitalize()
+
+    return render_template('pwa/mecanico/dashboard.html',
+                           os_hoje=os_hoje, os_andamento=os_andamento,
+                           stats=stats, comissao_mes=comissao_total,
+                           data_atual=data_atual)
 
 
 @mecanico_bp.route('/agenda')
@@ -154,63 +196,38 @@ def os_detalhe(os_id):
     # Buscar OS
     os = db.fetch_one("""
         SELECT so.*,
-               c.name as customer_name,
-               c.phone as customer_phone,
-               e.name as equipment_name,
-               e.plate as equipment_plate,
-               e.brand as equipment_brand,
-               e.model as equipment_model
+               c.name as customer_name, c.phone as customer_phone,
+               e.plate as equipment_plate, e.brand as equipment_brand,
+               e.model as equipment_model, e.year as equipment_year,
+               e.color as equipment_color, e.id as equipment_id
         FROM service_orders so
         JOIN customers c ON so.customer_id = c.id
-        LEFT JOIN equipments e ON so.equipment_id = e.id
+        LEFT JOIN equipment e ON so.equipment_id = e.id
         WHERE so.id = %s AND so.technician_id = %s
     """, (os_id, technician_id))
-    
+
     if not os:
         flash('OS não encontrada ou não atribuída a você.', 'danger')
-        return redirect(url_for('mecanico.minha_agenda'))
-    
-    # Status info
-    status_map = {
-        'open': {'text': 'Aberta', 'color': '#3b82f6', 'class': ''},
-        'in_progress': {'text': 'Andamento', 'color': '#f59e0b', 'class': 'andamento'},
-        'completed': {'text': 'Concluída', 'color': '#10b981', 'class': 'concluida'}
-    }
-    status_info = status_map.get(os['status'], status_map['open'])
-    os['status_text'] = status_info['text']
-    os['status_color'] = status_info['color']
-    os['status_class'] = status_info['class']
-    
-    # Checklist padrão de diagnóstico
-    checklist = [
-        {'id': 1, 'nome': 'Inspeção Visual Geral', 'checked': False},
-        {'id': 2, 'nome': 'Teste de Funcionamento', 'checked': False},
-        {'id': 3, 'nome': 'Verificação de Fluidos', 'checked': False},
-        {'id': 4, 'nome': 'Diagnóstico por Scanner', 'checked': False},
-        {'id': 5, 'nome': 'Teste de Rodagem', 'checked': False},
-        {'id': 6, 'nome': 'Limpeza e Organização', 'checked': False},
-    ]
-    
-    # Buscar peças e serviços já adicionados
-    pecas = db.fetch_all("""
-        SELECT p.*, soi.quantity, soi.unit_price, (soi.quantity * soi.unit_price) as total
-        FROM service_order_items soi
-        JOIN products p ON soi.product_id = p.id
-        WHERE soi.service_order_id = %s AND soi.item_type = 'part'
-    """, (os_id,))
-    
-    servicos = db.fetch_all("""
-        SELECT s.*, soi.quantity, soi.unit_price, (soi.quantity * soi.unit_price) as total
-        FROM service_order_items soi
-        JOIN services s ON soi.service_id = s.id
-        WHERE soi.service_order_id = %s AND soi.item_type = 'service'
-    """, (os_id,))
-    
-    return render_template('mobile/mecanico/os_detalhe.html',
-                         os=os,
-                         checklist=checklist,
-                         pecas=pecas or [],
-                         servicos=servicos or [])
+        return redirect(url_for('mecanico.index'))
+
+    # Histórico do veículo
+    historico_veiculo = []
+    if os.get('equipment_id'):
+        historico_veiculo = db.fetch_all("""
+            SELECT so2.id, so2.order_number, so2.customer_complaint,
+                   so2.open_date
+            FROM service_orders so2
+            WHERE so2.equipment_id = %s AND so2.id != %s
+              AND so2.status = 'completed' AND so2.active = TRUE
+            ORDER BY so2.open_date DESC LIMIT 5
+        """, (os['equipment_id'], os_id)) or []
+        for h in historico_veiculo:
+            if h.get('open_date'):
+                h['data_fmt'] = h['open_date'].strftime('%d/%m/%Y') if hasattr(h['open_date'], 'strftime') else str(h['open_date'])[:10]
+
+    return render_template('pwa/mecanico/os_detalhe.html',
+                           os=os,
+                           historico_veiculo=historico_veiculo)
 
 
 @mecanico_bp.route('/os/<int:os_id>/iniciar', methods=['POST'])
@@ -317,6 +334,27 @@ def os_finalizar(os_id):
         """, (technician_id, os_id, comissao, now, get_company_id()))
     
     return jsonify({'success': True})
+
+
+@mecanico_bp.route('/api/buscar-veiculo')
+@login_required
+def api_buscar_veiculo():
+    """Busca OS ativas por placa do veículo."""
+    db = get_db()
+    company_id = get_company_id()
+    placa = request.args.get('placa', '').strip().upper()
+    if len(placa) < 3:
+        return jsonify([])
+    rows = db.fetch_all("""
+        SELECT so.id as os_id, so.order_number, e.plate, e.brand, e.model, c.name as customer_name
+        FROM service_orders so
+        JOIN equipment e ON so.equipment_id = e.id
+        JOIN customers c ON so.customer_id = c.id
+        WHERE so.company_id = %s AND e.plate LIKE %s
+          AND so.status IN ('open','in_progress') AND so.active = TRUE
+        ORDER BY so.open_date DESC LIMIT 10
+    """, (company_id, f'%{placa}%')) or []
+    return jsonify([dict(r) for r in rows])
 
 
 @mecanico_bp.route('/os/<int:os_id>/diagnostico', methods=['GET', 'POST'])

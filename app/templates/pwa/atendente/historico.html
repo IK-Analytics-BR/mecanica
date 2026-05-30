@@ -1,0 +1,80 @@
+{% extends 'pwa/base_pwa.html' %}
+{% block title %}Histórico de OS{% endblock %}
+{% block header_title %}Histórico{% endblock %}
+{% block role_badge %}Atendente{% endblock %}
+
+{% block bottom_nav %}
+<a href="/atendente/" class="pwa-nav-item">
+    <i class="fas fa-home"></i><span>Início</span>
+</a>
+<a href="/atendente/nova-os" class="pwa-nav-item">
+    <i class="fas fa-plus-circle"></i><span>Nova OS</span>
+</a>
+<a href="/atendente/historico" class="pwa-nav-item active">
+    <i class="fas fa-list-alt"></i><span>Histórico</span>
+</a>
+<a href="/logout" class="pwa-nav-item">
+    <i class="fas fa-sign-out-alt"></i><span>Sair</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- FILTROS -->
+<div class="pwa-card" style="margin-bottom:12px;padding:12px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        {% for s, l in [('all','Todas'),('open','Abertas'),('in_progress','Andamento'),('completed','Concluídas')] %}
+        <a href="?status={{ s }}&dias={{ dias_f }}"
+           style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;text-decoration:none;
+                  {% if status_f == s %}background:var(--teal);color:#fff;{% else %}background:#f3f4f6;color:#374151;{% endif %}">
+            {{ l }}
+        </a>
+        {% endfor %}
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;">
+        {% for d, l in [(7,'7 dias'),(30,'30 dias'),(90,'90 dias')] %}
+        <a href="?status={{ status_f }}&dias={{ d }}"
+           style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;text-decoration:none;
+                  {% if dias_f == d %}background:var(--navy);color:#fff;{% else %}background:#f3f4f6;color:#374151;{% endif %}">
+            {{ l }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- LISTA -->
+{% if ordens %}
+    <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:8px;">
+        {{ ordens|length }} ordem(s) encontrada(s)
+    </div>
+    {% for o in ordens %}
+    <a href="/atendente/os/{{ o.id }}" class="os-card {{ 'andamento' if o.status=='in_progress' else ('concluida' if o.status=='completed' else '') }}">
+        <div class="os-card-top">
+            <span class="os-number">{{ o.order_number }}</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span class="status-badge {{ 'badge-andamento' if o.status=='in_progress' else ('badge-concluida' if o.status=='completed' else 'badge-open') }}">
+                    {{ o.status_label }}
+                </span>
+                {% if o.total %}
+                <span style="font-size:13px;font-weight:800;color:var(--green);">R${{ "%.0f"|format(o.total) }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="os-cliente">{{ o.customer_name }}</div>
+        <div class="os-veiculo">
+            {% if o.plate %}<span class="os-placa">{{ o.plate }}</span>{% endif %}
+            {% if o.brand %}{{ o.brand }} {{ o.model or '' }}{% endif %}
+        </div>
+        <div style="font-size:12px;color:var(--gray);">
+            <i class="fas fa-calendar-alt"></i> {{ o.data_fmt or '' }}
+            {% if o.technician_name %} · <i class="fas fa-user-cog"></i> {{ o.technician_name }}{% endif %}
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>Nenhuma OS encontrada</h3>
+        <p>Tente mudar o filtro ou período</p>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends 'pwa/base_pwa.html' %}
+{% block title %}Mecânico — IKFlow{% endblock %}
+{% block header_title %}Oficina{% endblock %}
+{% block role_badge %}Mecânico{% endblock %}
+
+{% block header_left %}
+<i class="fas fa-wrench" style="font-size:22px;color:var(--orange);"></i>
+{% endblock %}
+
+{% block bottom_nav %}
+<a href="/mecanico/" class="pwa-nav-item active">
+    <i class="fas fa-home"></i><span>Início</span>
+</a>
+<a href="/mecanico/agenda" class="pwa-nav-item">
+    <i class="fas fa-calendar-alt"></i><span>Agenda</span>
+</a>
+<a href="/mecanico/minhas-os" class="pwa-nav-item">
+    <i class="fas fa-list-alt"></i><span>Minhas OS</span>
+</a>
+<a href="/mecanico/ponto" class="pwa-nav-item">
+    <i class="fas fa-clock"></i><span>Ponto</span>
+</a>
+<a href="/mecanico/comissoes" class="pwa-nav-item">
+    <i class="fas fa-coins"></i><span>Comissão</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- SAUDAÇÃO -->
+<div style="margin-bottom:16px;">
+    <div style="font-size:13px;color:var(--gray);font-weight:600;">{{ data_atual }}</div>
+    <div style="font-size:22px;font-weight:800;color:var(--navy);">
+        Olá, {{ session.get('username','Mecânico') | title }}! 🔧
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid" style="margin-bottom:16px;">
+    <div class="kpi-card orange">
+        <div class="kpi-value">{{ stats.hoje }}</div>
+        <div class="kpi-label">OS Hoje</div>
+    </div>
+    <div class="kpi-card teal">
+        <div class="kpi-value">{{ stats.andamento }}</div>
+        <div class="kpi-label">Em Andamento</div>
+    </div>
+    <div class="kpi-card green">
+        <div class="kpi-value">{{ stats.concluidas }}</div>
+        <div class="kpi-label">Concluídas</div>
+    </div>
+    <div class="kpi-card" style="background:linear-gradient(135deg,#0b2447,#1e3a6e);">
+        <div class="kpi-value" style="color:#fff;font-size:18px;">R${{ "%.0f"|format(comissao_mes) }}</div>
+        <div class="kpi-label" style="color:rgba(255,255,255,.7);">Comissão Mês</div>
+    </div>
+</div>
+
+<!-- OS EM ANDAMENTO (destaque) -->
+{% if os_andamento %}
+<div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">
+    <i class="fas fa-fire" style="color:var(--orange);"></i> Em Andamento Agora
+</div>
+{% for os in os_andamento %}
+<a href="/mecanico/os/{{ os.id }}" class="os-card andamento" style="border-left:4px solid var(--orange);">
+    <div class="os-card-top">
+        <span class="os-number">{{ os.order_number }}</span>
+        <span class="status-badge badge-andamento">Em Andamento</span>
+    </div>
+    <div class="os-cliente">{{ os.customer_name }}</div>
+    <div class="os-veiculo">
+        {% if os.equipment_plate %}<span class="os-placa">{{ os.equipment_plate }}</span>{% endif %}
+        {{ os.equipment_brand or '' }} {{ os.equipment_model or '' }}
+    </div>
+    {% if os.customer_complaint %}
+    <div style="font-size:13px;color:#4b5563;margin-top:2px;">{{ os.customer_complaint[:80] }}{% if os.customer_complaint|length > 80 %}...{% endif %}</div>
+    {% endif %}
+    <div style="margin-top:8px;display:flex;gap:8px;">
+        <span style="font-size:12px;background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:20px;font-weight:700;">
+            <i class="fas fa-clock"></i> Em execução
+        </span>
+    </div>
+</a>
+{% endfor %}
+{% endif %}
+
+<!-- BUSCA POR PLACA -->
+<div class="pwa-card" style="background:linear-gradient(135deg,var(--navy),#1e3a6e);margin-bottom:16px;">
+    <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:10px;">
+        <i class="fas fa-search" style="color:var(--teal);"></i> Buscar veículo por placa
+    </div>
+    <div style="display:flex;gap:8px;">
+        <input type="text" id="buscaPlaca" class="pwa-input" placeholder="ABC1D23"
+               style="text-transform:uppercase;letter-spacing:3px;font-size:20px;font-weight:800;text-align:center;flex:1;"
+               maxlength="8" inputmode="text">
+        <button type="button" onclick="buscarPorPlaca()" class="btn-pwa btn-teal" style="width:auto;padding:12px 18px;">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+    <div id="resultadoPlaca" style="margin-top:10px;"></div>
+</div>
+
+<!-- OS DO DIA -->
+<div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">
+    OS de Hoje
+</div>
+{% if os_hoje %}
+    {% for os in os_hoje %}
+    <a href="/mecanico/os/{{ os.id }}" class="os-card {{ 'andamento' if os.status=='in_progress' else ('concluida' if os.status=='completed' else '') }}">
+        <div class="os-card-top">
+            <span class="os-number">{{ os.order_number }}</span>
+            <span class="status-badge {{ 'badge-andamento' if os.status=='in_progress' else ('badge-concluida' if os.status=='completed' else 'badge-open') }}">
+                {{ os.status_text }}
+            </span>
+        </div>
+        <div class="os-cliente">{{ os.customer_name }}</div>
+        <div class="os-veiculo">
+            {% if os.equipment_plate %}<span class="os-placa">{{ os.equipment_plate }}</span>{% endif %}
+            {{ os.equipment_brand or '' }} {{ os.equipment_model or '' }}
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="empty-state" style="padding:32px;">
+        <i class="fas fa-check-circle" style="color:var(--green);"></i>
+        <h3>Tudo em dia!</h3>
+        <p>Nenhuma OS para hoje</p>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('buscaPlaca').addEventListener('input',function(){
+    this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+});
+function buscarPorPlaca(){
+    var placa=document.getElementById('buscaPlaca').value.trim();
+    if(placa.length<3){ showToast('Informe pelo menos 3 caracteres da placa','error'); return; }
+    var div=document.getElementById('resultadoPlaca');
+    div.innerHTML='<div style="color:rgba(255,255,255,.7);font-size:13px;"><i class="fas fa-spinner fa-spin"></i> Buscando...</div>';
+    fetch('/mecanico/api/buscar-veiculo?placa='+encodeURIComponent(placa))
+    .then(r=>r.json()).then(function(d){
+        if(!d.length){
+            div.innerHTML='<div style="color:rgba(255,255,255,.6);font-size:13px;">Nenhum veículo encontrado com essa placa</div>';
+            return;
+        }
+        div.innerHTML=d.map(function(v){
+            return '<a href="/mecanico/os/'+v.os_id+'" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border-radius:10px;padding:10px;margin-top:6px;text-decoration:none;color:#fff;">'
+                +'<span class="os-placa" style="font-size:14px;">'+v.plate+'</span>'
+                +'<div><div style="font-weight:700;">'+v.brand+' '+v.model+'</div>'
+                +'<div style="font-size:12px;opacity:.7;">OS: '+v.order_number+' · '+v.customer_name+'</div></div>'
+                +'<i class="fas fa-chevron-right" style="margin-left:auto;opacity:.6;"></i></a>';
+        }).join('');
+    });
+}
+</script>
+{% endblock %}

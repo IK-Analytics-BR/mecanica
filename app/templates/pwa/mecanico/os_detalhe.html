@@ -1,0 +1,240 @@
+{% extends 'pwa/base_pwa.html' %}
+{% block title %}OS {{ os.order_number }}{% endblock %}
+{% block header_title %}{{ os.order_number }}{% endblock %}
+{% block role_badge %}Mecânico{% endblock %}
+
+{% block bottom_nav %}
+<a href="/mecanico/" class="pwa-nav-item">
+    <i class="fas fa-home"></i><span>Início</span>
+</a>
+<a href="/mecanico/agenda" class="pwa-nav-item">
+    <i class="fas fa-calendar-alt"></i><span>Agenda</span>
+</a>
+<a href="/mecanico/minhas-os" class="pwa-nav-item active">
+    <i class="fas fa-list-alt"></i><span>Minhas OS</span>
+</a>
+<a href="/mecanico/ponto" class="pwa-nav-item">
+    <i class="fas fa-clock"></i><span>Ponto</span>
+</a>
+<a href="/mecanico/comissoes" class="pwa-nav-item">
+    <i class="fas fa-coins"></i><span>Comissão</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- VEÍCULO DESTAQUE -->
+<div style="background:var(--navy);border-radius:16px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;">
+    <div style="background:var(--teal);border-radius:12px;padding:10px 16px;text-align:center;">
+        <div style="font-size:13px;font-weight:800;letter-spacing:2px;color:#fff;">{{ os.equipment_plate or '???' }}</div>
+    </div>
+    <div style="flex:1;">
+        <div style="font-size:16px;font-weight:800;color:#fff;">{{ os.equipment_brand or '' }} {{ os.equipment_model or '' }}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);">{{ os.equipment_year or '' }}{% if os.equipment_color %} · {{ os.equipment_color }}{% endif %}</div>
+        <div style="font-size:12px;color:var(--teal);font-weight:600;margin-top:2px;">{{ os.customer_name }}</div>
+    </div>
+    <a href="/veiculos/{{ os.equipment_id }}/historico" style="color:rgba(255,255,255,.5);font-size:22px;padding:8px;">
+        <i class="fas fa-history"></i>
+    </a>
+</div>
+
+<!-- PROBLEMA DO CLIENTE -->
+<div class="pwa-card" style="margin-bottom:12px;border-left:4px solid var(--orange);">
+    <div style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;margin-bottom:6px;">
+        <i class="fas fa-comment-alt"></i> Cliente relatou
+    </div>
+    <div style="font-size:15px;color:#1f2937;line-height:1.5;">{{ os.customer_complaint or 'Sem descrição informada' }}</div>
+</div>
+
+<!-- AÇÕES RÁPIDAS: INICIAR / PAUSAR / FINALIZAR -->
+<div class="pwa-card" style="margin-bottom:14px;">
+    <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:12px;">Controle do Serviço</div>
+
+    <!-- Cronômetro -->
+    <div style="text-align:center;padding:16px 0;border-bottom:1px solid #f3f4f6;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--gray);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Tempo em serviço</div>
+        <div id="cronometro" style="font-size:42px;font-weight:900;color:var(--navy);letter-spacing:2px;font-variant-numeric:tabular-nums;">00:00:00</div>
+        <div id="statusServico" style="font-size:13px;font-weight:700;margin-top:4px;color:var(--gray);">Parado</div>
+    </div>
+
+    {% if os.status == 'open' %}
+    <button type="button" class="btn-pwa btn-green" onclick="acao('iniciar')" id="btnIniciar">
+        <i class="fas fa-play"></i> Iniciar Serviço
+    </button>
+    {% elif os.status == 'in_progress' %}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <button type="button" class="btn-pwa btn-orange" onclick="acao('pausar')">
+            <i class="fas fa-pause"></i> Pausar
+        </button>
+        <button type="button" class="btn-pwa btn-green" onclick="confirmarFinalizar()">
+            <i class="fas fa-flag-checkered"></i> Concluir
+        </button>
+    </div>
+    {% elif os.status == 'completed' %}
+    <div style="background:#d1fae5;border-radius:12px;padding:14px;text-align:center;">
+        <i class="fas fa-check-circle" style="font-size:28px;color:var(--green);"></i>
+        <div style="font-weight:800;color:#065f46;margin-top:4px;">Serviço Concluído!</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- DIAGNÓSTICO -->
+<div class="pwa-card" style="margin-bottom:12px;">
+    <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:10px;">
+        <i class="fas fa-stethoscope" style="color:var(--teal);"></i> Diagnóstico
+    </div>
+    <form method="POST" action="/mecanico/os/{{ os.id }}/diagnostico" id="formDiag">
+        <div class="pwa-field">
+            <textarea name="diagnostico" class="pwa-input" rows="4"
+                      placeholder="Descreva o que foi encontrado, problema real, peças necessárias..."
+                      style="resize:none;height:100px;">{{ os.diagnostico or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn-pwa btn-teal">
+            <i class="fas fa-save"></i> Salvar Diagnóstico
+        </button>
+    </form>
+</div>
+
+<!-- CHECKLIST -->
+<div class="pwa-card" style="margin-bottom:12px;">
+    <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:10px;">
+        <i class="fas fa-clipboard-check" style="color:var(--teal);"></i> Checklist de Inspeção
+    </div>
+    {% set checks = [
+        ('Inspeção Visual Geral', 'fas fa-eye'),
+        ('Teste de Funcionamento', 'fas fa-play-circle'),
+        ('Verificação de Fluidos', 'fas fa-tint'),
+        ('Diagnóstico por Scanner', 'fas fa-laptop-code'),
+        ('Freios e Suspensão', 'fas fa-car-crash'),
+        ('Pneus e Rodas', 'fas fa-circle-notch'),
+        ('Sistema Elétrico', 'fas fa-bolt'),
+        ('Teste de Rodagem', 'fas fa-road'),
+        ('Limpeza Final', 'fas fa-broom'),
+    ] %}
+    {% for nome, icon in checks %}
+    <label style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f9fafb;cursor:pointer;">
+        <input type="checkbox" class="check-item" style="width:20px;height:20px;accent-color:var(--teal);" onchange="toggleCheck(this)">
+        <i class="{{ icon }}" style="color:var(--teal);font-size:16px;width:20px;text-align:center;"></i>
+        <span style="font-size:14px;font-weight:600;" class="check-label">{{ nome }}</span>
+        <span class="check-ok" style="display:none;color:var(--green);font-size:16px;margin-left:auto;"><i class="fas fa-check-circle"></i></span>
+    </label>
+    {% endfor %}
+    <div style="margin-top:10px;background:#f9fafb;border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:var(--gray);">Progresso</span>
+        <span style="font-size:14px;font-weight:800;color:var(--teal);" id="checkProgresso">0/{{ checks|length }}</span>
+    </div>
+</div>
+
+<!-- HISTÓRICO DO VEÍCULO -->
+{% if historico_veiculo %}
+<div class="pwa-card" style="margin-bottom:12px;">
+    <div style="font-size:13px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:10px;">
+        <i class="fas fa-history" style="color:var(--teal);"></i> Histórico do Veículo
+    </div>
+    {% for h in historico_veiculo[:3] %}
+    <div style="padding:8px 0;border-bottom:1px solid #f3f4f6;display:flex;gap:10px;align-items:flex-start;">
+        <i class="fas fa-tools" style="color:var(--teal);margin-top:2px;font-size:13px;"></i>
+        <div>
+            <div style="font-size:13px;font-weight:700;">{{ h.order_number }}</div>
+            <div style="font-size:12px;color:var(--gray);">{{ h.customer_complaint[:60] if h.customer_complaint else 'Sem descrição' }}</div>
+            <div style="font-size:11px;color:#9ca3af;">{{ h.data_fmt if h.data_fmt else '' }}</div>
+        </div>
+    </div>
+    {% endfor %}
+    <a href="/veiculos/{{ os.equipment_id }}/historico" style="display:block;text-align:center;font-size:13px;font-weight:700;color:var(--teal);padding:10px 0;text-decoration:none;">
+        Ver histórico completo <i class="fas fa-chevron-right"></i>
+    </a>
+</div>
+{% endif %}
+
+<!-- MODAL CONFIRMAR CONCLUSÃO -->
+<div class="bottom-sheet-overlay" id="sheetFinalizar">
+    <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title"><i class="fas fa-flag-checkered" style="color:var(--green);"></i> Concluir Serviço?</div>
+        <div style="color:#4b5563;font-size:14px;margin-bottom:16px;line-height:1.5;">
+            Confirme que o serviço foi realizado e o veículo está pronto para entrega.
+        </div>
+        <div class="pwa-field">
+            <label class="pwa-label">Observações finais (opcional)</label>
+            <textarea id="obsFinalizacao" class="pwa-input" rows="3" placeholder="Ex: Peça substituída, próxima revisão em 10.000 km..." style="resize:none;height:80px;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button type="button" class="btn-pwa" style="background:#e5e7eb;color:#374151;flex:1;" onclick="fecharSheet()">Cancelar</button>
+            <button type="button" class="btn-pwa btn-green" style="flex:2;" onclick="acao('finalizar')">
+                <i class="fas fa-check"></i> Confirmar Conclusão
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── CRONÔMETRO ──
+var iniciado = false, segundos = 0, timer = null;
+
+{% if os.status == 'in_progress' and os.started_at %}
+var startedAt = new Date('{{ os.started_at.isoformat() if os.started_at else "" }}');
+segundos = Math.floor((new Date() - startedAt) / 1000);
+iniciarCronometro();
+{% endif %}
+
+function iniciarCronometro(){
+    iniciado = true;
+    document.getElementById('statusServico').textContent = '▶ Em execução';
+    document.getElementById('statusServico').style.color = 'var(--green)';
+    timer = setInterval(function(){ segundos++; atualizarDisplay(); }, 1000);
+}
+function pararCronometro(){
+    iniciado = false;
+    clearInterval(timer);
+    document.getElementById('statusServico').textContent = '⏸ Pausado';
+    document.getElementById('statusServico').style.color = 'var(--orange)';
+}
+function atualizarDisplay(){
+    var h=Math.floor(segundos/3600), m=Math.floor((segundos%3600)/60), s=segundos%60;
+    document.getElementById('cronometro').textContent =
+        String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+// ── AÇÕES OS ──
+function acao(tipo){
+    var body = new FormData();
+    if(tipo === 'finalizar'){
+        body.append('obs', document.getElementById('obsFinalizacao').value);
+    }
+    fetch('/mecanico/os/{{ os.id }}/'+tipo, {method:'POST', body:body})
+    .then(r=>r.json()).then(function(d){
+        if(d.success || d.ok){
+            fecharSheet();
+            if(tipo==='iniciar'){ iniciarCronometro(); showToast('Serviço iniciado!'); }
+            else if(tipo==='pausar'){ pararCronometro(); showToast('Serviço pausado'); }
+            else if(tipo==='finalizar'){ showToast('Serviço concluído!'); setTimeout(()=>location.href='/mecanico/', 1500); }
+            location.reload();
+        } else { showToast(d.error||'Erro ao executar ação','error'); }
+    }).catch(function(){ showToast('Erro de conexão','error'); });
+}
+
+function confirmarFinalizar(){
+    document.getElementById('sheetFinalizar').classList.add('show');
+}
+function fecharSheet(){
+    document.getElementById('sheetFinalizar').classList.remove('show');
+}
+document.getElementById('sheetFinalizar').addEventListener('click', function(e){
+    if(e.target === this) fecharSheet();
+});
+
+// ── CHECKLIST ──
+var totalChecks = document.querySelectorAll('.check-item').length;
+function toggleCheck(el){
+    var label = el.closest('label');
+    var lbl = label.querySelector('.check-label');
+    var ok  = label.querySelector('.check-ok');
+    if(el.checked){ lbl.style.textDecoration='line-through'; lbl.style.color='var(--gray)'; ok.style.display='inline'; }
+    else { lbl.style.textDecoration=''; lbl.style.color=''; ok.style.display='none'; }
+    var done = document.querySelectorAll('.check-item:checked').length;
+    document.getElementById('checkProgresso').textContent = done+'/'+totalChecks;
+}
+</script>
+{% endblock %}
