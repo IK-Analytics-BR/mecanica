@@ -203,136 +203,71 @@
         }
 
         /* ══════════════════════════════════════════
-           PWA MOBILE — Layout Executivo
+           PWA MOBILE — Layout limpo v5
         ══════════════════════════════════════════ */
 
-        /* Overlay do drawer mobile */
+        /* Overlay: oculto por padrão */
         #sidebarOverlay {
             display: none;
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,.55);
-            z-index: 1040;
-            backdrop-filter: blur(2px);
+            z-index: 1050;
             cursor: pointer;
         }
-        #sidebarOverlay.show {
-            display: block !important;
-        }
+        #sidebarOverlay.show { display: block !important; }
 
-        /* Header mobile */
-        #mobileHeader {
-            display: none;
-        }
+        /* Header mobile: oculto por padrão */
+        #mobileHeader { display: none !important; }
 
-        /* Bottom nav mobile */
-        #bottomNav {
-            display: none;
-        }
+        /* Bottom nav: oculto por padrão */
+        #bottomNav { display: none; }
 
-        /* Busca global mobile */
-        #globalSearchBar {
-            display: none;
-        }
+        /* Busca global: oculto por padrão */
+        #globalSearchBar { display: none; }
 
         @media (max-width: 768px) {
             /* Esconder navbar desktop */
             .navbar { display: none !important; }
 
-            /* Mostrar header mobile */
-            #mobileHeader {
-                display: flex;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 1050;
-                background: linear-gradient(135deg, #0b2447, #08a5b2);
-                color: #fff;
-                align-items: center;
-                padding: 0 12px;
-                height: 56px;
-                padding-top: env(safe-area-inset-top);
-                box-shadow: 0 2px 12px rgba(0,0,0,.3);
-                gap: 10px;
-            }
-            #mobileHeader .mh-logo {
-                height: 28px;
-                flex: 1;
-                object-fit: contain;
-                object-position: left;
-            }
-            #mobileHeader .mh-btn {
-                background: rgba(255,255,255,.15);
-                border: none;
-                color: #fff;
-                width: 38px;
-                height: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 16px;
-                flex-shrink: 0;
-                cursor: pointer;
-            }
-            #mobileHeader .mh-btn:active { background: rgba(255,255,255,.3); }
-
-            /* Barra de busca global */
-            #globalSearchBar {
-                display: block;
-                position: fixed;
-                top: calc(56px + env(safe-area-inset-top));
-                left: 0;
-                right: 0;
-                z-index: 1049;
-                background: #fff;
-                padding: 8px 12px;
-                box-shadow: 0 2px 8px rgba(0,0,0,.1);
-                border-bottom: 1px solid #e9ecef;
-            }
-            #globalSearchBar input {
-                width: 100%;
-                border: 1.5px solid #e2e8f0;
-                border-radius: 24px;
-                padding: 8px 16px 8px 40px;
-                font-size: 15px;
-                background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.868-3.834zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat 14px center;
-                outline: none;
-                color: #1e293b;
-            }
-            #globalSearchBar input:focus {
-                border-color: #08a5b2;
-                box-shadow: 0 0 0 3px rgba(8,165,178,.15);
-            }
-
-            /* Sidebar como drawer deslizante */
+            /* Sidebar como drawer — SEMPRE via transform, nunca display:none */
             #sidebar {
                 display: flex !important;
                 flex-direction: column;
                 position: fixed !important;
-                top: 0;
-                left: 0;
+                top: 0 !important;
+                left: 0 !important;
                 width: 280px !important;
-                min-width: 280px !important;
-                max-width: 280px !important;
-                height: 100vh;
-                z-index: 1055;
-                transform: translateX(-280px);
-                transition: transform .3s cubic-bezier(.4,0,.2,1);
+                height: 100vh !important;
+                z-index: 1060 !important;
+                transform: translateX(-300px);
+                transition: transform .3s ease;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
-                padding-bottom: env(safe-area-inset-bottom);
             }
             #sidebar.drawer-open {
                 transform: translateX(0) !important;
-                box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+                box-shadow: 4px 0 24px rgba(0,0,0,.45);
             }
 
-            /* Content: compensar header + busca + bottom nav */
+            /* Bottom nav visível em mobile */
+            #bottomNav {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1050;
+                background: #fff;
+                border-top: 1px solid #e2e8f0;
+                padding-bottom: env(safe-area-inset-bottom);
+                box-shadow: 0 -4px 20px rgba(0,0,0,.1);
+            }
+
+            /* Content: apenas compensar bottom nav */
             #content {
                 margin-left: 0 !important;
-                padding-top: calc(56px + 52px + env(safe-area-inset-top)) !important;
+                padding-top: 16px !important;
                 padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
                 width: 100% !important;
             }
@@ -460,176 +395,60 @@
 
             /* Gráficos: canvas responsivo */
             canvas { max-width: 100% !important; }
-
-            /* Bottom nav */
-            #bottomNav {
-                display: flex !important;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                z-index: 1050;
-                background: #fff;
-                border-top: 1px solid #e2e8f0;
-                padding-bottom: env(safe-area-inset-bottom);
-                box-shadow: 0 -4px 20px rgba(0,0,0,.1);
-            }
-            .bn-item {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 8px 4px;
-                text-decoration: none;
-                color: #94a3b8;
-                font-size: 10px;
-                font-weight: 600;
-                gap: 3px;
-                cursor: pointer;
-                border: none;
-                background: none;
-                transition: color .2s;
-            }
-            .bn-item i { font-size: 20px; }
-            .bn-item.active, .bn-item:active {
-                color: #0b2447;
-            }
-            .bn-item.bn-primary {
-                color: #fff;
-                background: linear-gradient(135deg, #0b2447, #08a5b2);
-                border-radius: 16px;
-                margin: 6px;
-                padding: 10px;
-                box-shadow: 0 4px 12px rgba(8,165,178,.4);
-            }
         }
 
-        /* ═══════════════════════════════════════════════
-           CONTROLE PWA STANDALONE
-        ═══════════════════════════════════════════════ */
-
-        /* Em modo PWA standalone: esconder elementos desktop */
-        body.pwa-standalone .navbar {
-            display: none !important;
+        /* Estilos dos itens do bottom nav */
+        .bn-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            text-decoration: none;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 600;
+            gap: 3px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: color .2s;
+        }
+        .bn-item i { font-size: 20px; }
+        .bn-item.active { color: #0b2447; }
+        .bn-item.bn-primary {
+            color: #fff;
+            background: linear-gradient(135deg, #0b2447, #08a5b2);
+            border-radius: 16px;
+            margin: 6px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(8,165,178,.4);
         }
 
-        /* Sidebar desktop escondida, mas drawer funciona via media query */
+        /* Desktop: esconder elementos mobile */
         @media (min-width: 769px) {
-            body.pwa-standalone #sidebar {
-                display: none !important;
-            }
-        }
-
-        /* Mostrar header mobile em PWA */
-        body.pwa-standalone #mobileHeader {
-            display: flex !important;
-        }
-
-        body.pwa-standalone #bottomNav {
-            display: flex !important;
-        }
-
-        body.pwa-standalone #content {
-            margin-left: 0 !important;
-            padding-top: calc(56px + env(safe-area-inset-top)) !important;
-            padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
-            width: 100% !important;
-        }
-
-        /* Em modo desktop normal: esconder elementos mobile */
-        @media (min-width: 769px) {
-            body:not(.pwa-standalone) #mobileHeader {
-                display: none !important;
-            }
-            
-            body:not(.pwa-standalone) #bottomNav {
-                display: none !important;
-            }
-            
-            body:not(.pwa-standalone) #globalSearchBar {
-                display: none !important;
-            }
-        }
-
-        /* Landscape mode no PWA */
-        @media (orientation: landscape) and (max-height: 500px) {
-            body.pwa-standalone #mobileHeader {
-                height: 48px;
-                padding-top: 0;
-            }
-            
-            body.pwa-standalone #bottomNav {
-                height: 60px;
-            }
-            
-            body.pwa-standalone #content {
-                padding-top: 48px !important;
-                padding-bottom: 60px !important;
-            }
+            #bottomNav { display: none !important; }
+            #mobileHeader { display: none !important; }
+            #sidebarOverlay { display: none !important; }
         }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
-    <!-- ══ DETECÇÃO PWA ══ -->
+    <!-- ══ DETECÇÃO PWA v5 ══ -->
     <script>
-        // Detectar modo PWA standalone vs navegador
-        (function() {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                                 window.navigator.standalone ||
-                                 document.referrer.includes('android-app://');
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isTablet = /iPad|Android(?!.*Mobile)|Tablet/i.test(navigator.userAgent);
-            
-            // Aplicar classes ao body
-            if (isStandalone) {
-                document.body.classList.add('pwa-standalone');
-            }
-            if (isMobile) {
-                document.body.classList.add('device-mobile');
-            }
-            if (isTablet) {
-                document.body.classList.add('device-tablet');
-            }
-            
-            // Salvar no sessionStorage para uso server-side
-            sessionStorage.setItem('isStandalone', isStandalone);
-            sessionStorage.setItem('isMobile', isMobile);
-            
-            console.log('[PWA] Standalone:', isStandalone, 'Mobile:', isMobile, 'Tablet:', isTablet);
-        })();
+    (function() {
+        var standalone = (window.navigator.standalone === true) ||
+                         window.matchMedia('(display-mode: standalone)').matches;
+        if (standalone) {
+            document.body.classList.add('pwa-standalone');
+            console.log('[PWA] v5 standalone');
+        }
+    })();
     </script>
 
-    <!-- ══ HEADER MOBILE ══ -->
     {% if session.get('username') %}
-    <div id="mobileHeader">
-        <button class="mh-btn" id="drawerToggle" aria-label="Menu">
-            <i class="fas fa-bars"></i>
-        </button>
-        <img src="{{ url_for('static', filename='img/logo_menu.png') }}" alt="IKFlow" class="mh-logo">
-        <a href="{{ url_for('bem_vindo') }}" class="mh-btn" title="Início">
-            <i class="fas fa-home"></i>
-        </a>
-        <button class="mh-btn" id="userMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-user"></i>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end" style="margin-top:48px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);">
-            <li><span class="dropdown-item-text fw-bold">{{ session.get('username') }}</span></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{{ url_for('users.user_profile') }}"><i class="fas fa-user me-2"></i>Meu Perfil</a></li>
-            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="fas fa-key me-2"></i>Alterar Senha</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
-        </ul>
-    </div>
-
-    <!-- ══ BUSCA GLOBAL MOBILE ══ -->
-    <div id="globalSearchBar">
-        <input type="search" id="globalSearchInput" placeholder="Buscar OS, cliente, veículo, peça..." autocomplete="off" autocorrect="off">
-        <div id="globalSearchResults" style="display:none;position:absolute;left:12px;right:12px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);max-height:280px;overflow-y:auto;z-index:9999;margin-top:4px;"></div>
-    </div>
-
     <!-- ══ OVERLAY DRAWER ══ -->
     <div id="sidebarOverlay"></div>
     {% endif %}
@@ -1314,18 +1133,6 @@
     <!-- Indicador de versão -->
     <div id="pwa-version-indicator" style="position:fixed;bottom:4px;right:4px;font-size:11px;background:#08a5b2;color:#fff;padding:2px 6px;border-radius:4px;z-index:99999;font-family:monospace;">v5</div>
 
-    <!-- ══ PWA v5 ══ -->
-    <script>
-    // Detectar standalone
-    (function() {
-        const isStandalone = window.navigator.standalone === true;
-        if (isStandalone) {
-            document.body.classList.add('pwa-standalone');
-            console.log('[PWA] v5 - standalone detectado');
-        }
-    })();
-    </script>
-
     <!-- ══ iOS PWA UPDATE FORCE ══ -->
     <script>
     (function() {
@@ -1424,45 +1231,5 @@
     }
     </script>
 
-    <!-- ══ DRAWER MENU ══ -->
-    <script>
-    (function() {
-        function openDrawer() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar) sidebar.classList.add('drawer-open');
-            if (overlay) overlay.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeDrawer() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sidebar) sidebar.classList.remove('drawer-open');
-            if (overlay) overlay.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggle = document.getElementById('drawerToggle');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            if (toggle) toggle.addEventListener('click', openDrawer);
-            if (overlay) overlay.addEventListener('click', closeDrawer);
-
-            // Fechar ao clicar em link do sidebar
-            document.querySelectorAll('#sidebar a[href]').forEach(function(link) {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 768 || document.body.classList.contains('pwa-standalone')) {
-                        closeDrawer();
-                    }
-                });
-            });
-
-            // Bottom nav: botão Menu
-            const btnNavMenu = document.getElementById('btnNavMenu');
-            if (btnNavMenu) btnNavMenu.addEventListener('click', openDrawer);
-        });
-    })();
-    </script>
 </body>
 </html>
