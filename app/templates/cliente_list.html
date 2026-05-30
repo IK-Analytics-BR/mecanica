@@ -2,6 +2,32 @@
 
 {% block title %}Clientes - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4, h1.h2 { font-size: 20px; margin-top: 4px !important; }
+    .breadcrumb { font-size: 12px; }
+    .btn-toolbar { width: 100%; display: flex; gap: 8px; }
+    .btn-toolbar .btn { flex: 1; padding: 10px; font-size: 13px; border-radius: 10px; }
+    .border-bottom { padding-bottom: 12px !important; margin-bottom: 12px !important; }
+    /* Esconder tabela */
+    .table-responsive { display: none; }
+    /* Cards de cliente */
+    .cli-cards { display: flex; flex-direction: column; gap: 10px; }
+    .cli-card { background: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.07); display: flex; align-items: center; gap: 14px; }
+    .cli-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #08a5b2, #0b2447); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+    .cli-info { flex: 1; min-width: 0; }
+    .cli-name { font-weight: 700; font-size: 14px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cli-meta { font-size: 12px; color: #64748b; }
+    .cli-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .cli-actions .btn { width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; }
+    /* Paginação mobile */
+    .pagination { flex-wrap: wrap; gap: 4px; }
+    .page-link { padding: 6px 10px; font-size: 13px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Clientes</h1>
@@ -22,66 +48,61 @@
         </div>
     </div>
 
+    <!-- Tabela desktop -->
     <div class="table-responsive">
         <table class="table table-striped table-hover table-sm">
             <thead class="table-dark">
                 <tr>
-                    <th style="width: 70px;">ID</th>
-                    <th style="width: 250px; min-width: 200px;">Nome</th>
-                    <th style="width: 140px;">CNPJ</th>
-                    <th style="width: 120px;">Cidade/UF</th>
-                    <th style="width: 120px;">Telefone</th>
-                    <th style="width: 200px;">Email</th>
-                    <th style="width: 180px;" class="text-center">Ações</th>
+                    <th>ID</th><th>Nome</th><th>CNPJ</th>
+                    <th>Cidade/UF</th><th>Telefone</th><th>Email</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for cliente in clientes %}
                 <tr>
-                    <td style="vertical-align: middle;">{{ cliente.id }}</td>
-                    <td style="vertical-align: middle;">
-                        <div class="text-truncate" style="max-width: 250px;" title="{{ cliente.name or '-' }}">
-                            {{ cliente.name or '-' }}
-                        </div>
-                    </td>
-                    <td style="vertical-align: middle;">
-                        <small>{{ cliente.cnpj or '-' }}</small>
-                    </td>
-                    <td style="vertical-align: middle;">
-                        <small>{{ cliente.city or '-' }}/{{ cliente.state or '-' }}</small>
-                    </td>
-                    <td style="vertical-align: middle;">
-                        <small>{{ cliente.phone or '-' }}</small>
-                    </td>
-                    <td style="vertical-align: middle;">
-                        <div class="text-truncate" style="max-width: 200px;" title="{{ cliente.email or '-' }}">
-                            <small>{{ cliente.email or '-' }}</small>
-                        </div>
-                    </td>
-                    <td style="vertical-align: middle;" class="text-center">
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a href="{{ url_for('cliente.cliente_visualizar', id=cliente.id) }}" class="btn btn-info" title="Visualizar">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ url_for('cliente.cliente_editar', id=cliente.id) }}" class="btn btn-warning" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{{ url_for('cliente.cliente_excluir', id=cliente.id) }}" class="btn btn-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir este cliente?');">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                            <a href="{{ url_for('cliente.customer_products_page', customer_id=cliente.id) }}" class="btn btn-secondary" title="Produtos do Cliente">
-                                <i class="fas fa-sitemap"></i>
-                            </a>
+                    <td>{{ cliente.id }}</td>
+                    <td><div class="text-truncate" style="max-width:250px">{{ cliente.name or '-' }}</div></td>
+                    <td><small>{{ cliente.cnpj or '-' }}</small></td>
+                    <td><small>{{ cliente.city or '-' }}/{{ cliente.state or '-' }}</small></td>
+                    <td><small>{{ cliente.phone or '-' }}</small></td>
+                    <td><small>{{ cliente.email or '-' }}</small></td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('cliente.cliente_visualizar', id=cliente.id) }}" class="btn btn-info"><i class="fas fa-eye"></i></a>
+                            <a href="{{ url_for('cliente.cliente_editar', id=cliente.id) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                            <a href="{{ url_for('cliente.cliente_excluir', id=cliente.id) }}" class="btn btn-danger" onclick="return confirm('Excluir?')"><i class="fas fa-trash"></i></a>
+                            <a href="{{ url_for('cliente.customer_products_page', customer_id=cliente.id) }}" class="btn btn-secondary"><i class="fas fa-sitemap"></i></a>
                         </div>
                     </td>
                 </tr>
                 {% else %}
-                <tr>
-                    <td colspan="7" class="text-center">Nenhum cliente cadastrado.</td>
-                </tr>
+                <tr><td colspan="7" class="text-center">Nenhum cliente cadastrado.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    <!-- Cards mobile -->
+    <div class="cli-cards">
+        {% for cliente in clientes %}
+        <div class="cli-card">
+            <div class="cli-avatar">{{ (cliente.name or '?')[0].upper() }}</div>
+            <div class="cli-info">
+                <div class="cli-name">{{ cliente.name or '-' }}</div>
+                <div class="cli-meta">
+                    {{ cliente.city or '-' }}/{{ cliente.state or '-' }}
+                    {% if cliente.phone %} &bull; {{ cliente.phone }}{% endif %}
+                </div>
+            </div>
+            <div class="cli-actions">
+                <a href="{{ url_for('cliente.cliente_visualizar', id=cliente.id) }}" class="btn btn-info" title="Ver"><i class="fas fa-eye"></i></a>
+                <a href="{{ url_for('cliente.cliente_editar', id=cliente.id) }}" class="btn btn-warning" title="Editar"><i class="fas fa-edit"></i></a>
+                <a href="{{ url_for('cliente.cliente_excluir', id=cliente.id) }}" class="btn btn-danger" title="Excluir" onclick="return confirm('Excluir?')"><i class="fas fa-trash"></i></a>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">Nenhum cliente cadastrado.</div>
+        {% endfor %}
     </div>
 
     <!-- Paginação -->

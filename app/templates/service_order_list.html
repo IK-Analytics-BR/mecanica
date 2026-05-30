@@ -2,6 +2,35 @@
 
 {% block title %}Ordens de Serviço - IKFlow Mecânica{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px !important; }
+    /* Esconder tabela, mostrar cards */
+    .table-responsive { display: none; }
+    .os-cards { display: flex; flex-direction: column; gap: 10px; }
+    .os-card { background: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #e2e8f0; }
+    .os-card.status-open    { border-left-color: #3b82f6; }
+    .os-card.status-progress { border-left-color: #f59e0b; }
+    .os-card.status-done    { border-left-color: #22c55e; }
+    .os-card.status-cancel  { border-left-color: #ef4444; }
+    .os-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .os-card-number { font-weight: 700; font-size: 15px; color: #0b1e35; }
+    .os-card-body { font-size: 13px; color: #475569; line-height: 1.6; }
+    .os-card-body strong { color: #1e293b; }
+    .os-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .os-card-actions .btn { flex: 1; padding: 9px; font-size: 13px; border-radius: 10px; }
+    /* Botões topo */
+    .btn-toolbar-mobile { display: flex; gap: 8px; margin-bottom: 12px; }
+    .btn-toolbar-mobile .btn { flex: 1; font-size: 13px; padding: 10px; border-radius: 10px; }
+    /* Card info esconder em mobile */
+    .card:last-child { display: none; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Ordens de Serviço</h1>
@@ -29,18 +58,14 @@
         </div>
         <div class="card-body">
             {% if orders %}
+            <!-- Tabela desktop -->
             <div class="table-responsive">
                 <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>Número</th>
-                            <th>Cliente</th>
-                            <th>Equipamento</th>
-                            <th>Tipo</th>
-                            <th>Data Abertura</th>
-                            <th>Técnico</th>
-                            <th>Status</th>
-                            <th>Ações</th>
+                            <th>Número</th><th>Cliente</th><th>Equipamento</th>
+                            <th>Tipo</th><th>Data</th><th>Técnico</th>
+                            <th>Status</th><th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -50,35 +75,24 @@
                             <td>{{ order.customer_name }}</td>
                             <td>{{ order.equipment_name }}</td>
                             <td>
-                                {% if order.type == 'preventive' %}
-                                <span class="badge bg-success">Preventiva</span>
-                                {% elif order.type == 'corrective' %}
-                                <span class="badge bg-danger">Corretiva</span>
-                                {% elif order.type == 'predictive' %}
-                                <span class="badge bg-info">Preditiva</span>
+                                {% if order.type == 'preventive' %}<span class="badge bg-success">Preventiva</span>
+                                {% elif order.type == 'corrective' %}<span class="badge bg-danger">Corretiva</span>
+                                {% elif order.type == 'predictive' %}<span class="badge bg-info">Preditiva</span>
                                 {% endif %}
                             </td>
                             <td>{{ order.open_date.strftime('%d/%m/%Y') }}</td>
                             <td>{{ order.technician_name or 'Não atribuído' }}</td>
                             <td>
-                                {% if order.status == 'open' %}
-                                <span class="badge bg-primary">Aberta</span>
-                                {% elif order.status == 'in_progress' %}
-                                <span class="badge bg-warning">Em Andamento</span>
-                                {% elif order.status == 'completed' %}
-                                <span class="badge bg-success">Concluída</span>
-                                {% elif order.status == 'canceled' %}
-                                <span class="badge bg-danger">Cancelada</span>
+                                {% if order.status == 'open' %}<span class="badge bg-primary">Aberta</span>
+                                {% elif order.status == 'in_progress' %}<span class="badge bg-warning">Em Andamento</span>
+                                {% elif order.status == 'completed' %}<span class="badge bg-success">Concluída</span>
+                                {% elif order.status == 'canceled' %}<span class="badge bg-danger">Cancelada</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                                <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
                                 {% if order.status != 'completed' and order.status != 'canceled' %}
-                                <a href="{{ url_for('service_order.service_order_edit', order_id=order.id) }}" class="btn btn-warning btn-sm">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                <a href="{{ url_for('service_order.service_order_edit', order_id=order.id) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                                 {% endif %}
                             </td>
                         </tr>
@@ -86,10 +100,36 @@
                     </tbody>
                 </table>
             </div>
-            {% else %}
-            <div class="alert alert-info">
-                Nenhuma ordem de serviço cadastrada.
+            <!-- Cards mobile -->
+            <div class="os-cards">
+                {% for order in orders %}
+                {% set sc = 'status-open' if order.status=='open' else 'status-progress' if order.status=='in_progress' else 'status-done' if order.status=='completed' else 'status-cancel' %}
+                <div class="os-card {{ sc }}">
+                    <div class="os-card-header">
+                        <span class="os-card-number">{{ order.order_number }}</span>
+                        {% if order.status == 'open' %}<span class="badge bg-primary">Aberta</span>
+                        {% elif order.status == 'in_progress' %}<span class="badge bg-warning">Em Andamento</span>
+                        {% elif order.status == 'completed' %}<span class="badge bg-success">Concluída</span>
+                        {% elif order.status == 'canceled' %}<span class="badge bg-danger">Cancelada</span>
+                        {% endif %}
+                    </div>
+                    <div class="os-card-body">
+                        <div><strong>Cliente:</strong> {{ order.customer_name }}</div>
+                        <div><strong>Equipamento:</strong> {{ order.equipment_name or '-' }}</div>
+                        <div><strong>Técnico:</strong> {{ order.technician_name or 'Não atribuído' }}</div>
+                        <div><strong>Data:</strong> {{ order.open_date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="os-card-actions">
+                        <a href="{{ url_for('service_order.service_order_view', order_id=order.id) }}" class="btn btn-info"><i class="fas fa-eye me-1"></i>Ver</a>
+                        {% if order.status != 'completed' and order.status != 'canceled' %}
+                        <a href="{{ url_for('service_order.service_order_edit', order_id=order.id) }}" class="btn btn-warning"><i class="fas fa-edit me-1"></i>Editar</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
             </div>
+            {% else %}
+            <div class="alert alert-info">Nenhuma ordem de serviço cadastrada.</div>
             {% endif %}
         </div>
     </div>

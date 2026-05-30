@@ -2,6 +2,33 @@
 
 {% block title %}Bem-vindo - IK Flow{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    .welcome-card { padding: 20px 16px 12px; border-radius: 16px; background: linear-gradient(135deg, #0b1e35, #0b2d55); color: #fff; margin-bottom: 16px; }
+    .welcome-card h1 { font-size: 20px; margin-bottom: 6px; }
+    .welcome-card .lead { font-size: 13px; opacity: .8; }
+    .welcome-card small { font-size: 11px; opacity: .5; }
+    .setup-alert { background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; font-size: 13px; }
+    .setup-alert h5 { font-size: 14px; margin-bottom: 8px; }
+    .setup-alert ol { padding-left: 18px; margin: 0; }
+    .menu-section { margin-bottom: 16px; }
+    .menu-section h5 { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .menu-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fff; border-radius: 14px; padding: 14px 8px; text-decoration: none; color: #1e293b; font-size: 11px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.08); transition: transform .15s; }
+    .menu-item:active { transform: scale(.95); }
+    .menu-item i { font-size: 22px; color: #08a5b2; }
+    .status-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .status-row .card { margin-bottom: 0 !important; }
+    .status-row .card-body { padding: 12px 8px; }
+    .status-row .card-body .fa-3x { font-size: 1.6rem; margin-bottom: 8px; }
+    .status-row .card-body h5 { font-size: 12px; margin-bottom: 2px; }
+    .status-row .card-body p { font-size: 10px; }
+    .row .col-md-4 { padding: 0 5px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <!-- Welcome Header -->
@@ -63,26 +90,26 @@
     </div>
 
     <!-- Status Card -->
-    <div class="row">
-        <div class="col-md-4">
+    <div class="row status-row g-2">
+        <div class="col-4 col-md-4">
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
                     <h5>Sistema Ativo</h5>
-                    <p class="text-muted mb-0">Todas as funções estão disponíveis</p>
+                    <p class="text-muted mb-0">Todas as funções disponíveis</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-4 col-md-4">
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-shield-alt text-primary fa-3x mb-3"></i>
                     <h5>Seguro</h5>
-                    <p class="text-muted mb-0">Seus dados estão protegidos</p>
+                    <p class="text-muted mb-0">Dados protegidos</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-4 col-md-4">
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-headset text-info fa-3x mb-3"></i>

@@ -2,6 +2,41 @@
 
 {% block title %}Estoque - Sistema de Gestão de Suprimentos{% endblock %}
 
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1.mt-4 { font-size: 20px; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 12px; }
+    /* Botões topo em linha */
+    .card-header .float-end { display: flex; gap: 6px; margin-top: 8px; }
+    .card-header .float-end .btn { padding: 7px 10px; font-size: 12px; border-radius: 8px; }
+    .card-header { flex-direction: column !important; align-items: flex-start !important; }
+    /* Filtros em coluna */
+    #filterForm .row > div { margin-bottom: 8px; }
+    #filterForm .row > div:last-child { margin-bottom: 0; }
+    /* Esconder tabela */
+    .table-responsive { display: none !important; }
+    /* Cards de estoque */
+    .stk-cards { display: flex; flex-direction: column; gap: 10px; }
+    .stk-card { background: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+    .stk-card.stk-low  { border-left: 4px solid #ef4444; }
+    .stk-card.stk-high { border-left: 4px solid #f59e0b; }
+    .stk-card.stk-out  { border-left: 4px solid #94a3b8; background: #f8fafc; }
+    .stk-card.stk-ok   { border-left: 4px solid #22c55e; }
+    .stk-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .stk-name { font-weight: 700; font-size: 14px; color: #1e293b; flex: 1; }
+    .stk-qty { font-size: 22px; font-weight: 800; color: #0b1e35; line-height: 1; }
+    .stk-meta { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+    .stk-bar-wrap { height: 4px; background: #e2e8f0; border-radius: 2px; margin-bottom: 10px; }
+    .stk-bar { height: 4px; border-radius: 2px; background: #22c55e; }
+    .stk-actions { display: flex; gap: 8px; }
+    .stk-actions .btn { flex: 1; padding: 8px; font-size: 12px; border-radius: 10px; }
+    /* Esconder cards de gráfico em mobile */
+    .row.mt-4, .row > .col-xl-6 { display: block; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4">Estoque</h1>
@@ -72,53 +107,32 @@
                 </div>
             </div>
             
+            <!-- Tabela desktop -->
             <div class="table-responsive">
                 <table class="table table-bordered table-striped" id="stockTable">
                     <thead>
                         <tr>
-                            <th>Código</th>
-                            <th>Produto</th>
-                            <th>Categoria</th>
-                            <th>Local</th>
-                            <th>Quantidade</th>
-                            <th>Unidade</th>
-                            <th>Mínimo</th>
-                            <th>Máximo</th>
-                            <th>Valor Unitário</th>
-                            <th>Valor Total</th>
-                            <th>Ações</th>
+                            <th>Código</th><th>Produto</th><th>Categoria</th><th>Local</th>
+                            <th>Qtd</th><th>Un</th><th>Mín</th><th>Máx</th>
+                            <th>Vl.Unit</th><th>Vl.Total</th><th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in stock_items %}
-                        <tr class="
-                            {% if item.quantity <= item.min_stock and item.min_stock > 0 %}table-danger{% endif %}
-                            {% if item.quantity >= item.max_stock and item.max_stock > 0 %}table-warning{% endif %}
-                            {% if item.quantity == 0 %}table-secondary{% endif %}
-                        ">
+                        <tr class="{% if item.quantity<=item.min_stock and item.min_stock>0 %}table-danger{% elif item.quantity>=item.max_stock and item.max_stock>0 %}table-warning{% elif item.quantity==0 %}table-secondary{% endif %}">
                             <td>{{ item.code or item.sku or '-' }}</td>
                             <td>{{ item.product_name }}</td>
-                            <td>{{ item.category_name if item.category_name else '-' }}</td>
+                            <td>{{ item.category_name or '-' }}</td>
                             <td>{{ item.location_name }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>{{ item.unit }}</td>
-                            <td>{{ item.min_stock }}</td>
-                            <td>{{ item.max_stock }}</td>
+                            <td>{{ item.quantity }}</td><td>{{ item.unit }}</td>
+                            <td>{{ item.min_stock }}</td><td>{{ item.max_stock }}</td>
                             <td>R$ {{ "%.2f"|format(item.sale_price) if item.sale_price else '0.00' }}</td>
                             <td>R$ {{ "%.2f"|format(item.sale_price * item.quantity) if item.sale_price else '0.00' }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{{ url_for('inventory.inventory_configure', product_id=item.product_id) }}" class="btn btn-primary btn-sm" title="Configurar Estoque">
-                                        <i class="fas fa-cog"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-info btn-sm" title="Ver Movimentações" 
-                                            onclick="window.location.href='{{ url_for('inventory.inventory_movements') }}?product_id={{ item.product_id }}'">
-                                        <i class="fas fa-history"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-success btn-sm" title="Ajustar Estoque" 
-                                            onclick="prepareAdjustment('{{ item.product_id }}', '{{ item.product_name }}', '{{ item.quantity }}')">
-                                        <i class="fas fa-plus-minus"></i>
-                                    </button>
+                                    <a href="{{ url_for('inventory.inventory_configure', product_id=item.product_id) }}" class="btn btn-primary btn-sm"><i class="fas fa-cog"></i></a>
+                                    <button class="btn btn-info btn-sm" onclick="window.location.href='{{ url_for('inventory.inventory_movements') }}?product_id={{ item.product_id }}'"><i class="fas fa-history"></i></button>
+                                    <button class="btn btn-success btn-sm" onclick="prepareAdjustment('{{ item.product_id }}','{{ item.product_name }}','{{ item.quantity }}')"><i class="fas fa-plus-minus"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -126,11 +140,33 @@
                     </tbody>
                 </table>
             </div>
-            
-            {% if not stock_items %}
-            <div class="alert alert-info">
-                Nenhum item em estoque encontrado.
+            <!-- Cards mobile -->
+            <div class="stk-cards">
+                {% for item in stock_items %}
+                {% if item.quantity == 0 %}{% set sc='stk-out' %}
+                {% elif item.quantity <= item.min_stock and item.min_stock > 0 %}{% set sc='stk-low' %}
+                {% elif item.max_stock > 0 and item.quantity >= item.max_stock %}{% set sc='stk-high' %}
+                {% else %}{% set sc='stk-ok' %}{% endif %}
+                {% set pct = [(item.quantity / item.max_stock * 100)|int, 100]|min if item.max_stock > 0 else 50 %}
+                <div class="stk-card {{ sc }}">
+                    <div class="stk-header">
+                        <div class="stk-name">{{ item.product_name }}</div>
+                        <div class="stk-qty">{{ item.quantity }}<small style="font-size:12px;font-weight:400;color:#64748b"> {{ item.unit }}</small></div>
+                    </div>
+                    <div class="stk-meta">{{ item.location_name }} &bull; Mín: {{ item.min_stock }} &bull; R$ {{ "%.2f"|format(item.sale_price) if item.sale_price else '0,00' }}</div>
+                    <div class="stk-bar-wrap"><div class="stk-bar" style="width:{{ pct }}%;background:{% if sc=='stk-out' %}#94a3b8{% elif sc=='stk-low' %}#ef4444{% elif sc=='stk-high' %}#f59e0b{% else %}#22c55e{% endif %}"></div></div>
+                    <div class="stk-actions">
+                        <button class="btn btn-success" onclick="prepareAdjustment('{{ item.product_id }}','{{ item.product_name }}','{{ item.quantity }}')"><i class="fas fa-plus-minus me-1"></i>Ajustar</button>
+                        <a href="{{ url_for('inventory.inventory_configure', product_id=item.product_id) }}" class="btn btn-primary"><i class="fas fa-cog me-1"></i>Config</a>
+                        <a href="{{ url_for('inventory.inventory_movements') }}?product_id={{ item.product_id }}" class="btn btn-info"><i class="fas fa-history"></i></a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">Nenhum item em estoque encontrado.</div>
+                {% endfor %}
             </div>
+            {% if not stock_items %}
+            <div class="alert alert-info d-none d-md-block">Nenhum item em estoque encontrado.</div>
             {% endif %}
         </div>
     </div>
