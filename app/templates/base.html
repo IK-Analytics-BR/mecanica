@@ -576,23 +576,50 @@
             #mobileHeader { display: none !important; }
             #sidebarOverlay { display: none !important; }
         }
-        /* Bloquear landscape em mobile */
-        @media screen and (max-width: 768px) and (orientation: landscape) {
-            body::before {
-                content: 'Gire o dispositivo para retrato';
-                position: fixed; inset: 0; z-index: 99999;
-                background: #0b1e35; color: #fff;
-                display: flex; align-items: center; justify-content: center;
-                font-size: 18px; font-weight: 600; text-align: center;
-                padding: 20px;
-            }
-            body > *:not(style) { display: none !important; }
-            body::before { display: flex !important; }
+        /* ══ BLOQUEAR LANDSCAPE EM MOBILE ══ */
+        #rotate-lock {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: #0b1e35;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-align: center;
+            gap: 20px;
+        }
+        #rotate-lock i {
+            font-size: 56px;
+            color: #08a5b2;
+            animation: rotateHint 2s ease-in-out infinite;
+        }
+        #rotate-lock p {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255,255,255,.85);
+            margin: 0;
+        }
+        @keyframes rotateHint {
+            0%   { transform: rotate(0deg); }
+            40%  { transform: rotate(-90deg); }
+            60%  { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @media screen and (orientation: landscape) and (max-height: 500px) {
+            #rotate-lock { display: flex !important; }
         }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
+    <!-- ══ TELA DE BLOQUEIO LANDSCAPE ══ -->
+    <div id="rotate-lock">
+        <i class="fas fa-mobile-alt"></i>
+        <p>Gire o dispositivo<br>para usar o app</p>
+    </div>
+
     <!-- ══ DRAWER: funções globais PRIMEIRO ══ -->
     <script>
     window.openDrawer = function() {
