@@ -2,27 +2,39 @@
  * IKFlow Mecânica — Service Worker PWA
  * Cache estratégico: Shell estático + Network-first para dados
  */
-const CACHE_NAME = 'ikflow-mecanica-v5';
-const CACHE_STATIC = 'ikflow-static-v5';
-const CACHE_PAGES = 'ikflow-pages-v5';
-const SHELL_ASSETS = [
-  '/static/css/style.css',
-  '/static/css/mobile.css',
-  '/static/css/desktop.css',
-  '/static/js/pdv.js',
+const CACHE_NAME = 'ikflow-mecanica-v6';
+const CACHE_STATIC = 'ikflow-static-v6';
+const CACHE_PAGES = 'ikflow-pages-v6';
+
+// Assets locais — cacheados individualmente (erros ignorados)
+const SHELL_LOCAL = [
   '/static/js/script.js',
-  '/static/img/logo_menu.png',
+  '/static/img/icon-192.png',
+];
+
+// Assets externos CDN — mode no-cors, erros ignorados
+const SHELL_CDN = [
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
 ];
 
-// Instalar: pré-cachear shell
+// Cachear um asset sem lançar erro se falhar
+async function tryCache(cache, url, opts) {
+  try {
+    await cache.add(new Request(url, opts || {}));
+  } catch (e) {
+    console.log('[SW] Cache ignorado (erro esperado):', url);
+  }
+}
+
+// Instalar: pré-cachear shell de forma tolerante a falhas
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_STATIC).then(cache => {
-      return cache.addAll(SHELL_ASSETS.map(url => new Request(url, { mode: 'no-cors' })));
+    caches.open(CACHE_STATIC).then(async cache => {
+      for (const url of SHELL_LOCAL)  await tryCache(cache, url);
+      for (const url of SHELL_CDN)    await tryCache(cache, url, { mode: 'no-cors' });
     })
   );
 });
