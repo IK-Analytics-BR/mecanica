@@ -391,16 +391,7 @@ def inject_datetime():
     def pode_excluir(codigo_tela):
         return tem_permissao(codigo_tela, 'excluir')
 
-    def _safe_csrf_token():
-        """Retorna o CSRF token de forma segura, sem erro mesmo sem Flask-WTF."""
-        try:
-            if generate_csrf is not None:
-                return generate_csrf()
-        except Exception:
-            pass
-        return ''
-
-    return {
+    ctx = {
         'now': datetime.now,
         'datetime': datetime,
         'timedelta': timedelta,
@@ -414,8 +405,12 @@ def inject_datetime():
         'pode_criar': pode_criar,
         'pode_editar': pode_editar,
         'pode_excluir': pode_excluir,
-        'csrf_token': _safe_csrf_token,
     }
+    # Só injeta csrf_token quando Flask-WTF NAO esta disponivel
+    # (quando CSRFProtect esta ativo, ele ja registra csrf_token no Jinja2)
+    if not _csrf_available:
+        ctx['csrf_token'] = lambda: ''
+    return ctx
 
 @app.template_filter('basename')
 def _filter_basename(path):
