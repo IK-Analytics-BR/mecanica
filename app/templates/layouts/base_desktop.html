@@ -230,27 +230,27 @@
             }
         }
         
-        /* Drawer também funciona em PWA em telas maiores */
+        /* Drawer em PWA standalone */
         body.pwa-standalone #sidebar {
             position: fixed !important;
             top: 0 !important;
-            left: -280px !important;
+            left: 0 !important;
             width: 280px !important;
             height: 100vh !important;
             z-index: 9999 !important;
+            transform: translateX(-280px) !important;
             transition: transform 0.3s ease !important;
-            transform: translateX(0) !important;
             display: block !important;
             margin-left: 0 !important;
+            overflow-y: auto !important;
         }
 
         body.pwa-standalone #sidebar.drawer-open {
-            left: 0 !important;
             transform: translateX(0) !important;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.4) !important;
         }
 
-        /* Drawer overlay z-index maior que sidebar */
+        /* Overlay */
         body.pwa-standalone #sidebarOverlay.show {
             display: block !important;
             z-index: 9998 !important;
@@ -266,10 +266,7 @@
             display: flex !important;
         }
         
-        /* Esconder sidebar desktop em PWA */
-        body.pwa-standalone #sidebar {
-            display: none !important;
-        }
+        /* Sidebar em PWA: oculto via transform (não display:none) */
         
         /* Ajustar conteúdo para mobile */
         body.pwa-standalone #content {
