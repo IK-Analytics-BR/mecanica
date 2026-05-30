@@ -1137,10 +1137,7 @@
 
     <script>
     /* ══ PWA MOBILE — Drawer + Busca Global ══ */
-    (function() {
-        const isMobile = () => window.innerWidth <= 768;
-
-        // Drawer toggle
+    document.addEventListener('DOMContentLoaded', function() {
         function openDrawer() {
             var sb = document.getElementById('sidebar');
             var ov = document.getElementById('sidebarOverlay');
@@ -1156,20 +1153,20 @@
             document.body.style.overflow = '';
         }
 
-        const drawerBtn = document.getElementById('drawerToggle');
-        const drawerBtnBottom = document.getElementById('drawerToggleBottom');
-        const drawerCloseBtn = document.getElementById('drawerClose');
-        const overlay = document.getElementById('sidebarOverlay');
+        var drawerBtn = document.getElementById('drawerToggle');
+        var drawerBtnBottom = document.getElementById('drawerToggleBottom');
+        var drawerCloseBtn = document.getElementById('drawerClose');
+        var overlay = document.getElementById('sidebarOverlay');
 
         if (drawerBtn) drawerBtn.addEventListener('click', openDrawer);
         if (drawerBtnBottom) drawerBtnBottom.addEventListener('click', openDrawer);
         if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
         if (overlay) overlay.addEventListener('click', closeDrawer);
 
-        // Fechar drawer ao clicar em link do menu mobile (não em toggles de submenu)
-        document.querySelectorAll('#sidebar a[href]').forEach(link => {
+        // Fechar drawer ao clicar em link do menu mobile
+        document.querySelectorAll('#sidebar a[href]').forEach(function(link) {
             link.addEventListener('click', function() {
-                if (isMobile() && !this.getAttribute('data-bs-toggle')) closeDrawer();
+                if (!this.getAttribute('data-bs-toggle')) closeDrawer();
             });
         });
 
@@ -1179,12 +1176,8 @@
             searchInput.addEventListener('input', function() {
                 var q = this.value.trim().toLowerCase();
                 document.querySelectorAll('#sidebar ul.components > li').forEach(function(li) {
-                    if (!q) {
-                        li.classList.remove('menu-item-hidden');
-                        return;
-                    }
-                    var text = li.textContent.toLowerCase();
-                    li.classList.toggle('menu-item-hidden', !text.includes(q));
+                    if (!q) { li.classList.remove('menu-item-hidden'); return; }
+                    li.classList.toggle('menu-item-hidden', !li.textContent.toLowerCase().includes(q));
                 });
             });
         }
@@ -1232,7 +1225,7 @@
                 if (!searchInput.contains(e.target)) searchResults.style.display = 'none';
             });
         }
-    })();
+    });
     </script>
     
     <!-- Bloco para JavaScript adicional das páginas -->
