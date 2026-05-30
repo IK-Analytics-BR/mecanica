@@ -2,9 +2,9 @@
  * IKFlow Mecânica — Service Worker PWA
  * Cache estratégico: Shell estático + Network-first para dados
  */
-const CACHE_NAME = 'ikflow-mecanica-v2';
-const CACHE_STATIC = 'ikflow-static-v2';
-const CACHE_PAGES = 'ikflow-pages-v2';
+const CACHE_NAME = 'ikflow-mecanica-v5';
+const CACHE_STATIC = 'ikflow-static-v5';
+const CACHE_PAGES = 'ikflow-pages-v5';
 const SHELL_ASSETS = [
   '/static/css/style.css',
   '/static/css/mobile.css',
@@ -27,12 +27,15 @@ self.addEventListener('install', event => {
   );
 });
 
-// Ativar: limpar caches antigos
+// Ativar: limpar TODOS os caches antigos
 self.addEventListener('activate', event => {
   self.clients.claim();
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => !k.includes('v2')).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE_STATIC && k !== CACHE_PAGES && k !== CACHE_NAME).map(k => {
+        console.log('[SW] Deletando cache antigo:', k);
+        return caches.delete(k);
+      }))
     )
   );
 });

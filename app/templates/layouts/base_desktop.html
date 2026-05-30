@@ -344,8 +344,8 @@
 <body>
     <!-- ══ PWA MINIMAL TEST v4 ══ -->
     <script>
-        // VERSAO MINIMA PARA TESTE - v4
-        console.log('[PWA TEST] v4 - 29-05-2025');
+        // VERSAO v5 - 30-05-2025
+        console.log('[PWA] v5 - 30-05-2025');
 
         // Detectar PWA standalone
         const isStandalone = window.navigator.standalone === true;
@@ -356,17 +356,21 @@
             document.body.classList.add('pwa-standalone');
         }
 
-        // Service Worker minimal - apenas registrar, nada mais
+        // Service Worker: registrar e forçar atualização
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/static/js/service-worker.js')
-                .then(() => console.log('[SW] OK'))
-                .catch(() => console.log('[SW] Erro'));
+                .then(reg => {
+                    console.log('[SW] OK');
+                    reg.update();
+                    if (reg.waiting) reg.waiting.postMessage({ action: 'skipWaiting' });
+                })
+                .catch(e => console.log('[SW] Erro', e));
         }
     </script>
     <!-- FIM PWA MINIMAL -->
 
     <!-- DEBUG: Indicador de versão -->
-    <div id="pwa-version-indicator" style="position:fixed;bottom:4px;right:4px;font-size:11px;background:#08a5b2;color:#fff;padding:2px 6px;border-radius:4px;z-index:99999;font-family:monospace;">v4</div>
+    <div id="pwa-version-indicator" style="position:fixed;bottom:4px;right:4px;font-size:11px;background:#08a5b2;color:#fff;padding:2px 6px;border-radius:4px;z-index:99999;font-family:monospace;">v5</div>
 
     <div class="wrapper">
         <!-- Sidebar Desktop -->
