@@ -248,10 +248,12 @@
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 background: #0b1e35 !important;
+                pointer-events: none;
             }
             #sidebar.active { margin-left: 0 !important; }
             #sidebar.drawer-open {
                 transform: translateX(0%) !important;
+                pointer-events: auto;
             }
 
             /* Header do drawer */
@@ -359,11 +361,12 @@
                 bottom: 0;
                 left: 0;
                 right: 0;
-                z-index: 1050;
-                background: #fff;
-                border-top: 1px solid #e2e8f0;
+                z-index: 2000;
+                background: #0b1e35;
+                border-top: none;
                 padding-bottom: env(safe-area-inset-bottom);
-                box-shadow: 0 -4px 20px rgba(0,0,0,.1);
+                box-shadow: 0 -2px 20px rgba(0,0,0,.35);
+                pointer-events: auto;
             }
 
             /* Content: apenas compensar bottom nav */
@@ -499,35 +502,68 @@
             canvas { max-width: 100% !important; }
         }
 
-        /* Estilos dos itens do bottom nav */
+        /* ══ BOTTOM NAV — Estilos globais ══ */
         .bn-item {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px 4px;
+            padding: 10px 4px 6px;
             text-decoration: none;
-            color: #94a3b8;
             font-size: 10px;
-            font-weight: 600;
-            gap: 3px;
+            font-weight: 700;
+            gap: 4px;
             cursor: pointer;
             border: none;
             background: none;
-            transition: color .2s;
+            transition: transform .15s ease, opacity .15s;
+            position: relative;
+            color: rgba(255,255,255,.55);
+            letter-spacing: .3px;
         }
-        .bn-item i { font-size: 20px; }
-        .bn-item.active { color: #0b2447; }
+        .bn-item i { font-size: 22px; }
+        /* Cores individuais por botão */
+        .bn-os     { --bn-color: #38bdf8; }
+        .bn-cli    { --bn-color: #a78bfa; }
+        .bn-stock  { --bn-color: #fb923c; }
+        .bn-menu   { --bn-color: #94a3b8; }
+        .bn-item.bn-os i    { color: #38bdf8; }
+        .bn-item.bn-cli i   { color: #a78bfa; }
+        .bn-item.bn-stock i { color: #fb923c; }
+        .bn-item.bn-menu i  { color: #94a3b8; }
+        /* Botão Nova OS — destaque central */
         .bn-item.bn-primary {
             color: #fff;
-            background: linear-gradient(135deg, #0b2447, #08a5b2);
-            border-radius: 16px;
-            margin: 6px;
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(8,165,178,.4);
+            background: linear-gradient(135deg, #06b6d4, #0284c7);
+            border-radius: 20px;
+            margin: 6px 4px;
+            padding: 10px 12px;
+            box-shadow: 0 4px 16px rgba(6,182,212,.5);
+            flex: 1.2;
         }
-
+        .bn-item.bn-primary i { color: #fff; font-size: 20px; }
+        /* Estado ativo: escala e cor total */
+        .bn-item.active {
+            color: #fff;
+            transform: translateY(-4px);
+        }
+        .bn-item.active i { filter: drop-shadow(0 0 6px currentColor); }
+        .bn-item.active.bn-os  { color: #38bdf8; }
+        .bn-item.active.bn-cli { color: #a78bfa; }
+        .bn-item.active.bn-stock { color: #fb923c; }
+        .bn-item.active.bn-menu  { color: #94a3b8; }
+        /* Pip indicador */
+        .bn-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .bn-item.bn-primary.active::after { display: none; }
         /* Desktop: esconder elementos mobile */
         @media (min-width: 769px) {
             #bottomNav { display: none !important; }
@@ -1049,12 +1085,12 @@
     {% if session.get('username') %}
     <nav id="bottomNav">
         {% if blueprint_exists('service_order') %}
-        <a class="bn-item" href="{{ url_for('service_order.service_order_list') }}">
+        <a class="bn-item bn-os" href="{{ url_for('service_order.service_order_list') }}">
             <i class="fas fa-clipboard-list"></i><span>OS</span>
         </a>
         {% endif %}
         {% if blueprint_exists('cliente') %}
-        <a class="bn-item" href="{{ url_for('cliente.clientes') }}">
+        <a class="bn-item bn-cli" href="{{ url_for('cliente.clientes') }}">
             <i class="fas fa-users"></i><span>Clientes</span>
         </a>
         {% endif %}
@@ -1064,11 +1100,11 @@
         </a>
         {% endif %}
         {% if blueprint_exists('inventory') %}
-        <a class="bn-item" href="{{ url_for('inventory.inventory_list') }}">
+        <a class="bn-item bn-stock" href="{{ url_for('inventory.inventory_list') }}">
             <i class="fas fa-boxes"></i><span>Estoque</span>
         </a>
         {% endif %}
-        <button class="bn-item" id="drawerToggleBottom" onclick="openDrawer()">
+        <button class="bn-item bn-menu" id="drawerToggleBottom" onclick="openDrawer(); return false;">
             <i class="fas fa-th-large"></i><span>Menu</span>
         </button>
     </nav>
