@@ -675,6 +675,24 @@ function addTask() {
 
 // Indicador de versão para debug
 console.log('[IKFlow] Dashboard v2.0 - Build 29-05-2025');
+
+// Atualização automática após limpeza de cache iOS
+(function() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone === true;
+    
+    if (isIOS && isStandalone) {
+        const cacheCleared = localStorage.getItem('ios_cache_cleared');
+        const hasReloaded = sessionStorage.getItem('ios_post_login_reload');
+        
+        if (cacheCleared && !hasReloaded) {
+            console.log('[iOS PWA] Recarregando após limpeza de cache...');
+            sessionStorage.setItem('ios_post_login_reload', 'yes');
+            // Recarrega uma vez para garantir cache limpo
+            setTimeout(() => window.location.reload(true), 100);
+        }
+    }
+})();
 </script>
 
 <!-- Debug Version Indicator -->
