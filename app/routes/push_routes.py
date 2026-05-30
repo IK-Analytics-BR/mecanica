@@ -8,7 +8,7 @@ Endpoints:
 """
 import json
 import os
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, make_response
 from database import get_db
 from utils.auth import login_required, admin_required
 
@@ -183,3 +183,59 @@ def push_notificar_os(order_id: int, tipo: str):
             _send_push(info, payload)
     except Exception as e:
         print(f'[PUSH] push_notificar_os erro: {e}')
+
+
+@push_bp.route('/pwa/reset')
+def pwa_reset():
+    """Desregistra SW, limpa todos os caches e redireciona para login."""
+    html = """<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atualizando IKFlow...</title>
+<style>
+body{font-family:sans-serif;text-align:center;padding:60px 20px;background:#0b2447;color:#fff;}
+h2{color:#08a5b2;}p{color:#ccc;margin:10px 0;}
+.spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,0.3);border-top:4px solid #08a5b2;border-radius:50%;animation:spin 1s linear infinite;margin:20px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="spinner"></div>
+<h2>Atualizando o app...</h2>
+<p>Aguarde alguns segundos.</p>
+<script>
+(async function() {
+    try {
+        // Desregistrar todos os Service Workers
+        if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const reg of regs) {
+                await reg.unregister();
+                console.log('[RESET] SW removido:', reg.scope);
+            }
+        }
+        // Limpar todos os caches
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            for (const key of keys) {
+                await caches.delete(key);
+                console.log('[RESET] Cache removido:', key);
+            }
+        }
+        // Limpar storage
+        localStorage.clear();
+        sessionStorage.clear();
+        console.log('[RESET] Completo. Redirecionando...');
+    } catch(e) {
+        console.error('[RESET] Erro:', e);
+    }
+    // Redirecionar para login após limpeza
+    setTimeout(() => { window.location.replace('/login'); }, 1500);
+})();
+</script>
+</body></html>"""
+    resp = make_response(html, 200)
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+    return resp
