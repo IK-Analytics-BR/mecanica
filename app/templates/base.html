@@ -214,8 +214,11 @@
             background: rgba(0,0,0,.55);
             z-index: 1040;
             backdrop-filter: blur(2px);
+            cursor: pointer;
         }
-        #sidebarOverlay.show { display: block; }
+        #sidebarOverlay.show {
+            display: block !important;
+        }
 
         /* Header mobile */
         #mobileHeader {
@@ -1419,6 +1422,47 @@
         }
       });
     }
+    </script>
+
+    <!-- ══ DRAWER MENU ══ -->
+    <script>
+    (function() {
+        function openDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.add('drawer-open');
+            if (overlay) overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.remove('drawer-open');
+            if (overlay) overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.getElementById('drawerToggle');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (toggle) toggle.addEventListener('click', openDrawer);
+            if (overlay) overlay.addEventListener('click', closeDrawer);
+
+            // Fechar ao clicar em link do sidebar
+            document.querySelectorAll('#sidebar a[href]').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768 || document.body.classList.contains('pwa-standalone')) {
+                        closeDrawer();
+                    }
+                });
+            });
+
+            // Bottom nav: botão Menu
+            const btnNavMenu = document.getElementById('btnNavMenu');
+            if (btnNavMenu) btnNavMenu.addEventListener('click', openDrawer);
+        });
+    })();
     </script>
 </body>
 </html>
