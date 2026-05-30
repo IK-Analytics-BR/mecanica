@@ -565,7 +565,7 @@
                     alt="IKFlow"
                     style="height: 40px; max-width: 180px; object-fit: contain;"
                 >
-                <button id="drawerClose" aria-label="Fechar menu">
+                <button id="drawerClose" aria-label="Fechar menu" onclick="closeDrawer()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -1068,7 +1068,7 @@
             <i class="fas fa-boxes"></i><span>Estoque</span>
         </a>
         {% endif %}
-        <button class="bn-item" id="drawerToggleBottom">
+        <button class="bn-item" id="drawerToggleBottom" onclick="openDrawer()">
             <i class="fas fa-th-large"></i><span>Menu</span>
         </button>
     </nav>
@@ -1136,34 +1136,23 @@
     </script>
 
     <script>
-    /* ══ PWA MOBILE — Drawer + Busca Global ══ */
+    /* ══ PWA MOBILE — Drawer ══ */
+    function openDrawer() {
+        var sb = document.getElementById('sidebar');
+        if (sb) sb.classList.add('drawer-open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+        var sb = document.getElementById('sidebar');
+        if (sb) sb.classList.remove('drawer-open');
+        document.body.style.overflow = '';
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        function openDrawer() {
-            var sb = document.getElementById('sidebar');
-            var ov = document.getElementById('sidebarOverlay');
-            if (sb) sb.classList.add('drawer-open');
-            if (ov) ov.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeDrawer() {
-            var sb = document.getElementById('sidebar');
-            var ov = document.getElementById('sidebarOverlay');
-            if (sb) sb.classList.remove('drawer-open');
-            if (ov) ov.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        var drawerBtn = document.getElementById('drawerToggle');
-        var drawerBtnBottom = document.getElementById('drawerToggleBottom');
         var drawerCloseBtn = document.getElementById('drawerClose');
-        var overlay = document.getElementById('sidebarOverlay');
-
-        if (drawerBtn) drawerBtn.addEventListener('click', openDrawer);
-        if (drawerBtnBottom) drawerBtnBottom.addEventListener('click', openDrawer);
         if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
-        if (overlay) overlay.addEventListener('click', closeDrawer);
 
-        // Fechar drawer ao clicar em link do menu mobile
+        // Fechar drawer ao clicar em link de navegação
         document.querySelectorAll('#sidebar a[href]').forEach(function(link) {
             link.addEventListener('click', function() {
                 if (!this.getAttribute('data-bs-toggle')) closeDrawer();
