@@ -4,10 +4,11 @@ import sys
 from functools import wraps
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 try:
-    from flask_wtf.csrf import CSRFProtect
+    from flask_wtf.csrf import CSRFProtect, generate_csrf
     _csrf_available = True
 except ImportError:
     _csrf_available = False
+    generate_csrf = None
 
 try:
     from flask_limiter import Limiter
@@ -390,6 +391,15 @@ def inject_datetime():
     def pode_excluir(codigo_tela):
         return tem_permissao(codigo_tela, 'excluir')
 
+    def _safe_csrf_token():
+        """Retorna o CSRF token de forma segura, sem erro mesmo sem Flask-WTF."""
+        try:
+            if generate_csrf is not None:
+                return generate_csrf()
+        except Exception:
+            pass
+        return ''
+
     return {
         'now': datetime.now,
         'datetime': datetime,
@@ -403,7 +413,8 @@ def inject_datetime():
         'pode_ver': pode_ver,
         'pode_criar': pode_criar,
         'pode_editar': pode_editar,
-        'pode_excluir': pode_excluir
+        'pode_excluir': pode_excluir,
+        'csrf_token': _safe_csrf_token,
     }
 
 @app.template_filter('basename')
