@@ -29,7 +29,7 @@
     <link rel="apple-touch-icon"                href="{{ url_for('static', filename='img/icon-192.png') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/icon-192.png') }}">
     <!-- CSRF token global (Flask-WTF) -->
-    <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         :root {
             --ik-teal: #08a5b2;
@@ -1350,6 +1350,85 @@
         }
       });
     }
+    </script>
+
+    <!-- ══ CSRF: injeta token em todos os forms POST automaticamente ══ -->
+    <script>
+    (function() {
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken || !csrfToken.content) return;
+        var token = csrfToken.content;
+
+        function injectCsrf() {
+            document.querySelectorAll('form').forEach(function(form) {
+                var method = (form.getAttribute('method') || 'get').toLowerCase();
+                if (method !== 'post') return;
+                if (form.querySelector('input[name="csrf_token"]')) return;
+                var inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'csrf_token';
+                inp.value = token;
+                form.appendChild(inp);
+            });
+        }
+
+        // Injeta ao carregar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', injectCsrf);
+        } else {
+            injectCsrf();
+        }
+
+        // Observa forms adicionados dinamicamente (modais, etc.)
+        if (window.MutationObserver) {
+            var obs = new MutationObserver(function(mutations) {
+                mutations.forEach(function(m) {
+                    m.addedNodes.forEach(function(node) {
+                        if (node.nodeType !== 1) return;
+                        var forms = node.tagName === 'FORM' ? [node] : Array.from(node.querySelectorAll('form'));
+                        forms.forEach(function(form) {
+                            var method = (form.getAttribute('method') || 'get').toLowerCase();
+                            if (method !== 'post') return;
+                            if (form.querySelector('input[name="csrf_token"]')) return;
+                            var inp = document.createElement('input');
+                            inp.type = 'hidden';
+                            inp.name = 'csrf_token';
+                            inp.value = token;
+                            form.appendChild(inp);
+                        });
+                    });
+                });
+            });
+            obs.observe(document.body, { childList: true, subtree: true });
+        }
+
+        // Garante token em fetch/XHR com X-CSRFToken header
+        var origFetch = window.fetch;
+        window.fetch = function(url, opts) {
+            opts = opts || {};
+            if (opts.method && opts.method.toUpperCase() !== 'GET') {
+                opts.headers = opts.headers || {};
+                if (!opts.headers['X-CSRFToken'] && !opts.headers['x-csrftoken']) {
+                    opts.headers['X-CSRFToken'] = token;
+                }
+            }
+            return origFetch(url, opts);
+        };
+
+        // XMLHttpRequest
+        var origOpen = XMLHttpRequest.prototype.open;
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function(method, url) {
+            this._method = method;
+            return origOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function() {
+            if (this._method && this._method.toUpperCase() !== 'GET') {
+                try { this.setRequestHeader('X-CSRFToken', token); } catch(e) {}
+            }
+            return origSend.apply(this, arguments);
+        };
+    })();
     </script>
 
 </body>
