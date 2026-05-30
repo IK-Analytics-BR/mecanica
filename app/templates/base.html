@@ -208,14 +208,14 @@
 
         /* Overlay: oculto por padrão */
         #sidebarOverlay {
-            display: none;
+            display: none !important;
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,.55);
-            z-index: 1050;
+            z-index: 1065;
             cursor: pointer;
         }
-        #sidebarOverlay.show { display: block !important; }
+        /* Drawer fullscreen não usa overlay */
 
         /* Header mobile: oculto por padrão */
         #mobileHeader { display: none !important; }
@@ -238,19 +238,20 @@
                 top: 0 !important;
                 left: 0 !important;
                 margin-left: 0 !important;
-                width: 100vw !important;
-                max-width: 100vw !important;
-                height: 100vh !important;
-                z-index: 1060 !important;
-                transform: translateX(-100vw) !important;
-                transition: transform .3s cubic-bezier(.4,0,.2,1) !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: 100% !important;
+                min-height: 100vh !important;
+                z-index: 1070 !important;
+                transform: translateX(-110%) !important;
+                transition: transform .3s ease !important;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 background: #0b1e35 !important;
             }
             #sidebar.active { margin-left: 0 !important; }
             #sidebar.drawer-open {
-                transform: translateX(0) !important;
+                transform: translateX(0%) !important;
             }
 
             /* Header do drawer */
@@ -1141,13 +1142,17 @@
 
         // Drawer toggle
         function openDrawer() {
-            document.getElementById('sidebar').classList.add('drawer-open');
-            document.getElementById('sidebarOverlay').classList.add('show');
+            var sb = document.getElementById('sidebar');
+            var ov = document.getElementById('sidebarOverlay');
+            if (sb) sb.classList.add('drawer-open');
+            if (ov) ov.classList.add('show');
             document.body.style.overflow = 'hidden';
         }
         function closeDrawer() {
-            document.getElementById('sidebar').classList.remove('drawer-open');
-            document.getElementById('sidebarOverlay').classList.remove('show');
+            var sb = document.getElementById('sidebar');
+            var ov = document.getElementById('sidebarOverlay');
+            if (sb) sb.classList.remove('drawer-open');
+            if (ov) ov.classList.remove('show');
             document.body.style.overflow = '';
         }
 
