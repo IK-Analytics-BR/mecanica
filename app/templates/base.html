@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>{% block title %}IKFlow Mecânica{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -543,45 +543,66 @@
             flex: 1.2;
         }
         .bn-item.bn-primary i { color: #fff; font-size: 20px; }
-        /* Estado ativo: escala e cor total */
+        /* Estado ativo: maior, brilhante, pip */
         .bn-item.active {
-            color: #fff;
-            transform: translateY(-4px);
+            transform: translateY(-6px) scale(1.15);
+            color: #fff !important;
         }
-        .bn-item.active i { filter: drop-shadow(0 0 6px currentColor); }
-        .bn-item.active.bn-os  { color: #38bdf8; }
-        .bn-item.active.bn-cli { color: #a78bfa; }
-        .bn-item.active.bn-stock { color: #fb923c; }
-        .bn-item.active.bn-menu  { color: #94a3b8; }
+        .bn-item.active i { filter: drop-shadow(0 0 8px currentColor); }
+        .bn-item.active.bn-os    { color: #38bdf8 !important; }
+        .bn-item.active.bn-cli   { color: #a78bfa !important; }
+        .bn-item.active.bn-stock { color: #fb923c !important; }
+        .bn-item.active.bn-menu  { color: #94a3b8 !important; }
         /* Pip indicador */
         .bn-item.active::after {
             content: '';
             position: absolute;
-            bottom: 4px;
-            width: 4px;
-            height: 4px;
+            bottom: 3px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: currentColor;
+            opacity: .9;
         }
         .bn-item.bn-primary.active::after { display: none; }
+        /* Não-ativos ficam menores para contrastar */
+        .bn-item:not(.active):not(.bn-primary) {
+            transform: scale(0.9);
+            opacity: .7;
+        }
         /* Desktop: esconder elementos mobile */
         @media (min-width: 769px) {
             #bottomNav { display: none !important; }
             #mobileHeader { display: none !important; }
             #sidebarOverlay { display: none !important; }
         }
+        /* Bloquear landscape em mobile */
+        @media screen and (max-width: 768px) and (orientation: landscape) {
+            body::before {
+                content: 'Gire o dispositivo para retrato';
+                position: fixed; inset: 0; z-index: 99999;
+                background: #0b1e35; color: #fff;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 18px; font-weight: 600; text-align: center;
+                padding: 20px;
+            }
+            body > *:not(style) { display: none !important; }
+            body::before { display: flex !important; }
+        }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
-    <!-- ══ DETECÇÃO PWA v5 ══ -->
+    <!-- ══ DETECÇÃO PWA + ORIENTAÇÃO ══ -->
     <script>
     (function() {
         var standalone = (window.navigator.standalone === true) ||
                          window.matchMedia('(display-mode: standalone)').matches;
         if (standalone) {
             document.body.classList.add('pwa-standalone');
-            console.log('[PWA] v5 standalone');
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(function(){});
+            }
         }
     })();
     </script>
@@ -1104,7 +1125,7 @@
             <i class="fas fa-boxes"></i><span>Estoque</span>
         </a>
         {% endif %}
-        <button class="bn-item bn-menu" id="drawerToggleBottom" onclick="openDrawer(); return false;">
+        <button class="bn-item bn-menu" id="drawerToggleBottom" type="button" onclick="openDrawer()" style="pointer-events:auto !important;">
             <i class="fas fa-th-large"></i><span>Menu</span>
         </button>
     </nav>
