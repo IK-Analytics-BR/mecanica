@@ -1,7 +1,34 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Fechar Caixa{% endblock %}
 
+
+{% block styles %}
+<style>
+@media (max-width: 768px) {
+    h1, h2, h4 { font-size: 18px !important; margin-top: 8px !important; }
+    .breadcrumb { font-size: 12px; margin-bottom: 10px; }
+    .container-fluid { padding-left: 10px !important; padding-right: 10px !important; }
+    .row > [class*="col-md"], .row > [class*="col-xl"], .row > [class*="col-lg"] { width: 100% !important; }
+    .form-control, .form-select { height: 44px; font-size: 15px; padding: 10px 12px; }
+    textarea.form-control { height: auto; min-height: 80px; }
+    .form-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .nav-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-tabs .nav-link { white-space: nowrap; font-size: 13px; padding: 8px 12px; }
+    .card { border-radius: 12px; margin-bottom: 12px; }
+    .card-header { font-size: 13px; padding: 10px 14px; }
+    .card-body { padding: 12px; }
+    .table-responsive { overflow-x: auto; }
+    table { font-size: 12px; min-width: 440px; }
+    .btn { width: 100%; padding: 11px; font-size: 14px; border-radius: 10px; margin-top: 4px; }
+    .btn-sm { width: auto !important; padding: 5px 10px !important; font-size: 12px !important; margin-top: 0 !important; }
+    .input-group .btn { width: auto !important; margin-top: 0; }
+    .d-flex.justify-content-between { flex-wrap: wrap; gap: 6px; }
+    .modal-dialog { margin: 8px; }
+    canvas { max-height: 220px; }
+}
+</style>
+{% endblock %}
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4">
