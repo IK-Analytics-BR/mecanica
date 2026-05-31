@@ -37,14 +37,14 @@ def index():
     hoje = date.today()
 
     os_hoje = db.fetch_all("""
-        SELECT so.id, so.order_number, so.status, so.customer_complaint, so.started_at,
+        SELECT so.id, so.order_number, so.status, so.started_at,
                c.name as customer_name,
                e.plate as equipment_plate, e.brand as equipment_brand, e.model as equipment_model
         FROM service_orders so
         JOIN customers c ON so.customer_id = c.id
         LEFT JOIN equipment e ON so.equipment_id = e.id
         WHERE so.technician_id = %s AND so.company_id = %s
-          AND DATE(so.open_date) = %s AND so.active = TRUE
+          AND DATE(so.open_date) = %s
         ORDER BY FIELD(so.status,'in_progress','open','completed'), so.open_date DESC
     """, (technician_id, company_id, hoje)) or []
 
@@ -214,11 +214,10 @@ def os_detalhe(os_id):
     historico_veiculo = []
     if os.get('equipment_id'):
         historico_veiculo = db.fetch_all("""
-            SELECT so2.id, so2.order_number, so2.customer_complaint,
-                   so2.open_date
+            SELECT so2.id, so2.order_number, so2.open_date
             FROM service_orders so2
             WHERE so2.equipment_id = %s AND so2.id != %s
-              AND so2.status = 'completed' AND so2.active = TRUE
+              AND so2.status = 'completed'
             ORDER BY so2.open_date DESC LIMIT 5
         """, (os['equipment_id'], os_id)) or []
         for h in historico_veiculo:
@@ -351,7 +350,7 @@ def api_buscar_veiculo():
         JOIN equipment e ON so.equipment_id = e.id
         JOIN customers c ON so.customer_id = c.id
         WHERE so.company_id = %s AND e.plate LIKE %s
-          AND so.status IN ('open','in_progress') AND so.active = TRUE
+          AND so.status IN ('open','in_progress')
         ORDER BY so.open_date DESC LIMIT 10
     """, (company_id, f'%{placa}%')) or []
     return jsonify([dict(r) for r in rows])
