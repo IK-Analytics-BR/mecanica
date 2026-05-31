@@ -237,7 +237,7 @@
         {% endblock %}
         <div class="logo">IKFlow <span>{% block header_title %}Oficina{% endblock %}</span></div>
         <span class="header-role-badge">{% block role_badge %}Atendente{% endblock %}</span>
-        <a href="/logout" class="btn-header" title="Sair"><i class="fas fa-sign-out-alt"></i></a>
+        <a href="/logout" class="btn-header" style="color:#ef4444;" title="Sair"><i class="fas fa-sign-out-alt"></i></a>
     </header>
 
     <!-- CONTEÚDO -->
@@ -252,7 +252,10 @@
 
     <!-- BOTTOM NAV -->
     <nav class="pwa-bottom-nav">
-        {% block bottom_nav %}{% endblock %}
+        {% block bottom_nav %}
+        <a href="/pwa/inicio" class="bn-item" title="Início"><i class="fas fa-home"></i><span>Início</span></a>
+        <a href="/logout" class="bn-item" style="color:#ef4444;" title="Sair"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a>
+        {% endblock %}
     </nav>
 
     <!-- TOAST GLOBAL -->
