@@ -7,9 +7,9 @@ from functools import wraps
 from datetime import datetime, timedelta
 import calendar
 
-from app.database import get_db
-from app.utils.auth import login_required
-from app.utils.tenant import get_company_id
+from database import get_db
+from utils.auth import login_required
+from utils.tenant import get_company_id
 
 mecanico_bp = Blueprint('mecanico', __name__, url_prefix='/mecanico')
 
