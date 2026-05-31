@@ -37,7 +37,7 @@ def index():
     hoje = date.today()
 
     os_hoje = db.fetch_all("""
-        SELECT so.id, so.order_number, so.status, so.started_at,
+        SELECT so.id, so.order_number, so.status,
                c.name as customer_name,
                e.plate as equipment_plate, e.brand as equipment_brand, e.model as equipment_model
         FROM service_orders so
@@ -548,22 +548,23 @@ def comissoes():
     # Ordens com comissão
     ordens = db.fetch_all("""
         SELECT 
-            so.id, so.order_number, so.completed_at,
+            so.id, so.order_number,
             c.name as customer_name,
             e.name as equipment_name,
-            SUM(com.amount) as comissao_total
+            SUM(com.amount) as comissao_total,
+            MAX(com.created_at) as data_comissao
         FROM commissions com
         JOIN service_orders so ON com.service_order_id = so.id
         JOIN customers c ON so.customer_id = c.id
         LEFT JOIN equipments e ON so.equipment_id = e.id
         WHERE com.technician_id = %s 
           AND DATE(com.created_at) BETWEEN %s AND %s
-        GROUP BY so.id, so.order_number, so.completed_at, c.name, e.name
-        ORDER BY so.completed_at DESC
+        GROUP BY so.id, so.order_number, c.name, e.name
+        ORDER BY data_comissao DESC
     """, (technician_id, inicio, fim))
     
     for os in ordens:
-        os['data'] = os['completed_at'].strftime('%d/%m/%Y') if os['completed_at'] else '-'
+        os['data'] = os['data_comissao'].strftime('%d/%m/%Y') if os.get('data_comissao') else '-'
         os['comissao_servicos'] = os['comissao_total'] * 0.9  # 90% estimado de serviços
         os['comissao_pecas'] = os['comissao_total'] * 0.1     # 10% estimado de peças
     
