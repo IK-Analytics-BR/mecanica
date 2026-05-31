@@ -281,7 +281,7 @@ def usuario_cadastrar():
         
         print(f"[DEBUG] Dados extraídos com sucesso: name={name}, username={username}, email={email}, role={role}, status={status}")
         # Validar role permitido e suporte do ENUM
-        allowed_roles = {'admin','manager','user'}
+        allowed_roles = {'admin','manager','user','mecanico','atendente','auxiliar'}
         if role not in allowed_roles:
             return render_template(
                 'usuario_form.html',
@@ -290,7 +290,7 @@ def usuario_cadastrar():
                 empresas=empresas_ativas,
                 selected_empresas=empresa_ids,
                 show_error_modal=True,
-                error_reason='Função inválida. Valores permitidos: Administrador, Gerente, Usuário.'
+                error_reason='Função inválida. Valores permitidos: Administrador, Gerente, Usuário, Mecânico, Atendente, Auxiliar.'
             )
 
         # Usuário não-admin deve ter ao menos 1 empresa
@@ -650,7 +650,7 @@ def usuario_editar(id):
                 )
 
         # Validar role permitido e suporte do ENUM
-        allowed_roles = {'admin','manager','user'}
+        allowed_roles = {'admin','manager','user','mecanico','atendente','auxiliar'}
         if role not in allowed_roles:
             return render_template(
                 'usuario_form.html',
@@ -659,7 +659,7 @@ def usuario_editar(id):
                 empresas=empresas_ativas,
                 selected_empresas=empresa_ids,
                 show_error_modal=True,
-                error_reason='Função inválida. Valores permitidos: Administrador, Gerente, Usuário.'
+                error_reason='Função inválida. Valores permitidos: Administrador, Gerente, Usuário, Mecânico, Atendente, Auxiliar.'
             )
         if role == 'manager' and not _role_enum_supports_manager(db):
             return render_template(

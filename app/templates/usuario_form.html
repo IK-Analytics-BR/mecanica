@@ -325,6 +325,9 @@
                                 <option value="admin" {% if usuario and usuario.role == 'admin' %}selected{% endif %}>Administrador</option>
                                 <option value="manager" {% if usuario and usuario.role == 'manager' %}selected{% endif %}>Gerente</option>
                                 <option value="user" {% if usuario and usuario.role == 'user' %}selected{% endif %}>Usuário</option>
+                                <option value="mecanico" {% if usuario and usuario.role == 'mecanico' %}selected{% endif %}>Mecânico (PWA Oficina)</option>
+                                <option value="atendente" {% if usuario and usuario.role == 'atendente' %}selected{% endif %}>Atendente (PWA Oficina)</option>
+                                <option value="auxiliar" {% if usuario and usuario.role == 'auxiliar' %}selected{% endif %}>Auxiliar (PWA Oficina)</option>
                             </select>
                             <label for="role">Função</label>
                         </div>
