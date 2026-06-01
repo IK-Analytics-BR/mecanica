@@ -39,7 +39,7 @@ def index():
     os_hoje = db.fetch_all("""
         SELECT so.id, so.order_number, so.status,
                c.name as customer_name,
-               e.plate as equipment_plate, e.brand as equipment_brand, e.model as equipment_model
+               e.serial_number as equipment_plate, e.name as equipment_name, e.model as equipment_model
         FROM service_orders so
         JOIN customers c ON so.customer_id = c.id
         LEFT JOIN equipment e ON so.equipment_id = e.id
@@ -96,10 +96,10 @@ def minha_agenda():
         SELECT so.*, 
                c.name as customer_name,
                e.name as equipment_name,
-               e.plate as equipment_plate
+               e.serial_number as equipment_plate
         FROM service_orders so
         JOIN customers c ON so.customer_id = c.id
-        LEFT JOIN equipments e ON so.equipment_id = e.id
+        LEFT JOIN equipment e ON so.equipment_id = e.id
         WHERE so.technician_id = %s
           AND so.company_id = %s
           AND DATE(so.scheduled_date) = %s
@@ -166,7 +166,7 @@ def minhas_os():
                e.name as equipment_name
         FROM service_orders so
         JOIN customers c ON so.customer_id = c.id
-        LEFT JOIN equipments e ON so.equipment_id = e.id
+        LEFT JOIN equipment e ON so.equipment_id = e.id
         WHERE so.technician_id = %s
           AND so.company_id = %s
     """
@@ -197,9 +197,8 @@ def os_detalhe(os_id):
     os = db.fetch_one("""
         SELECT so.*,
                c.name as customer_name, c.phone as customer_phone,
-               e.plate as equipment_plate, e.brand as equipment_brand,
-               e.model as equipment_model, e.year as equipment_year,
-               e.color as equipment_color, e.id as equipment_id
+               e.serial_number as equipment_plate, e.name as equipment_name,
+               e.model as equipment_model, e.id as equipment_id
         FROM service_orders so
         JOIN customers c ON so.customer_id = c.id
         LEFT JOIN equipment e ON so.equipment_id = e.id
@@ -345,11 +344,11 @@ def api_buscar_veiculo():
     if len(placa) < 3:
         return jsonify([])
     rows = db.fetch_all("""
-        SELECT so.id as os_id, so.order_number, e.plate, e.brand, e.model, c.name as customer_name
+        SELECT so.id as os_id, so.order_number, e.serial_number as plate, e.name, e.model, c.name as customer_name
         FROM service_orders so
         JOIN equipment e ON so.equipment_id = e.id
         JOIN customers c ON so.customer_id = c.id
-        WHERE so.company_id = %s AND e.plate LIKE %s
+        WHERE so.company_id = %s AND e.serial_number LIKE %s
           AND so.status IN ('open','in_progress')
         ORDER BY so.open_date DESC LIMIT 10
     """, (company_id, f'%{placa}%')) or []
@@ -556,7 +555,7 @@ def comissoes():
         FROM commissions com
         JOIN service_orders so ON com.service_order_id = so.id
         JOIN customers c ON so.customer_id = c.id
-        LEFT JOIN equipments e ON so.equipment_id = e.id
+        LEFT JOIN equipment e ON so.equipment_id = e.id
         WHERE com.technician_id = %s 
           AND DATE(com.created_at) BETWEEN %s AND %s
         GROUP BY so.id, so.order_number, c.name, e.name
